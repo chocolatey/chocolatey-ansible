@@ -1,0 +1,10 @@
+{
+    "docs": "https://docs.ansible.com/ansible/devel/dev_guide/testing/sanity/pslint.html",
+    "results": [
+        {
+            "message": "The test `ansible-test sanity --test pslint` [[explain](https://docs.ansible.com/ansible/devel/dev_guide/testing/sanity/pslint.html)] failed with 1 error:",
+            "output": "plugins/modules/win_test.ps1:4:5: PSCustomUseLiteralPath: Use the explicit -LiteralPath parameter name instead of -Path"
+        }
+    ],
+    "verified": false
+}

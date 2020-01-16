@@ -1,0 +1,10 @@
+{
+    "docs": "https://docs.ansible.com/ansible/devel/dev_guide/testing/sanity/validate-modules.html",
+    "results": [
+        {
+            "message": "The test `ansible-test sanity --test validate-modules` [[explain](https://docs.ansible.com/ansible/devel/dev_guide/testing/sanity/validate-modules.html)] failed with 1 error:",
+            "output": "plugins/modules/win_test.ps1:0:0: doc-required-mismatch: Argument 'option' in argument_spec is required, but is not documented as being required"
+        }
+    ],
+    "verified": false
+}
