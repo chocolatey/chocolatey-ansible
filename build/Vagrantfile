@@ -12,7 +12,8 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
-  config.vm.box = "roboxes/ubuntu1910"
+  config.vm.box = "bento/ubuntu-19.10"
+  config.vm.box_version = "201910.31.0"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -67,6 +68,12 @@ Vagrant.configure("2") do |config|
   #   apt-get update
   #   apt-get install -y apache2
   # SHELL
-  config.vm.provision "shell", path: "./dependencies.sh"
-  config.vm.provision "file", source: "../chocolatey", destination: "./chocolatey"
+  config.vm.provision "install dependencies", type: "shell" do |shell|
+    shell.path = "./dependencies.sh"
+  end
+
+  config.vm.provision "copy collection files", type: "file" do |file|
+    file.source = "../chocolatey"
+    file.destination = "./chocolatey"
+  end
 end
