@@ -1,3 +1,19 @@
 # Ansible Collection - chocolatey.chocolatey
 
-Documentation for the collection.
+Manage your packages using Chocolatey.
+
+## Getting Started
+
+### Installation Instructions
+
+TBD
+
+### Examples
+
+TBD
+
+## Developing
+
+### Building Locally
+
+TBD
