@@ -20,10 +20,11 @@ process {
                 }
 
                 $Command = @(
-                    'source ansible-venv/bin/activate'
+                    'source ~/ansible-venv/bin/activate'
                     'cd chocolatey'
-                    'ansible-galaxy collection build; ansible-galaxy collection install *.tar.gz'
-                    'cd ../.ansible/collections/ansible_collections/chocolatey/chocolatey'
+                    'ansible-galaxy collection build'
+                    'ansible-galaxy collection install *.tar.gz'
+                    'cd ~/.ansible/collections/ansible_collections/chocolatey/chocolatey'
                     'sudo ansible-test windows-integration -vvvvv --inventory vagrant-inventory.winrm'
                 ) -join ';'
 
