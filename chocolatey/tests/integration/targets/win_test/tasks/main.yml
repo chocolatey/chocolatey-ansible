@@ -1,8 +1,0 @@
-- name: test ansible-test in collection
-  win_test:
-  register: test_out
-
-- name: assert tests
-  assert:
-    that:
-    - test_out.data == 'hi'
