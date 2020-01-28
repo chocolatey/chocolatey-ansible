@@ -25,7 +25,8 @@ process {
                     'ansible-galaxy collection build'
                     'ansible-galaxy collection install *.tar.gz'
                     'cd ~/.ansible/collections/ansible_collections/chocolatey/chocolatey'
-                    'sudo ansible-test windows-integration -vvvvv --inventory vagrant-inventory.winrm'
+                    'sudo ansible-test windows-integration -vvvvv --inventory vagrant-inventory.winrm --coverage'
+                    'cp -r ./tests/output/ ~/.testresults/'
                 ) -join ';'
 
                 vagrant ssh choco_ansible_server --command $Command
