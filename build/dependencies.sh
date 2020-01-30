@@ -1,7 +1,5 @@
 sudo apt-get update
 
-sudo apt-get install python -y
-
 sudo apt-get install python3 python3-pip python3-venv -y
 
 sudo apt-add-repository ppa:ansible/ansible
