@@ -43,7 +43,7 @@ process {
                 "ansible_become_method=runas"
             )
 
-            $Inventory | Set-Content -Path '~/chocolatey/tests/integration/ci-inventory.winrm'
+            $Inventory | Set-Content -Path './chocolatey/tests/integration/ci-inventory.winrm'
             bash -c $Command
         }
         else {
