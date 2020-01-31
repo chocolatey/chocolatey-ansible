@@ -20,10 +20,10 @@ $labVMIpAddress = (Get-AzPublicIpAddress -ResourceGroupName $labVmRgName -Name $
 $labVMFqdn = (Get-AzPublicIpAddress -ResourceGroupName $labVmRgName -Name $labVmName).DnsSettings.Fqdn
 
 # Set a variable labVmRgName to store the lab VM resource group name
-Write-Host "##vso[task.setvariable variable=labVmRgName;]$labVmRgName"
+Write-Host "##vso[task.setvariable variable=LabVmRgName;]$labVmRgName"
 
 # Set a variable labVMIpAddress to store the lab VM Ip address
-Write-Host "##vso[task.setvariable variable=labVMIpAddress;]$labVMIpAddress"
+Write-Host "##vso[task.setvariable variable=LabVMIpAddress;]$labVMIpAddress"
 
 # Set a variable labVMFqdn to store the lab VM FQDN name
-Write-Host "##vso[task.setvariable variable=labVMFqdn;]$labVMFqdn"
+Write-Host "##vso[task.setvariable variable=LabVMFqdn;]$labVMFqdn"
