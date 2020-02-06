@@ -22,7 +22,7 @@ begin {
         'cd ./chocolatey'
         'ansible-galaxy collection build'
         'ansible-galaxy collection install *.tar.gz'
-        'cd ../.ansible/collections/ansible_collections/chocolatey/chocolatey'
+        'cd ~/.ansible/collections/ansible_collections/chocolatey/chocolatey'
         "sudo ansible-test windows-integration -vvvvv --inventory $InventoryFile"
         'cp -r ./tests/output/ ~/.testresults/'
     ) -join ';'
