@@ -5,7 +5,11 @@ param(
     $LabVMId
 )
 
-$labVmComputeId = (Get-AzResource -Id $LabVMId).Properties.ComputeId
+do {
+    $labVmComputeId = (Get-AzResource -Id $LabVMId).Properties.ComputeId
+    Start-Sleep -Seconds 10
+}
+while (-not $labVmComputeId)
 
 # Get lab VM resource group name
 $labVmRgName = (Get-AzResource -Id $labVmComputeId).ResourceGroupName
