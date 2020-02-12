@@ -41,7 +41,7 @@ process {
                 "ansible_password=$env:CHOCOCICLIENT_PASSWORD"
                 "ansible_connection=winrm"
                 "ansible_port=5985"
-                "ansible_winrm_transport=http"
+                "ansible_winrm_transport=ntlm"
                 "ansible_become_method=runas"
             )
 
