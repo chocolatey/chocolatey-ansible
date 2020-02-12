@@ -45,8 +45,7 @@ process {
             )
 
             $Inventory | Set-Content -Path './chocolatey/tests/integration/ci-inventory.winrm'
-            $Commands
-            bash -c $Command
+            bash -c ($Commands -join '&&')
         }
         else {
             Set-Location -Path $PSScriptRoot
