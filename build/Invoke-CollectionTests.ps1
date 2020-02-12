@@ -18,7 +18,7 @@ begin {
 
     $InventoryFile = if ($IsCIBuild) { 'ci-inventory.winrm' } else { 'vagrant-inventory.winrm' }
     $Command = @(
-        'source ./ansible-venv/bin/activate'
+        'source ~/ansible-venv/bin/activate'
         'cd ./chocolatey'
         'ansible-galaxy collection build'
         'ansible-galaxy collection install *.tar.gz'
