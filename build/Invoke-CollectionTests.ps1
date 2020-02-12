@@ -17,16 +17,17 @@ begin {
     Push-Location
 
     $InventoryFile = if ($IsCIBuild) { 'ci-inventory.winrm' } else { 'vagrant-inventory.winrm' }
+    $Sudo = if ($IsCIBuild) { [string]::Empty } else { "sudo " }
     $Commands = @(
         'source ~/ansible-venv/bin/activate'
         'cd ./chocolatey'
         'ansible-galaxy collection build'
         'ansible-galaxy collection install *.tar.gz'
         'cd ~/.ansible/collections/ansible_collections/chocolatey/chocolatey'
-        "sudo source ~/ansible-venv/bin/activate"
-        "sudo ansible-test windows-integration -vvvvv --inventory $InventoryFile"
+        "source ~/ansible-venv/bin/activate"
+        "${Sudo}ansible-test windows-integration -vvvvv --inventory $InventoryFile"
         'cp -r ./tests/output/ ~/.testresults/'
-    )
+    ) -join ' && '
 }
 process {
     try {
@@ -45,7 +46,7 @@ process {
             )
 
             $Inventory | Set-Content -Path './chocolatey/tests/integration/ci-inventory.winrm'
-            bash -c ($Commands -join '&&')
+            bash -c $Commands
         }
         else {
             Set-Location -Path $PSScriptRoot
@@ -55,7 +56,7 @@ process {
                 throw "An error has occurred; please refer to the Vagrant log for details."
             }
 
-            vagrant ssh choco_ansible_server --command ($Commands -join ';')
+            vagrant ssh choco_ansible_server --command $Commands
             $Result = [PSCustomObject]@{
                 Success  = $?
                 ExitCode = $LASTEXITCODE
