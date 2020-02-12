@@ -9,4 +9,4 @@ sudo apt-get update
 
 python3 -m venv ~/ansible-venv
 source ~/ansible-venv/bin/activate
-pip3 install wheel ansible pywinrm
+pip3 install wheel ansible ansible-test pywinrm
