@@ -49,7 +49,7 @@ process {
                 "ansible_user=$Username"
                 "ansible_password=$Secret"
                 "ansible_connection=winrm"
-                "ansible_port=5985"
+                "ansible_port=5986"
                 "ansible_winrm_transport=ntlm"
                 "ansible_become_method=runas"
             )
