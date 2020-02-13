@@ -11,7 +11,12 @@ param(
     [Parameter(ParameterSetName = 'CI')]
     [Alias('LabVMFqdn')]
     [string]
-    $ComputerName
+    $ComputerName,
+
+    [Parameter(ParameterSetName = 'CI')]
+    [Alias('Password')]
+    [string]
+    $Secret
 )
 begin {
     Push-Location
@@ -32,13 +37,17 @@ begin {
 process {
     try {
         if ($IsCIBuild) {
+            if (!$env:CHOCOCICLIENT_PASSWORD) {
+                Write-Warning "Choco Client Password appears to be missing!"
+            }
+
             $Inventory = @(
                 "[windows]"
                 "win10 ansible_host=$ComputerName"
                 ""
                 "[windows:vars]"
                 "ansible_user=$Username"
-                "ansible_password=$env:CHOCOCICLIENT_PASSWORD"
+                "ansible_password=$Secret"
                 "ansible_connection=winrm"
                 "ansible_port=5985"
                 "ansible_winrm_transport=ntlm"
