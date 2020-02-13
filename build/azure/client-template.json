@@ -4,7 +4,7 @@
     "parameters": {
         "newVMName": {
             "type": "string",
-            "defaultValue": "WinClient"
+            "defaultValue": "Ansible-Client"
         },
         "labName": {
             "type": "string",
@@ -12,7 +12,7 @@
         },
         "size": {
             "type": "string",
-            "defaultValue": "Standard_D2s_v3"
+            "defaultValue": "Standard_D3_v2"
         },
         "userName": {
             "type": "string",
@@ -23,7 +23,7 @@
         },
         "Configure_WinRM_hostName": {
             "type": "string",
-            "defaultValue": "win-ansible-client"
+            "defaultValue": "chococlient"
         }
     },
     "variables": {
