@@ -37,7 +37,7 @@ begin {
 process {
     try {
         if ($IsCIBuild) {
-            if (!$env:CHOCOCICLIENT_PASSWORD) {
+            if (!$Secret) {
                 Write-Warning "Choco Client Password appears to be missing!"
             }
 
@@ -50,7 +50,7 @@ process {
                 "ansible_password=$Secret"
                 "ansible_connection=winrm"
                 "ansible_port=5986"
-                "ansible_winrm_transport=ntlm"
+                "ansible_winrm_transport=ssl"
                 "ansible_become_method=runas"
             )
 
