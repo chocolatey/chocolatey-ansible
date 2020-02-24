@@ -23,11 +23,11 @@ $labVMIpAddress = (Get-AzPublicIpAddress -ResourceGroupName $labVmRgName -Name $
 # Get lab VM FQDN
 $labVMFqdn = (Get-AzPublicIpAddress -ResourceGroupName $labVmRgName -Name $labVmName).DnsSettings.Fqdn
 
-# Set a variable labVmRgName to store the lab VM resource group name
+Write-Host "Setting Lab Resource Group Name Var: $labVmRgName"
 Write-Host "##vso[task.setvariable variable=ChocoCIClient.labVmRgName;]$labVmRgName"
 
-# Set a variable labVMIpAddress to store the lab VM Ip address
+Write-Host "Setting Lab VM IP Address Var: $labVMIpAddress"
 Write-Host "##vso[task.setvariable variable=ChocoCIClient.labVMIpAddress;]$labVMIpAddress"
 
-# Set a variable labVMFqdn to store the lab VM FQDN name
+Write-Host "Setting Lab VM FQDN Var: $labVMFqdn"
 Write-Host "##vso[task.setvariable variable=ChocoCIClient.labVMFqdn;]$labVMFqdn"
