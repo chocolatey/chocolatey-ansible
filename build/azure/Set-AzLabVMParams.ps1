@@ -33,28 +33,12 @@ Write-Host "Setting Lab VM FQDN Var: $labVMFqdn"
 Write-Host "##vso[task.setvariable variable=ChocoCIClient.labVMFqdn;]$labVMFqdn"
 
 $CertificateScript = {
-    # Make sure the Fully Qualified Domain Name is being used
-    $hostName = [System.Net.Dns]::GetHostName()
-    $domainName = [System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().DomainName
+    $url = "https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1"
+    $file = "$env:temp\ConfigureRemotingForAnsible.ps1"
 
-    If (-Not $hostName.endswith($domainName)) {
-        $hostName += "." + $domainName
-    }
+    [System.Net.WebClient]::new().DownloadFile($url, $file)
 
-    Write-Host "Creating self signed certificate"
-
-    # you can only generate a new certificate in 'My'
-    # necessary to branch based on PowerShell version, since not all parameters are supported in earlier versions
-    if ($PSVersionTable.PSVersion.Major -le 4) {
-        $newCert = New-SelfSignedCertificate -CertStoreLocation cert:\LocalMachine\My -DnsName $hostName
-    }
-    else {
-        $newCert = New-SelfSignedCertificate -CertStoreLocation cert:\LocalMachine\My -DnsName $hostName -KeyUsage KeyEncipherment, DigitalSignature -NotAfter (Get-Date).AddYears(10)
-    }
-
-    # move the certificate to 'TrustedPeople'
-    $certPath = Get-ChildItem -Path 'Cert:\\LocalMachine\\My' | Where-Object subject -like "*$hostName"
-    Move-Item -Path $certPath.PsPath -Destination 'Cert:\\LocalMachine\\TrustedPeople' > $null
+    & $file -Verbose
 }
 
 $Script = New-Item -Path ./CertScript.ps1
