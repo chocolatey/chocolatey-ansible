@@ -2,7 +2,16 @@
 param(
     [Parameter(Mandatory)]
     [string]
-    $LabVMId
+    $LabVMId,
+
+    [Parameter(Mandatory)]
+    [string]
+    $Username,
+
+    [Parameter(Mandatory)]
+    [Alias('Password')]
+    [string]
+    $Secret
 )
 
 do {
@@ -39,10 +48,16 @@ $CertificateScript = {
     [System.Net.WebClient]::new().DownloadFile($url, $file)
 
     & $file -Verbose
-}
+
+    $Username = "{0}"
+    $Password = "{1}" | ConvertTo-SecureString -AsPlainText -Force
+
+    New-LocalUser -Name $Username -Password $Password -PasswordNeverExpires
+    Add-LocalGroupMember -Group Administrators -Member $Username
+}.ToString()
 
 $Script = New-Item -Path ./CertScript.ps1
-$CertificateScript | Set-Content -Path $Script.FullName
+$CertificateScript -f $Username, $Secret | Set-Content -Path $Script.FullName
 
 $params = @{
     ResourceGroupName = 'choco-ci'
@@ -52,3 +67,5 @@ $params = @{
 }
 
 Invoke-AzVMRunCommand @params -Verbose
+
+Remove-Item -Path $Script.FullName -Force
