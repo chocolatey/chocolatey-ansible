@@ -1,7 +1,7 @@
 # YAML spec:
 # https://aka.ms/yaml
 
-name: '$(Date:yyyyMMdd)$(Rev:.r) (#$(BuildID)) $(TeamProject) ($(SourceBranchName):$(Build.SourceVersion)) —'
+name: '$(Date:yyyyMMdd)$(Rev:.r) (#$(BuildID)) $(TeamProject) ($(SourceBranchName))'
 
 variables:
   ChocoCIClient.labVMName: 'ChocoCIClient'
@@ -11,6 +11,7 @@ variables:
 # ChocoCIClient.ansiblePassword: <secret>
 
 trigger:
+  batch: true
   branches:
     include:
       - master
