@@ -68,8 +68,8 @@ process {
 
             # Locate the built tarball and expose the path & name in Azure variables
             $CollectionTarball = Get-ChildItem -Path './chocolatey' -Recurse -File -Filter '*chocolatey*.tar.gz'
-            Write-Host "##vso[task.setvariable variable=CollectionArtifact.Path]$($CollectionTarball.FullName)"
-            Write-Host "##vso[task.setvariable variable=CollectionArtifact.Name]$($CollectionTarball.Name)"
+            Write-Host "##vso[task.setvariable variable=ArtifactPath;isOutput=true]$($CollectionTarball.FullName)"
+            Write-Host "##vso[task.setvariable variable=ArtifactName;isOutput=true]$($CollectionTarball.Name)"
         }
         else {
             Set-Location -Path $PSScriptRoot
