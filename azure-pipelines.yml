@@ -1,11 +1,10 @@
 # YAML spec:
 # https://aka.ms/yaml
 
-name: Chocolatey Collection CI
+name: '$(TeamProject) ($(SourceBranchName)) $(Date:yyyyMMdd) [#$(Rev:.r)]'
 
 variables:
   ChocoCIClient.labVMName: 'ChocoCIClient'
-  ChocoCIClient.labVMFqdn: ''
   ChocoCIClient.labVMUserName: 'ansible'
 # ChocoCIClient.labVMPassword: <secret>
   ChocoCIClient.ansibleUser: 'ansible-test'
@@ -18,6 +17,9 @@ trigger:
   tags:
     include:
       - '*'
+
+pr:
+  - master
 
 jobs:
 - job: CreateVM
@@ -38,6 +40,7 @@ jobs:
 
   - task: AzurePowerShell@4
     displayName: 'VM Setup'
+    name: AzVmConfig
     inputs:
       azureSubscription: 'Visual Studio Professional Subscription - Joel'
       ScriptPath: 'build/azure/Set-AzLabVMParams.ps1'
@@ -49,6 +52,8 @@ jobs:
   dependsOn: CreateVM
   pool:
     vmImage: ubuntu-latest
+  variables:
+    labVmFqdn: $[ dependencies.CreateVM.outputs['AzVmConfig.Fqdn'] ]
 
   steps:
   - task: Bash@3
@@ -63,7 +68,7 @@ jobs:
       azureSubscription: 'Visual Studio Professional Subscription - Joel'
       scriptType: pscore
       scriptPath: 'build/Invoke-CollectionTests.ps1'
-      arguments: '-IsCIBuild -Username $(ChocoCIClient.ansibleUser) -ComputerName $(ChocoCIClient.labVMFqdn) -Secret $(ChocoCIClient.ansiblePassword)'
+      arguments: '-IsCIBuild -Username $(ChocoCIClient.ansibleUser) -ComputerName $(labVMFqdn) -Secret $(ChocoCIClient.ansiblePassword)'
 
   - task: PublishPipelineArtifact@1
     inputs:

@@ -33,13 +33,13 @@ $labVMIpAddress = (Get-AzPublicIpAddress -ResourceGroupName $labVmRgName -Name $
 $labVMFqdn = (Get-AzPublicIpAddress -ResourceGroupName $labVmRgName -Name $labVmName).DnsSettings.Fqdn
 
 Write-Host "Setting Lab Resource Group Name Var: $labVmRgName"
-Write-Host "##vso[task.setvariable variable=ChocoCIClient.labVmRgName;]$labVmRgName"
+Write-Host "##vso[task.setvariable variable=RgName;]$labVmRgName"
 
 Write-Host "Setting Lab VM IP Address Var: $labVMIpAddress"
-Write-Host "##vso[task.setvariable variable=ChocoCIClient.labVMIpAddress;]$labVMIpAddress"
+Write-Host "##vso[task.setvariable variable=IpAddress;]$labVMIpAddress"
 
 Write-Host "Setting Lab VM FQDN Var: $labVMFqdn"
-Write-Host "##vso[task.setvariable variable=ChocoCIClient.labVMFqdn;]$labVMFqdn"
+Write-Host "##vso[task.setvariable variable=Fqdn;]$labVMFqdn"
 
 $CertificateScript = {
     $url = "https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1"
