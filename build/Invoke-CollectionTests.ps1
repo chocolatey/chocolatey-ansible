@@ -30,7 +30,7 @@ begin {
         'ansible-galaxy collection install *.tar.gz'
         'cd ~/.ansible/collections/ansible_collections/chocolatey/chocolatey'
         "source ~/ansible-venv/bin/activate"
-        "${Sudo}ansible-test windows-integration -vvvvv --inventory $InventoryFile"
+        "${Sudo}ansible-test windows-integration -vvvvv --inventory $InventoryFile --requirements"
         'cp -r ./tests/output/ ~/.testresults/'
     ) -join ' && '
 }
