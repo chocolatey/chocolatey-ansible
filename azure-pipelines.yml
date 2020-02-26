@@ -65,8 +65,18 @@ jobs:
       scriptPath: 'build/Invoke-CollectionTests.ps1'
       arguments: '-IsCIBuild -Username $(ChocoCIClient.ansibleUser) -ComputerName $(ChocoCIClient.labVMFqdn) -Secret $(ChocoCIClient.ansiblePassword)'
 
-  - publish: ~/testresults
-    artifact: TestResults
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(System.DefaultWorkingDirectory)/testresults'
+      artifact: 'Ansible-Test Output Files'
+
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: 'JUnit'
+      searchFolder: '$(System.DefaultWorkingDirectory)/testresults'
+      testResultsFiles: '*.xml'
+      publishRunAttachments: true
+
 
 - job: DestroyVM
   displayName: 'Destroy Azure Labs VM'

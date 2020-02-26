@@ -23,6 +23,14 @@ begin {
 
     $InventoryFile = if ($IsCIBuild) { 'ci-inventory.winrm' } else { 'vagrant-inventory.winrm' }
     $Sudo = if ($IsCIBuild) { [string]::Empty } else { "sudo " }
+
+    $OutputPath = if ($IsCIBuild) {
+        Join-Path -Path $env:SYSTEM_DEFAULTWORKINGDIRECTORY -ChildPath 'testresults/'
+    }
+    else {
+        '~/.testresults/'
+    }
+
     $Commands = @(
         'source ~/ansible-venv/bin/activate'
         'cd ./chocolatey'
@@ -31,7 +39,7 @@ begin {
         'cd ~/.ansible/collections/ansible_collections/chocolatey/chocolatey'
         "source ~/ansible-venv/bin/activate"
         "${Sudo}ansible-test windows-integration -vvvvv --inventory $InventoryFile --requirements"
-        'cp -r ./tests/output/ ~/.testresults/'
+        "cp -r ./tests/output/ $OutputPath"
     ) -join ' && '
 }
 process {
