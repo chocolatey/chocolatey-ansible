@@ -65,6 +65,9 @@ jobs:
       scriptPath: 'build/Invoke-CollectionTests.ps1'
       arguments: '-IsCIBuild -Username $(ChocoCIClient.ansibleUser) -ComputerName $(ChocoCIClient.labVMFqdn) -Secret $(ChocoCIClient.ansiblePassword)'
 
+  - publish: ~/testresults
+    artifact: TestResults
+
 - job: DestroyVM
   displayName: 'Destroy Azure Labs VM'
   pool:
