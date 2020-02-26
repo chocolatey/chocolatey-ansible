@@ -1,7 +1,7 @@
 # YAML spec:
 # https://aka.ms/yaml
 
-name: '$(TeamProject) ($(SourceBranchName)) $(Date:yyyyMMdd) [#$(Rev:.r)]'
+name: '$(Date:yyyyMMdd)$(Rev:.r) (#$(BuildID)) $(TeamProject) ($(SourceBranchName):$(Build.SourceVersion)) —'
 
 variables:
   ChocoCIClient.labVMName: 'ChocoCIClient'
@@ -71,11 +71,13 @@ jobs:
       arguments: '-IsCIBuild -Username $(ChocoCIClient.ansibleUser) -ComputerName $(labVMFqdn) -Secret $(ChocoCIClient.ansiblePassword)'
 
   - task: PublishPipelineArtifact@1
+    displayName: 'Publish Results Artifacts'
     inputs:
       path: '$(System.DefaultWorkingDirectory)/testresults'
       artifact: 'Ansible-Test Output Files'
 
   - task: PublishTestResults@2
+    displayName: 'Publish JUnit Results'
     inputs:
       testResultsFormat: 'JUnit'
       searchFolder: '$(System.DefaultWorkingDirectory)/testresults'
