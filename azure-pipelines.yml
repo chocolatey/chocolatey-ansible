@@ -49,7 +49,7 @@ jobs:
       azurePowerShellVersion: LatestVersion
 
 - job: Tests
-  displayName: 'Chocolatey Collection Tests'
+  displayName: 'Build & Test Chocolatey Collection'
   dependsOn: CreateVM
   pool:
     vmImage: ubuntu-latest
@@ -72,17 +72,26 @@ jobs:
       arguments: '-IsCIBuild -Username $(ChocoCIClient.ansibleUser) -ComputerName $(labVMFqdn) -Secret $(ChocoCIClient.ansiblePassword)'
 
   - task: PublishPipelineArtifact@1
-    displayName: 'Publish Results Artifacts'
+    displayName: 'Publish Ansible-Test Output Artifact'
+    condition: succeededOrFailed()
     inputs:
       path: '$(System.DefaultWorkingDirectory)/testresults'
       artifact: 'Ansible-Test Output Files'
 
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish Collection Tarball Artifact'
+    inputs:
+      path: '$(CollectionArtifact.Path)'
+      artifact: '$(CollectionArtifact.Name)'
+
+
   - task: PublishTestResults@2
     displayName: 'Publish JUnit Results'
+    condition: succeededOrFailed()
     inputs:
       testResultsFormat: 'JUnit'
       searchFolder: '$(System.DefaultWorkingDirectory)/testresults'
-      testResultsFiles: '*.xml'
+      testResultsFiles: '**/*.xml'
       publishRunAttachments: true
 
 

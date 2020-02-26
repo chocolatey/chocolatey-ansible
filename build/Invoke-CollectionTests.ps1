@@ -65,6 +65,11 @@ process {
 
             $Inventory | Set-Content -Path './chocolatey/tests/integration/ci-inventory.winrm'
             bash -c $Commands
+
+            # Locate the built tarball and expose the path & name in Azure variables
+            $CollectionTarball = Get-ChildItem -Path './chocolatey' -Filter '*chocolatey*.tar.gz'
+            Write-Host "##vso[task.setvariable variable=CollectionArtifact.Path;isOutput=true]$($CollectionTarball.FullName)"
+            Write-Host "##vso[task.setvariable variable=CollectionArtifact.Name;isOutput=true]$($CollectionTarball.Name)"
         }
         else {
             Set-Location -Path $PSScriptRoot
