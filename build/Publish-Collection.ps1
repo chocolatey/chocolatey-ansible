@@ -20,33 +20,20 @@ param(
     [Parameter(Mandatory)]
     [Alias('Username')]
     [string]
-    $GalaxyUsername,
+    $Username,
 
     [Parameter(Mandatory)]
     [Alias('GalaxyPassword', 'Password')]
     [string]
-    $GalaxySecret,
+    $Secret,
 
     [Parameter()]
     [string]
-    $AHUsername,
-
-    [Parameter()]
-    [Alias('AHPassword')]
-    [string]
-    $AHSecret
+    $Url
 )
 
 $PackageFile = Get-ChildItem -Path "$env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifacts" -Recurse -File -Filter '*.tar.gz'
 Write-Host "Found collection artifact at '$($PackageFile.FullName)'"
 
-if ($AHUsername -and $AHSecret) {
-    Write-Verbose "Publishing collection to AH"
-    Write-Warning "Publishing action not yet determined."
-}
-else {
-    Write-Warning "AH credentials were blank or not provided. Skipping AH publish step."
-}
-
-Write-Verbose "Publishing collection to Ansible Galaxy"
+Write-Verbose "Publishing collection to $Url"
 Write-Warning "Publishing action not yet determined."

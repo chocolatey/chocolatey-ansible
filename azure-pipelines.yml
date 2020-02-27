@@ -9,6 +9,7 @@ variables:
 # ChocoCIClient.labVMPassword: <secret>
   ChocoCIClient.ansibleUser: 'ansible-test'
 # ChocoCIClient.ansiblePassword: <secret>
+  collectionArtifactName: 'chocolatey.collection'
 
 trigger:
   batch: true
@@ -22,125 +23,136 @@ trigger:
 pr:
   - master
 
-jobs:
-- job: CreateVM
-  displayName: 'Create Windows Client VM'
-  pool:
-    vmImage: ubuntu-latest
+stages:
+- stage: Build
+  displayName: '[Build]'
 
-  steps:
-  - task: ms-azuredevtestlabs.tasks.azure-dtl-task-createvm.AzureDevTestLabsCreateVM@3
-    name: AzureVM
-    displayName: 'Create Windows Client VM'
-    inputs:
-      azureSubscription: 'Visual Studio Professional Subscription - Joel'
-      LabId: '/subscriptions/6f2ac189-3b89-4d14-a0af-f5f808633f91/resourceGroups/choco-ci/providers/Microsoft.DevTestLab/labs/ChocoAnsibleLab'
-      VirtualMachineName: '$(ChocoCIClient.labVMName)'
-      TemplateFile: 'build/azure/client-template.json'
-      ParameterOverrides: '-newVMName ''$(ChocoCIClient.labVMName)'' -userName ''$(ChocoCIClient.labVMUserName)'' -password ''$(ChocoCIClient.labVMPassword)'' -Configure_WinRM_hostName ''$(ChocoCIClient.labVMFqdn)'''
+  jobs:
+  - job: CreateVM
+    displayName: 'Create Windows VM'
+    pool:
+      vmImage: ubuntu-latest
 
-  - task: AzurePowerShell@4
-    displayName: 'VM Setup'
-    name: AzVmConfig
-    inputs:
-      azureSubscription: 'Visual Studio Professional Subscription - Joel'
-      ScriptPath: 'build/azure/Set-AzLabVMParams.ps1'
-      ScriptArguments: '-LabVMId $(AzureVM.labVmId) -Username $(ChocoCIClient.ansibleUser) -Secret $(ChocoCIClient.ansiblePassword)'
-      azurePowerShellVersion: LatestVersion
+    steps:
+    - task: AzureDevTestLabsCreateVM@3
+      name: AzureVM
+      displayName: 'Create Azure Labs VM'
+      inputs:
+        azureSubscription: 'Visual Studio Professional Subscription - Joel'
+        LabId: '/subscriptions/6f2ac189-3b89-4d14-a0af-f5f808633f91/resourceGroups/choco-ci/providers/Microsoft.DevTestLab/labs/ChocoAnsibleLab'
+        VirtualMachineName: '$(ChocoCIClient.labVMName)'
+        TemplateFile: 'build/azure/client-template.json'
+        ParameterOverrides: '-newVMName ''$(ChocoCIClient.labVMName)'' -userName ''$(ChocoCIClient.labVMUserName)'' -password ''$(ChocoCIClient.labVMPassword)'' -Configure_WinRM_hostName ''$(ChocoCIClient.labVMFqdn)'''
 
-- job: Tests
-  displayName: 'Build & Test Chocolatey Collection'
-  dependsOn: CreateVM
-  pool:
-    vmImage: ubuntu-latest
-  variables:
-    labVmFqdn: $[ dependencies.CreateVM.outputs['AzVmConfig.Fqdn'] ]
+    - task: AzurePowerShell@4
+      displayName: 'VM Setup'
+      name: AzVmConfig
+      inputs:
+        azureSubscription: 'Visual Studio Professional Subscription - Joel'
+        ScriptPath: 'build/azure/Set-AzLabVMParams.ps1'
+        ScriptArguments: '-LabVMId $(AzureVM.labVmId) -Username $(ChocoCIClient.ansibleUser) -Secret $(ChocoCIClient.ansiblePassword)'
+        azurePowerShellVersion: LatestVersion
 
-  steps:
-  - task: Bash@3
-    displayName: 'Install Dependencies'
-    inputs:
-      targetType: filePath
-      filePath: ./build/dependencies.sh
+  - job: Tests
+    displayName: 'Create & Test Collection'
+    dependsOn: CreateVM
+    pool:
+      vmImage: ubuntu-latest
+    variables:
+      labVmFqdn: $[ dependencies.CreateVM.outputs['AzVmConfig.Fqdn'] ]
 
-  - task: AzureCLI@2
-    displayName: 'Run Ansible-Test for Collection'
-    name: TestRun
-    inputs:
-      azureSubscription: 'Visual Studio Professional Subscription - Joel'
-      scriptType: pscore
-      scriptPath: 'build/Invoke-CollectionTests.ps1'
-      arguments: '-IsCIBuild -Username $(ChocoCIClient.ansibleUser) -ComputerName $(labVMFqdn) -Secret $(ChocoCIClient.ansiblePassword)'
+    steps:
+    - task: Bash@3
+      displayName: 'Install Dependencies'
+      inputs:
+        targetType: filePath
+        filePath: ./build/dependencies.sh
 
-  - task: PublishPipelineArtifact@1
-    displayName: 'Publish Ansible-Test Output Artifact'
-    condition: succeededOrFailed()
-    inputs:
-      path: '$(System.DefaultWorkingDirectory)/testresults'
-      artifact: 'Ansible-Test Output Files'
+    - task: AzureCLI@2
+      displayName: 'Run Ansible-Test for Collection'
+      name: TestRun
+      inputs:
+        azureSubscription: 'Visual Studio Professional Subscription - Joel'
+        scriptType: pscore
+        scriptPath: 'build/Invoke-CollectionTests.ps1'
+        arguments: '-IsCIBuild -Username $(ChocoCIClient.ansibleUser) -ComputerName $(labVMFqdn) -Secret $(ChocoCIClient.ansiblePassword)'
 
-  - task: PublishPipelineArtifact@1
-    displayName: 'Publish Collection Tarball Artifact'
-    inputs:
-      path: '$(TestRun.ArtifactPath)'
-      artifact: '$(TestRun.ArtifactName)'
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Ansible-Test Output Artifact'
+      condition: succeededOrFailed()
+      inputs:
+        path: '$(System.DefaultWorkingDirectory)/testresults'
+        artifact: 'Ansible-Test Output Files'
 
-  - task: PublishTestResults@2
-    displayName: 'Publish JUnit Results'
-    condition: succeededOrFailed()
-    inputs:
-      testResultsFormat: 'JUnit'
-      searchFolder: '$(System.DefaultWorkingDirectory)/testresults'
-      testResultsFiles: '**/*.xml'
-      publishRunAttachments: true
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Collection Tarball Artifact'
+      inputs:
+        path: '$(TestRun.ArtifactPath)'
+        artifact: '$(collectionArtifactName)'
 
-- job: DestroyVM
-  displayName: 'Destroy Azure Labs VM'
-  pool:
-    vmImage: ubuntu-latest
-  dependsOn:
-    - CreateVM
-    - Tests
-  condition: always()
-  variables:
-    labVmId: $[ dependencies.CreateVM.outputs['AzureVM.labVmId'] ]
+    - task: PublishTestResults@2
+      displayName: 'Publish JUnit Results'
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: 'JUnit'
+        searchFolder: '$(System.DefaultWorkingDirectory)/testresults'
+        testResultsFiles: '**/*.xml'
+        publishRunAttachments: true
 
-  steps:
-  - task: ms-azuredevtestlabs.tasks.azure-dtl-task-deleteVm.AzureDevTestLabsDeleteVM@3
-    displayName: 'Destroy VM'
-    inputs:
-      azureSubscription: 'Visual Studio Professional Subscription - Joel'
-      LabId: '/subscriptions/6f2ac189-3b89-4d14-a0af-f5f808633f91/resourceGroups/choco-ci/providers/Microsoft.DevTestLab/labs/ChocoAnsibleLab'
-      LabVmId: '$(labVmId)'
-    continueOnError: true
+  - job: DestroyVM
+    displayName: 'Destroy Azure Labs VM'
+    pool:
+      vmImage: ubuntu-latest
+    dependsOn:
+      - CreateVM
+      - Tests
+    condition: always()
+    variables:
+      labVmId: $[ dependencies.CreateVM.outputs['AzureVM.labVmId'] ]
 
-- job: Publish
-  displayName: 'Publish Chocolatey Collection'
+    steps:
+    - task: AzureDevTestLabsDeleteVM@3
+      displayName: 'Destroy VM'
+      inputs:
+        azureSubscription: 'Visual Studio Professional Subscription - Joel'
+        LabId: '/subscriptions/6f2ac189-3b89-4d14-a0af-f5f808633f91/resourceGroups/choco-ci/providers/Microsoft.DevTestLab/labs/ChocoAnsibleLab'
+        LabVmId: '$(labVmId)'
+      continueOnError: true
+
+- stage: Publish
+  displayName: '[Publish]'
+  dependsOn: Build
   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
-  dependsOn:
-    - Tests
-  pool:
-    vmImage: ubuntu-latest
-  variables:
-    artifactName: $[ dependencies.Tests.outputs['TestRun.ArtifactName'] ]
-    artifactPath: $[ dependencies.Tests.outputs['TestRun.ArtifactPath'] ]
 
-  steps:
-  - task: Bash@3
-    displayName: 'Install Dependencies'
-    inputs:
-      targetType: filePath
-      filePath: ./build/dependencies.sh
+  jobs:
+  - job: Publish
+    displayName: 'Publish Chocolatey Collection'
+    pool:
+      vmImage: ubuntu-latest
 
-  - task: DownloadPipelineArtifact@2
-    displayName: 'Download Tarball Artifact'
-    inputs:
-      artifact: '$(artifactName)'
-      targetPath: '$(System.DefaultWorkingDirectory)/artifacts/'
+    steps:
+    - task: Bash@3
+      displayName: 'Install Dependencies'
+      inputs:
+        targetType: filePath
+        filePath: ./build/dependencies.sh
 
-  - task: PowerShell@2
-    displayName: 'Publish Chocolatey Collection to Galaxy & AH'
-    inputs:
-      targetType: filePath
-      filePath: ./build/Publish-Collection.ps1
-      pwsh: true
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Tarball Artifact'
+      inputs:
+        artifact: '$(collectionArtifactName)'
+        targetPath: '$(System.DefaultWorkingDirectory)/artifacts/'
+
+    - task: PowerShell@2
+      displayName: 'Publish Chocolatey Collection to Galaxy'
+      inputs:
+        targetType: filePath
+        filePath: ./build/Publish-Collection.ps1 -UserName $(GalaxyUsername) -Secret $(GalaxyPassword)
+        pwsh: true
+
+    - task: PowerShell@2
+      displayName: 'Publish Chocolatey Collection to AH'
+      inputs:
+        targetType: filePath
+        filePath: ./build/Publish-Collection.ps1 -UserName $(AHUsername) -Secret $(AHPassword) -Url $(AHUrl)
+        pwsh: true
