@@ -14,12 +14,12 @@ Set-StrictMode -Version 2.0
 
 # Create a new result object
 $result = @{
-    changed = $false
+    changed       = $false
     ansible_facts = @{
-        ansible_chocolatey =  @{
-            config = @{}
-            feature = @{}
-            sources = @()
+        ansible_chocolatey = @{
+            config   = @{}
+            feature  = @{}
+            sources  = @()
             packages = @()
         }
     }
@@ -55,14 +55,15 @@ Function Get-ChocolateyConfig {
 
     param($choco_app)
 
-    $choco_config_path = "$(Split-Path -Path (Split-Path -Path $choco_app.Path))\config\chocolatey.config"
-    if (-not (Test-Path -Path $choco_config_path)) {
+    $choco_config_path = "$(Split-Path -LiteralPath (Split-Path -LiteralPath $choco_app.Path))\config\chocolatey.config"
+    if (-not (Test-Path -LiteralPath $choco_config_path)) {
         Fail-Json -obj $result -message "Expecting Chocolatey config file to exist at '$choco_config_path'"
     }
 
     try {
-        [xml]$choco_config = Get-Content -Path $choco_config_path
-    } catch {
+        [xml]$choco_config = Get-Content -LiteralPath $choco_config_path
+    }
+    catch {
         Fail-Json -obj $result -message "Failed to parse Chocolatey config file at '$choco_config_path': $($_.Exception.Message)"
     }
 
@@ -71,10 +72,12 @@ Function Get-ChocolateyConfig {
         # try and parse as a boot, then an int, fallback to string
         try {
             $value = [System.Boolean]::Parse($config.value)
-        } catch {
+        }
+        catch {
             try {
                 $value = [System.Int32]::Parse($config.value)
-            } catch {
+            }
+            catch {
                 $value = $config.value
             }
         }
@@ -111,14 +114,15 @@ Function Get-ChocolateyPackages {
 Function Get-ChocolateySources {
     param($choco_app)
 
-    $choco_config_path = "$(Split-Path -Path (Split-Path -Path $choco_app.Path))\config\chocolatey.config"
+    $choco_config_path = "$(Split-Path -LiteralPath (Split-Path -LiteralPath $choco_app.Path))\config\chocolatey.config"
     if (-not (Test-Path -LiteralPath $choco_config_path)) {
         Fail-Json -obj $result -message "Expecting Chocolatey config file to exist at '$choco_config_path'"
     }
 
     try {
-        [xml]$choco_config = Get-Content -Path $choco_config_path
-    } catch {
+        [xml]$choco_config = Get-Content -LiteralPath $choco_config_path
+    }
+    catch {
         Fail-Json -obj $result -message "Failed to parse Chocolatey config file at '$choco_config_path': $($_.Exception.Message)"
     }
 
@@ -158,15 +162,15 @@ Function Get-ChocolateySources {
         }
 
         $source_info = @{
-            name = $xml_source.id
-            source = $xml_source.value
-            disabled = [System.Convert]::ToBoolean($xml_source.disabled)
-            source_username = $source_username
-            priority = $priority
-            certificate = $certificate
-            bypass_proxy = $bypass_proxy
+            name               = $xml_source.id
+            source             = $xml_source.value
+            disabled           = [System.Convert]::ToBoolean($xml_source.disabled)
+            source_username    = $source_username
+            priority           = $priority
+            certificate        = $certificate
+            bypass_proxy       = $bypass_proxy
             allow_self_service = $allow_self_service
-            admin_only = $admin_only
+            admin_only         = $admin_only
         }
         $sources.Add($source_info) > $null
     }

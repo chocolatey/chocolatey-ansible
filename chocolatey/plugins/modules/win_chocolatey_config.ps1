@@ -23,7 +23,7 @@ $result = @{
 if ($diff) {
     $result.diff = @{
         before = $null
-        after = $null
+        after  = $null
     }
 }
 
@@ -45,14 +45,15 @@ Function Get-ChocolateyConfig {
     # structure 'configKey = configValue | description', if the key or value
     # contains a = or |, it will make it quite hard to easily parse it,
     # compared to reading an XML file that already delimits these values
-    $choco_config_path = "$(Split-Path -Path (Split-Path -Path $choco_app.Path))\config\chocolatey.config"
-    if (-not (Test-Path -Path $choco_config_path)) {
+    $choco_config_path = "$(Split-Path -LiteralPath (Split-Path -LiteralPath $choco_app.Path))\config\chocolatey.config"
+    if (-not (Test-Path -LiteralPath $choco_config_path)) {
         Fail-Json -obj $result -message "Expecting Chocolatey config file to exist at '$choco_config_path'"
     }
 
     try {
-        [xml]$choco_config = Get-Content -Path $choco_config_path
-    } catch {
+        [xml]$choco_config = Get-Content -LiteralPath $choco_config_path
+    }
+    catch {
         Fail-Json -obj $result -message "Failed to parse Chocolatey config file at '$choco_config_path': $($_.Exception.Message)"
     }
 
@@ -61,7 +62,7 @@ Function Get-ChocolateyConfig {
         $config_info."$($config.key)" = $config.value
     }
 
-    return ,$config_info
+    return , $config_info
 }
 
 Function Remove-ChocolateyConfig {
@@ -107,9 +108,10 @@ if ($state -eq "absent" -and $config_info.$name -ne "") {
         Remove-ChocolateyConfig -choco_app $choco_app -name $name
     }
     $result.changed = $true
-# choco.exe config set is not case sensitive, it won't make a change if the
-# value is the same but doesn't match
-} elseif ($state -eq "present" -and $config_info.$name -ne $value) {
+    # choco.exe config set is not case sensitive, it won't make a change if the
+    # value is the same but doesn't match
+}
+elseif ($state -eq "present" -and $config_info.$name -ne $value) {
     if (-not $check_mode) {
         Set-ChocolateyConfig -choco_app $choco_app -name $name -value $value
     }
