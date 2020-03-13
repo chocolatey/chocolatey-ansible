@@ -147,12 +147,12 @@ stages:
       displayName: 'Publish Chocolatey Collection to Galaxy'
       inputs:
         targetType: filePath
-        filePath: ./build/Publish-Collection.ps1 -UserName $(GalaxyUsername) -Secret $(GalaxyPassword)
+        filePath: ./build/Publish-Collection.ps1 -ApiKey $(GalaxyApiKey)
         pwsh: true
 
     - task: PowerShell@2
       displayName: 'Publish Chocolatey Collection to AH'
       inputs:
         targetType: filePath
-        filePath: ./build/Publish-Collection.ps1 -UserName $(AHUsername) -Secret $(AHPassword) -Url $(AHUrl)
+        filePath: ./build/Publish-Collection.ps1 -ApiKey $(AHApiKey) -Url $(AHUrl)
         pwsh: true
