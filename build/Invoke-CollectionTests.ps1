@@ -39,6 +39,8 @@ begin {
         'cd ~/.ansible/collections/ansible_collections/chocolatey/chocolatey'
         "source ~/ansible-venv/bin/activate"
         "${Sudo}ansible-test windows-integration -vvvvv --inventory $InventoryFile --requirements"
+        "${Sudo}ansible-test sanity -vvvvv --requirements"
+        "${Sudo}ansible-test coverage xml -vvvvv --requirements"
         "cp -r ./tests/output/ $OutputPath"
     ) -join ' && '
 }

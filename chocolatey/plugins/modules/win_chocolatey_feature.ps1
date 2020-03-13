@@ -31,7 +31,7 @@ Function Get-ChocolateyFeatures {
         $feature_info."$($feature_split[0])" = $feature_split[1] -eq "Enabled"
     }
 
-    return ,$feature_info
+    return , $feature_info
 }
 
 Function Set-ChocolateyFeature {
@@ -43,7 +43,8 @@ Function Set-ChocolateyFeature {
 
     if ($enabled) {
         $state_string = "enable"
-    } else {
+    }
+    else {
         $state_string = "disable"
     }
     $res = Run-Command -command "`"$($choco_app.Path)`" feature $state_string --name `"$name`""

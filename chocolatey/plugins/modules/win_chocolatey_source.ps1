@@ -31,14 +31,14 @@ $result = @{
 if ($diff) {
     $result.diff = @{
         before = @{}
-        after = @{}
+        after  = @{}
     }
 }
 
 Function Get-ChocolateySources {
     param($choco_app)
 
-    $choco_config_path = "$(Split-Path -Path (Split-Path -Path $choco_app.Path))\config\chocolatey.config"
+    $choco_config_path = "$(Split-Path -LiteralPath (Split-Path -LiteralPath $choco_app.Path))\config\chocolatey.config"
     if (-not (Test-Path -LiteralPath $choco_config_path)) {
         Fail-Json -obj $result -message "Expecting Chocolatey config file to exist at '$choco_config_path'"
     }
@@ -50,8 +50,9 @@ Function Get-ChocolateySources {
     # it inadequete for our tasks. Instead we will parse the chocolatey.config
     # file and get the values from there
     try {
-        [xml]$choco_config = Get-Content -Path $choco_config_path
-    } catch {
+        [xml]$choco_config = Get-Content -LiteralPath $choco_config_path
+    }
+    catch {
         Fail-Json -obj $result -message "Failed to parse Chocolatey config file at '$choco_config_path': $($_.Exception.Message)"
     }
 
@@ -91,19 +92,19 @@ Function Get-ChocolateySources {
         }
 
         $source_info = @{
-            name = $xml_source.id
-            source = $xml_source.value
-            disabled = [System.Convert]::ToBoolean($xml_source.disabled)
-            source_username = $source_username
-            priority = $priority
-            certificate = $certificate
-            bypass_proxy = $bypass_proxy
+            name               = $xml_source.id
+            source             = $xml_source.value
+            disabled           = [System.Convert]::ToBoolean($xml_source.disabled)
+            source_username    = $source_username
+            priority           = $priority
+            certificate        = $certificate
+            bypass_proxy       = $bypass_proxy
             allow_self_service = $allow_self_service
-            admin_only = $admin_only
+            admin_only         = $admin_only
         }
         $sources.Add($source_info) > $null
     }
-    return ,$sources
+    return , $sources
 }
 
 Function New-ChocolateySource {
@@ -143,22 +144,26 @@ Function New-ChocolateySource {
     if ($null -ne $priority) {
         $arguments.Add("--priority") > $null
         $arguments.Add($priority) > $null
-    } else {
+    }
+    else {
         $priority = 0
     }
     if ($bypass_proxy -eq $true) {
         $arguments.Add("--bypass-proxy") > $null
-    } else {
+    }
+    else {
         $bypass_proxy = $false
     }
     if ($allow_self_service -eq $true) {
         $arguments.Add("--allow-self-service") > $null
-    } else {
+    }
+    else {
         $allow_self_service = $false
     }
     if ($admin_only -eq $true) {
         $arguments.Add("--admin-only") > $null
-    } else {
+    }
+    else {
         $admin_only = $false
     }
 
@@ -173,17 +178,17 @@ Function New-ChocolateySource {
     }
 
     $source_info = @{
-        name = $name
-        source = $source
-        disabled = $false
-        source_username = $source_username
-        priority = $priority
-        certificate = $certificate
-        bypass_proxy = $bypass_proxy
+        name               = $name
+        source             = $source
+        disabled           = $false
+        source_username    = $source_username
+        priority           = $priority
+        certificate        = $certificate
+        bypass_proxy       = $bypass_proxy
         allow_self_service = $allow_self_service
-        admin_only = $admin_only
+        admin_only         = $admin_only
     }
-    return ,$source_info
+    return , $source_info
 }
 
 Function Remove-ChocolateySource {
@@ -211,7 +216,8 @@ $actual_source = $actual_sources | Where-Object { $_.name -eq $name }
 if ($diff) {
     if ($null -ne $actual_source) {
         $before = $actual_source.Clone()
-    } else {
+    }
+    else {
         $before = @{}
     }
     $result.diff.before = $before
@@ -220,14 +226,16 @@ if ($diff) {
 if ($state -eq "absent" -and $null -ne $actual_source) {
     Remove-ChocolateySource -choco_app $choco_app -name $name
     $result.changed = $true
-} elseif ($state -in ("disabled", "present")) {
+}
+elseif ($state -in ("disabled", "present")) {
     $change = $false
     if ($null -eq $actual_source) {
         if ($null -eq $source) {
             Fail-Json -obj $result -message "The source option must be set when creating a new source"
         }
         $change = $true
-    } else {
+    }
+    else {
         if ($null -ne $source -and $source -ne $actual_source.source) {
             $change = $true
         }
@@ -275,7 +283,8 @@ if ($state -eq "absent" -and $null -ne $actual_source) {
     $status_action = $null
     if ($state -ne "disabled" -and $actual_source.disabled) {
         $status_action = "enable"
-    } elseif ($state -eq "disabled" -and (-not $actual_source.disabled)) {
+    }
+    elseif ($state -eq "disabled" -and (-not $actual_source.disabled)) {
         $status_action = "disable"
     }
     if ($null -ne $status_action) {

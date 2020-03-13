@@ -11,7 +11,7 @@ $result = @{
 }
 
 $choco_app = Get-Command -Name choco.exe -CommandType Application
-$choco_config_path = "$(Split-Path -Path (Split-Path -Path $choco_app.Path))\config\chocolatey.config"
+$choco_config_path = "$(Split-Path -LiteralPath (Split-Path -LiteralPath $choco_app.Path))\config\chocolatey.config"
 
 [xml]$choco_config = Get-Content -LiteralPath $choco_config_path
 foreach ($xml_source in $choco_config.chocolatey.sources.GetEnumerator()) {
@@ -49,15 +49,15 @@ foreach ($xml_source in $choco_config.chocolatey.sources.GetEnumerator()) {
     }
 
     $source_info = @{
-        name = $xml_source.id
-        source = $xml_source.value
-        disabled = [System.Convert]::ToBoolean($xml_source.disabled)
-        source_username = $source_username
-        priority = $priority
-        certificate = $certificate
-        bypass_proxy = $bypass_proxy
+        name               = $xml_source.id
+        source             = $xml_source.value
+        disabled           = [System.Convert]::ToBoolean($xml_source.disabled)
+        source_username    = $source_username
+        priority           = $priority
+        certificate        = $certificate
+        bypass_proxy       = $bypass_proxy
         allow_self_service = $allow_self_service
-        admin_only = $admin_only
+        admin_only         = $admin_only
     }
     $result.sources.Add($source_info)
 }
