@@ -1,16 +1,39 @@
-# Chocolatey Collection for Ansible Galaxy
+# Ansible Collection: choclatey.chocolatey
 
 |                   Build Status                   |
 | :----------------------------------------------: |
 | [![Build Status][pipeline-badge]][pipeline-link] |
 
-Manage your packages using Chocolatey from within Ansible.
+This repo hosts the `chocolatey.chocolatey` Ansible Collection.
 
-## Getting Started
+The collection includes the modules required to configure Chocolatey, as well as manage packages on Windows using Chocolatey.
 
-### Installation Instructions
+## Installation and Usage
 
-TBD
+### Installing the Collection from Ansible Galaxy
+
+Before using the Chocolatey collection, you need to install it with the `ansible-galaxy` CLI:
+
+    ansible-galaxy collection install chocolatey.chocolatey
+
+You can also include it in a `requirements.yml` file and install it via `ansible-galaxy collection install -r requirements.yml` using the format:
+
+```yaml
+collections:
+- name: chocolatey.chocolatey
+```
+
+### Modules
+
+This collection provides the following modules you can use in your own roles:
+
+| Name                          | Description                               |
+|-------------------------------|-------------------------------------------|
+|`win_chocolatey`               | Manage packages using chocolatey          |  
+|`win_chocolatey_config`        | Manage Chocolatey config settings         |
+|`win_chocolatey_facts`         | Create a facts collection for Chocolatey  |
+|`win_chocolatey_feature`       | Manage Chocolatey features                |
+|`win_chocolatey_source`        | Manage Chocolatey sources                 |
 
 ### Examples
 
