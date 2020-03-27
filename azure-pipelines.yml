@@ -10,6 +10,7 @@ variables:
   ChocoCIClient.ansibleUser: 'ansible-test'
 # ChocoCIClient.ansiblePassword: <secret>
   collectionArtifactName: 'chocolatey.collection'
+  Package.Version: 24.6.26
 
 trigger:
   batch: true
@@ -67,6 +68,24 @@ stages:
       inputs:
         targetType: filePath
         filePath: ./build/dependencies.sh
+
+    - task: PowerShell@2
+      displayName: 'Set Package Version'
+
+      inputs:
+        targetType: 'inline'
+        script: |
+          $tagName = if ("$(Build.SourceBranch)" -match '^/refs/tags/(?<Tag>.+)') {
+              $matches.Tag
+          }
+          else {
+              "$env:PACKAGE_VERSION-$(Get-Date -Format 'yyyyMMdd')-$(New-Guid)"
+          }
+          Write-Host "##vso[task.setvariable variable=Package.Version]$tagName"
+
+        errorActionPreference: 'stop'
+        failOnStderr: true
+        pwsh: true
 
     - task: AzureCLI@2
       displayName: 'Run Ansible-Test for Collection'
@@ -147,12 +166,13 @@ stages:
       displayName: 'Publish Chocolatey Collection to Galaxy'
       inputs:
         targetType: filePath
-        filePath: ./build/Publish-Collection.ps1 -UserName $(GalaxyUsername) -Secret $(GalaxyPassword)
+        filePath: ./build/Publish-Collection.ps1 -ApiKey $(GalaxyApiKey)
         pwsh: true
 
     - task: PowerShell@2
+      enabled: false # pending AH access
       displayName: 'Publish Chocolatey Collection to AH'
       inputs:
         targetType: filePath
-        filePath: ./build/Publish-Collection.ps1 -UserName $(AHUsername) -Secret $(AHPassword) -Url $(AHUrl)
+        filePath: ./build/Publish-Collection.ps1 -ApiKey $(AHApiKey) -Url $(AHUrl)
         pwsh: true
