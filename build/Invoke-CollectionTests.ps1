@@ -66,6 +66,8 @@ process {
             )
 
             $Inventory | Set-Content -Path './chocolatey/tests/integration/ci-inventory.winrm'
+            (Get-Content -Path './chocolatey/galaxy.yml' -Raw) -replace '{{ REPLACE_VERSION }}', $env:PACKAGE_VERSION |
+                Set-Content -Path './chocolatey/galaxy.yml'
             bash -c $Commands
 
             # Locate the built tarball and expose the path & name in Azure variables
@@ -81,6 +83,7 @@ process {
                 throw "An error has occurred; please refer to the Vagrant log for details."
             }
 
+            vagrant ssh choco_ansible_server --command "sed -i ./chocolatey/galaxy.yml 's/{{ REPLACE_VERSION }}/$env:PACKAGE_VERSION/g'"
             vagrant ssh choco_ansible_server --command $Commands
             $Result = [PSCustomObject]@{
                 Success  = $?

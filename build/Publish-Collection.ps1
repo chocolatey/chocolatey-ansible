@@ -1,13 +1,13 @@
 <#
     .SYNOPSIS
-    Publishes a tarball package to Ansible Galaxy / AH
+    Publishes a tarball package to Ansible Galaxy / a specified target server.
 
     .DESCRIPTION
     Publishes a tarball package containing an Ansible Collection to Ansible's Galaxy repository,
     as well as AH for paying customers.
 
-    The default working directory specified in $env:SYSTEM_DEFAULTWORKINGDIRECTORY is searched for an
-    `artifacts` folder, and any *.tar.gz files within will be published to Ansible Galaxy and/or AH.
+    The specified path is searched for an `artifacts` folder, and any *.tar.gz files within will
+    be published to Ansible Galaxy and/or AH.
 
     .EXAMPLE
     An example
@@ -18,22 +18,31 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [Alias('Username')]
+    # The file path or folder containing the collection tarball.
     [string]
-    $Username,
+    $Path = "$env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifacts",
 
     [Parameter(Mandatory)]
-    [Alias('GalaxyPassword', 'Password')]
+    # The API key required to publish the collection to the specified server.
     [string]
-    $Secret,
+    $ApiKey,
 
     [Parameter()]
+    # The target server to publish the collection to.
+    # By default, collections will be published to Ansible Galaxy.
+    [Alias('ServerUrl', 'Url')]
     [string]
-    $Url
+    $Server
 )
 
-$PackageFile = Get-ChildItem -Path "$env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifacts" -Recurse -File -Filter '*.tar.gz'
+$PackageFile = Get-ChildItem -Path $Path -Recurse -File -Filter '*.tar.gz'
 Write-Host "Found collection artifact at '$($PackageFile.FullName)'"
 
-Write-Verbose "Publishing collection to $Url"
-Write-Warning "Publishing action not yet determined."
+if ($Server) {
+    Write-Host "Publishing collection to $Server"
+    ansible-galaxy collection publish $PackageFile.FullName --token=$ApiKey --server=$Server
+}
+else {
+    Write-Host "Publishing collection to Ansible Galaxy (default server)"
+    ansible-galaxy collection publish $PackageFile.FullName --token=$ApiKey
+}
