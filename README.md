@@ -1,4 +1,4 @@
-# Ansible Collection: choclatey.chocolatey
+# Ansible Collection: chocolatey.chocolatey
 
 |                   Build Status                   |
 | :----------------------------------------------: |
@@ -95,13 +95,15 @@ The `tests` directory contains configuration for running integration tests using
 
 You can run the collection's test suites with the commands:
 
-    ansible-test integration --docker -v --color
+```code
+ansible-test windows-integration --docker -v --color
+```
 
 ## License
 
 MIT License
 
-See LICENSE to see full text.
+See [LICENSE](LICENSE) to see full text.
 
 <!-- Link Targets -->
 
