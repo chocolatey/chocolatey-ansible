@@ -75,13 +75,14 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          $tagName = if ("$(Build.SourceBranch)" -match '^/refs/tags/(?<Tag>.+)') {
-              $matches.Tag
+          $version = if ("$(Build.SourceBranch)" -match '^/refs/tags/(?<Tag>.+)') {
+              # Github version tags usually begin with a "v", but we just want the number
+              $matches.Tag -replace '^v'
           }
           else {
               "$env:PACKAGE_VERSION-$(Get-Date -Format 'yyyyMMdd')-$(New-Guid)"
           }
-          Write-Host "##vso[task.setvariable variable=Package.Version]$tagName"
+          Write-Host "##vso[task.setvariable variable=Package.Version]$version"
 
         errorActionPreference: 'stop'
         failOnStderr: true
