@@ -17,7 +17,7 @@
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)]
+    [Parameter()]
     # The file path or folder containing the collection tarball.
     [string]
     $Path = "$env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifacts",
