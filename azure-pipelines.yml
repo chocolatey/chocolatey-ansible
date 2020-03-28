@@ -167,7 +167,8 @@ stages:
       displayName: 'Publish Chocolatey Collection to Galaxy'
       inputs:
         targetType: filePath
-        filePath: ./build/Publish-Collection.ps1 -ApiKey $(GalaxyApiKey)
+        filePath: ./build/Publish-Collection.ps1
+        arguments: -ApiKey $(GalaxyApiKey)
         pwsh: true
 
     - task: PowerShell@2
@@ -175,5 +176,6 @@ stages:
       displayName: 'Publish Chocolatey Collection to AH'
       inputs:
         targetType: filePath
-        filePath: ./build/Publish-Collection.ps1 -ApiKey $(AHApiKey) -Url $(AHUrl)
+        filePath: ./build/Publish-Collection.ps1
+        arguments: -ApiKey $(AHApiKey) -Url $(AHUrl)
         pwsh: true
