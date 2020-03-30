@@ -40,9 +40,9 @@ Write-Host "Found collection artifact at '$($PackageFile.FullName)'"
 
 if ($Server) {
     Write-Host "Publishing collection to $Server"
-    ansible-galaxy collection publish $PackageFile.FullName --token=$ApiKey --server=$Server
+    ansible-galaxy collection publish $PackageFile.FullName --api-key=$ApiKey --server=$Server
 }
 else {
     Write-Host "Publishing collection to Ansible Galaxy (default server)"
-    ansible-galaxy collection publish $PackageFile.FullName --token=$ApiKey
+    ansible-galaxy collection publish $PackageFile.FullName --api-key=$ApiKey
 }
