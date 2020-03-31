@@ -55,13 +55,13 @@ tags:
 dependencies: {}
 
 # The URL of the originating SCM repository
-repository: https://github.com/vexx32/choco-ansible
+repository: https://github.com/chocolatey/chocolatey-ansible
 
 # The URL to any online docs
-documentation: https://github.com/vexx32/choco-ansible
+documentation: https://github.com/chocolatey/chocolatey-ansible
 
 # The URL to the homepage of the collection/project
-homepage: https://github.com/vexx32/choco-ansible
+homepage: https://github.com/chocolatey/chocolatey-ansible
 
 # The URL to the collection issue tracker
-issues: https://github.com/vexx32/choco-ansible/issues
+issues: https://github.com/chocolatey/chocolatey-ansible/issues
