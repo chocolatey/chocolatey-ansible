@@ -73,7 +73,7 @@ Use Background Mode for Self-Service (C4B):
 - name: Use background mode for self-service
   win_chocolatey_feature:
     name: useBackgroundService
-    state: enables
+    state: enabled
 ```
 
 Disable the Community Package Repository
