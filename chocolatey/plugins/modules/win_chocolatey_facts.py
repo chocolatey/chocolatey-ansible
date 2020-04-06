@@ -4,7 +4,8 @@
 # Copyright: (c) 2018, Ansible Project
 # Copyright: (c) 2018, Simon Baerlocher <s.baerlocher@sbaerlocher.ch>
 # Copyright: (c) 2018, ITIGO AG <opensource@itigo.ch>
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# Copyright: (c) 2020, Chocolatey Software
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
