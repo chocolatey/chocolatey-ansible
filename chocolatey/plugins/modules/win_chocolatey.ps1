@@ -3,7 +3,8 @@
 # Copyright: (c) 2014, Trond Hindenes <trond@hindenes.com>
 # Copyright: (c) 2017, Dag Wieers <dag@wieers.com>
 # Copyright: (c) 2018, Ansible Project
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# Copyright: (c) 2020, Chocolatey Software
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #Requires -Module Ansible.ModuleUtils.ArgvParser
 #Requires -Module Ansible.ModuleUtils.CommandUtil
@@ -326,7 +327,7 @@ Function Install-Chocolatey {
         $module.Warn("Chocolatey was older than v0.10.5 so it was upgraded during this task run.")
         Update-ChocolateyPackage -choco_path $choco_app.Path -packages @("chocolatey") `
 
-            -proxy_url $proxy_url -proxy_username $proxy_username `
+        -proxy_url $proxy_url -proxy_username $proxy_username `
             -proxy_password $proxy_password -source $source `
             -source_username $source_username -source_password $source_password
     }
