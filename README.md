@@ -101,7 +101,7 @@ ansible-test windows-integration --docker -v --color
 
 ## License
 
-MIT License
+GPL v3.0 License
 
 See [LICENSE](LICENSE) to see full text.
 
