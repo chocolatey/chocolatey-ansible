@@ -172,7 +172,6 @@ stages:
         pwsh: true
 
     - task: PowerShell@2
-      enabled: false # pending AH access
       displayName: 'Publish Chocolatey Collection to AH'
       inputs:
         targetType: filePath
