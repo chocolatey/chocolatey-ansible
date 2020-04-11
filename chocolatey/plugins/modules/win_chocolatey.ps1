@@ -632,7 +632,7 @@ Function Uninstall-ChocolateyPackage {
         $arguments.Add("--force") > $null
     }
     if ($package_params) {
-        $arguments.Add("--package-params") > $null
+        $arguments.Add("--package-parameters") > $null
         $arguments.Add($package_params) > $null
     }
     if ($skip_scripts) {
