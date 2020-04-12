@@ -2,3 +2,4 @@
 /tests/output
 .vagrant/
 .testresults/
+*.nupkg
