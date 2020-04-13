@@ -1,5 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
+$pp = Get-PackageParameters
 $package_name = $env:ChocolateyPackageName
 $package_version = $env:ChocolateyPackageVersion
 $install_path = "--- PATH ---\$package_name-$package_version.txt"
@@ -53,3 +54,7 @@ $package_info = @{
 $package_json = ConvertTo-Json -InputObject $package_info
 
 [System.IO.File]::WriteAllText($install_path, $package_json)
+
+if($pp){
+    New-Item -Path $env:TEMP -Name $($pp['File'])
+}
