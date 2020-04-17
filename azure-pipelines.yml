@@ -143,6 +143,8 @@ stages:
   displayName: '[Publish]'
   dependsOn: Build
   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
+  variables:
+    ansibleConfigPath: '~/ansible.cfg'
 
   jobs:
   - job: Publish
@@ -172,7 +174,7 @@ stages:
           $config = Get-Content -Path ./build/ansible.cfg -Raw
           $config = $config -replace '{{ REPLACE_GALAXY_TOKEN }}', '$(GalaxyApiKey)' -replace '{{ REPLACE_AH_TOKEN }}', '$(AHApiKey)'
 
-          $path = '~/ansible.cfg'
+          $path = $(ansibleConfigPath)
           Write-Host "Copying Ansible publishing configuration to '$path'"
           $config | Set-Content -Path $path
 
@@ -183,4 +185,4 @@ stages:
         targetType: filePath
         filePath: ./build/Publish-Collection.ps1
       env:
-        ANSIBLE_CONFIG: '~/ansible.cfg'
+        ANSIBLE_CONFIG: $(ansibleConfigPath)
