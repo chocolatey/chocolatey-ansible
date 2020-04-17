@@ -185,4 +185,6 @@ stages:
         targetType: filePath
         filePath: ./build/Publish-Collection.ps1
       env:
-        ANSIBLE_CONFIG: $(ansibleConfigPath)
+        ANSIBLE_CONFIG: '$(System.DefaultWorkingDirectory)/build/ansible.cfg'
+        ANSIBLE_GALAXY_SERVER_RELEASE_GALAXY_TOKEN: '$(GalaxyApiKey)'
+        ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN: '$(AHApiKey)'
