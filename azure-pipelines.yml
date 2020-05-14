@@ -143,6 +143,8 @@ stages:
   displayName: '[Publish]'
   dependsOn: Build
   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
+  variables:
+    ansibleConfigPath: '~/ansible.cfg'
 
   jobs:
   - job: Publish
@@ -164,17 +166,25 @@ stages:
         targetPath: '$(System.DefaultWorkingDirectory)/artifacts/'
 
     - task: PowerShell@2
-      displayName: 'Publish Chocolatey Collection to Galaxy'
+      displayName: 'Setup ansible.cfg'
       inputs:
-        targetType: filePath
-        filePath: ./build/Publish-Collection.ps1
-        arguments: -ApiKey $(GalaxyApiKey)
         pwsh: true
+        targetType: inline
+        script: |
+          $config = Get-Content -Path ./build/ansible.cfg -Raw
+          $config = $config -replace '{{ REPLACE_GALAXY_TOKEN }}', '$(GalaxyApiKey)' -replace '{{ REPLACE_AH_TOKEN }}', '$(AHApiKey)'
+
+          $path = $(ansibleConfigPath)
+          Write-Host "Copying Ansible publishing configuration to '$path'"
+          $config | Set-Content -Path $path
 
     - task: PowerShell@2
-      displayName: 'Publish Chocolatey Collection to AH'
+      displayName: 'Publish Chocolatey Collection to Galaxy & AH'
       inputs:
+        pwsh: true
         targetType: filePath
         filePath: ./build/Publish-Collection.ps1
-        arguments: -ApiKey $(AHApiKey) -Url $(AHUrl)
-        pwsh: true
+      env:
+        ANSIBLE_CONFIG: '$(System.DefaultWorkingDirectory)/build/ansible.cfg'
+        ANSIBLE_GALAXY_SERVER_RELEASE_GALAXY_TOKEN: '$(GalaxyApiKey)'
+        ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN: '$(AHApiKey)'
