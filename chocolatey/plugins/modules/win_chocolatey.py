@@ -80,6 +80,12 @@ options:
     type: bool
     default: no
     version_added: '2.1'
+  remove_dependencies:
+    description:
+    - Remove a package's dependencies on uninstall.
+    type: bool
+    default: no
+    version_added: '2.10'
   install_args:
     description:
     - Arguments to pass to the native installer.
@@ -335,6 +341,12 @@ EXAMPLES = r'''
     - procexp
     - putty
     - windirstat
+    state: absent
+
+- name: Uninstall a package and dependencies
+  win_chocolatey:
+    name: audacity-lame
+	remove_dependencies: yes
     state: absent
 
 - name: Install curl using proxy
