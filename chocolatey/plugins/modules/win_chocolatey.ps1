@@ -23,6 +23,7 @@ $spec = @{
         force = @{ type = "bool"; default = $false }
         ignore_checksums = @{ type = "bool"; default = $false }
         ignore_dependencies = @{ type = "bool"; default = $false }
+        remove_dependencies = @{ type = "bool"; default = $false }
         install_args = @{ type = "str" }
         name = @{ type = "list"; elements = "str"; required = $true }
         override_args = @{ type = "bool"; default = $false }
@@ -51,6 +52,7 @@ $architecture = $module.Params.architecture
 $force = $module.Params.force
 $ignore_checksums = $module.Params.ignore_checksums
 $ignore_dependencies = $module.Params.ignore_dependencies
+$remove_dependencies = $module.Params.remove_dependencies
 $install_args = $module.Params.install_args
 $name = $module.Params.name
 $override_args = $module.Params.override_args
@@ -619,6 +621,7 @@ Function Uninstall-ChocolateyPackage {
         [bool]$force,
         [String]$package_params,
         [bool]$skip_scripts,
+        [bool]$remove_dependencies,
         [int]$timeout,
         [String]$version
     )
@@ -637,6 +640,9 @@ Function Uninstall-ChocolateyPackage {
     }
     if ($skip_scripts) {
         $arguments.Add("--skip-scripts") > $null
+    }
+    if ($remove_dependencies) {
+        $arguments.Add("--remove-dependencies") > $null
     }
     if ($null -ne $timeout) {
         $arguments.Add("--timeout") > $null
@@ -697,7 +703,7 @@ if ($state -in "absent", "reinstalled") {
     if ($null -ne $installed_packages) {
         Uninstall-ChocolateyPackage -choco_path $choco_path -packages $installed_packages `
             -force $force -package_params $package_params -skip_scripts $skip_scripts `
-            -timeout $timeout -version $version
+            -remove_dependencies $remove_dependencies -timeout $timeout -version $version
     }
 
     # ensure the package info for the uninstalled versions has been removed
