@@ -346,7 +346,7 @@ EXAMPLES = r'''
 - name: Uninstall a package and dependencies
   win_chocolatey:
     name: audacity-lame
-	remove_dependencies: yes
+    remove_dependencies: yes
     state: absent
 
 - name: Install curl using proxy
