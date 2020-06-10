@@ -85,7 +85,7 @@ options:
     - Remove a package's dependencies on uninstall.
     type: bool
     default: no
-    version_added: '2.10'
+    version_added: '1.1.0'
   install_args:
     description:
     - Arguments to pass to the native installer.
@@ -105,7 +105,7 @@ options:
     - Should install arguments be used exclusively without appending
       to current package passed arguments.
     type: bool
-    version_added: '1.1.0'
+    version_added: '2.10'
   package_params:
     description:
     - Parameters to pass to the package.
