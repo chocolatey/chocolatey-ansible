@@ -67,7 +67,7 @@ Set the Chocolatey cache location:
     value: C:\Temp
 ```
 
-Use Background Mode for Self-Service (C4B):
+Use Background Mode for Self-Service (Business Feature):
 
 ```yaml
 - name: Use background mode for self-service
@@ -76,13 +76,13 @@ Use Background Mode for Self-Service (C4B):
     state: enabled
 ```
 
-Disable the Community Package Repository
+Remove the Community Package Repository (as you have an internal repository; recommended):
 
 ```yaml
 - name: Disable Community Repo
   win_chocolatey_source:
     name: chocolatey
-    state: disabled
+    state: absent
 ```
 
 ## Testing and Development
