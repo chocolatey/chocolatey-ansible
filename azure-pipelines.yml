@@ -35,6 +35,18 @@ stages:
       vmImage: ubuntu-latest
 
     steps:
+    - task: PowerShell@2
+      displayName: 'Set VM Name'
+
+      inputs:
+        targetType: 'inline'
+        script: |
+          Write-Host "##vso[task.setvariable variable=ChocoCIClient.labVMName]$(Get-Date -AsUtc -Format "CyyyyMMddHHmmss")"
+
+        errorActionPreference: 'stop'
+        failOnStderr: true
+        pwsh: true
+
     - task: AzureDevTestLabsCreateVM@3
       name: AzureVM
       displayName: 'Create Azure Labs VM'
