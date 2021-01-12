@@ -22,6 +22,7 @@ options:
     - The name of the feature to manage.
     - Run C(choco.exe feature list) to get a list of features that can be
       managed.
+    - For a list of options see L(Chocolatey feature docs,https://chocolatey.org/docs/chocolatey-configuration#features)
     type: str
     required: yes
   state:
