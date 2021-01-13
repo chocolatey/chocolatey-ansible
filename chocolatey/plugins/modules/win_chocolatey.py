@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = r'''
 ---
 module: win_chocolatey
-version_added: '1.9'
+version_added: '0.1.9'
 short_description: Manage packages using chocolatey
 description:
 - Manage packages using Chocolatey.
@@ -32,7 +32,7 @@ options:
       control this option globally.
     type: bool
     default: no
-    version_added: '2.2'
+    version_added: '0.2.2'
   allow_multiple:
     description:
     - Allow the installation of multiple packages when I(version) is specified.
@@ -40,7 +40,7 @@ options:
       package doesn't support this. Use at your own risk.
     type: bool
     default: no
-    version_added: '2.8'
+    version_added: '0.2.8'
   allow_prerelease:
     description:
     - Allow the installation of pre-release packages.
@@ -48,7 +48,7 @@ options:
       installed.
     type: bool
     default: no
-    version_added: '2.6'
+    version_added: '0.2.6'
   architecture:
     description:
     - Force Chocolatey to install the package of a specific process
@@ -58,7 +58,7 @@ options:
     type: str
     choices: [ default, x86 ]
     default: default
-    version_added: '2.7'
+    version_added: '0.2.7'
   force:
     description:
     - Forces the install of a package, even if it already is installed.
@@ -73,31 +73,32 @@ options:
       this option globally.
     type: bool
     default: no
-    version_added: '2.2'
+    version_added: '0.2.2'
   ignore_dependencies:
     description:
     - Ignore dependencies, only install/upgrade the package itself.
     type: bool
     default: no
-    version_added: '2.1'
+    version_added: '0.2.1'
   remove_dependencies:
     description:
     - Remove a package's dependencies on uninstall.
     type: bool
     default: no
-    version_added: '1.1.0'
+    version_added: '0.1.1'
   install_args:
     description:
     - Arguments to pass to the native installer.
     - These are arguments that are passed directly to the installer the
       Chocolatey package runs, this is generally an advanced option.
     type: str
-    version_added: '2.1'
+    version_added: '0.2.1'
   name:
     description:
     - Name of the package(s) to be installed.
     - Set to C(all) to run the action on all the installed packages.
     type: list
+    elements: str
     required: yes
   override_args:
     description:
@@ -105,7 +106,8 @@ options:
     - Should install arguments be used exclusively without appending
       to current package passed arguments.
     type: bool
-    version_added: '2.10'
+    default: no
+    version_added: '0.2.10'
   package_params:
     description:
     - Parameters to pass to the package.
@@ -113,7 +115,7 @@ options:
       documented by the package itself.
     - Before Ansible 2.7, this option was just I(params).
     type: str
-    version_added: '2.1'
+    version_added: '0.2.1'
     aliases: [ params ]
   pinned:
     description:
@@ -125,14 +127,14 @@ options:
     - Will unpin all versions of a package if C(no) and I(version) is not set.
     - This is ignored when C(state=absent).
     type: bool
-    version_added: '2.8'
+    version_added: '0.2.8'
   proxy_url:
     description:
     - Proxy URL used to install chocolatey and the package.
     - Use M(win_chocolatey_config) with the name C(proxy) to control this
       option globally.
     type: str
-    version_added: '2.4'
+    version_added: '0.2.4'
   proxy_username:
     description:
     - Proxy username used to install Chocolatey and the package.
@@ -141,7 +143,7 @@ options:
     - Use M(win_chocolatey_config) with the name C(proxyUser) to control this
       option globally.
     type: str
-    version_added: '2.4'
+    version_added: '0.2.4'
   proxy_password:
     description:
     - Proxy password used to install Chocolatey and the package.
@@ -150,14 +152,14 @@ options:
       password on the global config level with M(win_chocolatey_config) with
       name C(proxyPassword) to avoid this.
     type: str
-    version_added: '2.4'
+    version_added: '0.2.4'
   skip_scripts:
     description:
     - Do not run I(chocolateyInstall.ps1) or I(chocolateyUninstall.ps1) scripts
       when installing a package.
     type: bool
     default: no
-    version_added: '2.4'
+    version_added: '0.2.4'
   source:
     description:
     - Specify the source to retrieve the package from.
@@ -175,7 +177,7 @@ options:
     - It is recommended you define the credentials on a source with
       M(win_chocolatey_source) instead of passing it per task.
     type: str
-    version_added: '2.7'
+    version_added: '0.2.7'
   source_password:
     description:
     - The password for I(source_username).
@@ -183,7 +185,7 @@ options:
       can see this value when the module is running Chocolatey, define the
       credentials with a source with M(win_chocolatey_source) to avoid this.
     type: str
-    version_added: '2.7'
+    version_added: '0.2.7'
   state:
     description:
     - State of the package on the system.
@@ -202,7 +204,7 @@ options:
     - The time to allow chocolatey to finish before timing out.
     type: int
     default: 2700
-    version_added: '2.3'
+    version_added: '0.2.3'
     aliases: [ execution_timeout ]
   validate_certs:
     description:
@@ -214,7 +216,7 @@ options:
       certificate.
     type: bool
     default: yes
-    version_added: '2.7'
+    version_added: '0.2.7'
   version:
     description:
     - Specific version of the package to be installed.
