@@ -12,7 +12,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = r'''
 ---
 module: win_chocolatey_feature
-version_added: '2.7'
+version_added: '0.2.7'
 short_description: Manages Chocolatey features
 description:
 - Used to enable or disable features in Chocolatey.
@@ -22,6 +22,7 @@ options:
     - The name of the feature to manage.
     - Run C(choco.exe feature list) to get a list of features that can be
       managed.
+    - For a list of options see L(Chocolatey feature docs,https://chocolatey.org/docs/chocolatey-configuration#features)
     type: str
     required: yes
   state:

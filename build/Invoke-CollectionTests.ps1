@@ -42,6 +42,7 @@ begin {
         "${Sudo}ansible-test sanity -vvvvv --requirements"
         "${Sudo}ansible-test coverage xml -vvvvv --requirements"
         "cp -r ./tests/output/ $OutputPath"
+        "rm -r $OutputPath/.tmp"
     ) -join ' && '
 }
 process {
