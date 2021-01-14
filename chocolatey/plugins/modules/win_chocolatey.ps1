@@ -649,8 +649,6 @@ Function Uninstall-ChocolateyPackage {
         $arguments.Add($timeout) > $null
     }
     if ($version) {
-        # Need to set allow-multiple to make sure choco doesn't uninstall all versions
-        $arguments.Add("--allow-multiple") > $null
         $arguments.Add("--version") > $null
         $arguments.Add($version) > $null
     } else {
@@ -807,4 +805,3 @@ if ($state -in @("downgrade", "latest", "present", "reinstalled")) {
 }
 
 $module.ExitJson()
-
