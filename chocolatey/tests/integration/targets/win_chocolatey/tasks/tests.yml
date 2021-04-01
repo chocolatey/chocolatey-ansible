@@ -606,5 +606,5 @@
   assert:
     that:
     - remove_multiple is changed
-    - '"ansible|0.0.1" not in remove_multiple_actual.stdout_lines'
-    - '"ansible|0.1.0" in remove_multiple_actual.stdout_lines'
+    - '"{{ test_choco_package1 }}|0.0.1" not in remove_multiple_actual.stdout_lines'
+    - '"{{ test_choco_package1 }}|0.1.0" in remove_multiple_actual.stdout_lines'
