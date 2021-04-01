@@ -631,28 +631,33 @@ Function Uninstall-ChocolateyPackage {
     $common_args = Get-CommonChocolateyArguments
     $arguments.AddRange($common_args)
 
-    if ($force) {
-        $arguments.Add("--force") > $null
-    }
-    if ($package_params) {
-        $arguments.Add("--package-parameters") > $null
-        $arguments.Add($package_params) > $null
-    }
-    if ($skip_scripts) {
-        $arguments.Add("--skip-scripts") > $null
-    }
-    if ($remove_dependencies) {
-        $arguments.Add("--remove-dependencies") > $null
-    }
-    if ($null -ne $timeout) {
-        $arguments.Add("--timeout") > $null
-        $arguments.Add($timeout) > $null
-    }
     if ($version) {
         $arguments.Add("--version") > $null
         $arguments.Add($version) > $null
     } else {
         $arguments.Add("--all-versions") > $null
+    }
+
+    if ($remove_dependencies) {
+        $arguments.Add("--remove-dependencies") > $null
+    }
+
+    if ($force) {
+        $arguments.Add("--force") > $null
+    }
+
+    if ($null -ne $timeout) {
+        $arguments.Add("--timeout") > $null
+        $arguments.Add($timeout) > $null
+    }
+
+    if ($skip_scripts) {
+        $arguments.Add("--skip-scripts") > $null
+    }
+
+    if ($package_params) {
+        $arguments.Add("--package-parameters") > $null
+        $arguments.Add($package_params) > $null
     }
 
     $command = Argv-ToString -arguments $arguments

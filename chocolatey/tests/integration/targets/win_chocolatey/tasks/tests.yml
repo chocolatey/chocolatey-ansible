@@ -480,8 +480,8 @@
   assert:
     that:
     - allow_multiple is changed
-    - '"ansible|0.1.0" in allow_multiple_actual.stdout_lines'
-    - '"ansible|0.0.1" in allow_multiple_actual.stdout_lines'
+    - '"{{ test_choco_package1 }}|0.1.0" in allow_multiple_actual.stdout_lines'
+    - '"{{ test_choco_package1 }}|0.0.1" in allow_multiple_actual.stdout_lines'
 
 - name: pin 2 packages (check mode)
   win_chocolatey:
