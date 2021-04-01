@@ -622,6 +622,7 @@ Function Uninstall-ChocolateyPackage {
         [String]$package_params,
         [bool]$skip_scripts,
         [bool]$remove_dependencies,
+        [bool]$allow_multiple,
         [int]$timeout,
         [String]$version
     )
@@ -634,6 +635,10 @@ Function Uninstall-ChocolateyPackage {
     if ($version) {
         $arguments.Add("--version") > $null
         $arguments.Add($version) > $null
+
+        if ($allow_multiple) {
+            $arguments.Add("--allow-multiple")
+        }
     } else {
         $arguments.Add("--all-versions") > $null
     }
@@ -702,11 +707,19 @@ if ('all' -in $name -and $state -in @('present', 'reinstalled')) {
 $package_info = $name | Get-ChocolateyPackageVersion -choco_path $choco_path
 
 if ($state -in "absent", "reinstalled") {
-    $installed_packages = ($package_info.GetEnumerator() | Where-Object { $null -ne $_.Value }).Key
+    $installed_packages = $package_info.Keys | Where-Object { $null -ne $package_info.$_ }
     if ($null -ne $installed_packages) {
-        Uninstall-ChocolateyPackage -choco_path $choco_path -packages $installed_packages `
-            -force $force -package_params $package_params -skip_scripts $skip_scripts `
-            -remove_dependencies $remove_dependencies -timeout $timeout -version $version
+        foreach ($package in $installed_packages) {
+            # --allow-multiple is buggy for `choco uninstall`.
+            # To get the correct behaviour, we have to use it only when multiple side by side package versions
+            # are actually installed, or we'll either just get errors, or end up uninstalling all installed versions
+            # even if a specific version is targeted.
+            $add_allow_multiple_for_uninstall = $package_info.$package.Count -gt 1
+            Uninstall-ChocolateyPackage -choco_path $choco_path -packages $package `
+                -force $force -package_params $package_params -skip_scripts $skip_scripts `
+                -remove_dependencies $remove_dependencies -timeout $timeout -version $version `
+                -allow_multiple $add_allow_multiple_for_uninstall
+        }
     }
 
     # ensure the package info for the uninstalled versions has been removed
