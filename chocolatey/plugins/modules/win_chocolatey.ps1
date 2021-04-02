@@ -345,14 +345,30 @@ Function Get-ChocolateyPackageVersion {
 
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
         [System.String]
-        $name
+        $name,
+
+        [Parameter()]
+        [string]
+        $version
     )
 
     Begin {
         # Due to https://github.com/chocolatey/choco/issues/1843, we get a list of all the installed packages and
         # filter it ourselves. This has the added benefit of being quicker when dealing with multiple packages as we
         # only call choco.exe once.
-        $command = Argv-ToString -arguments @($choco_path, 'list', '--local-only', '--limit-output', '--all-versions')
+        $command = Argv-ToString -arguments @(
+            $choco_path
+            'list'
+            '--local-only'
+            '--limit-output'
+            if ($version) {
+                '--version'
+                $version
+            }
+            else {
+                '--all-versions'
+            }
+        )
         $res = Run-Command -command $command
 
         # Chocolatey v0.10.12 introduced enhanced exit codes, 2 means no results, e.g. no package
@@ -703,13 +719,23 @@ if ('all' -in $name -and $state -in @('present', 'reinstalled')) {
     $module.FailJson("Cannot specify the package name as 'all' when state=$state")
 }
 
-# get the version of all specified packages
+# Get the installed versions of all specified packages
 $package_info = $name | Get-ChocolateyPackageVersion -choco_path $choco_path
 
 if ($state -in "absent", "reinstalled") {
     $installed_packages = $package_info.Keys | Where-Object { $null -ne $package_info.$_ }
     if ($null -ne $installed_packages) {
         foreach ($package in $installed_packages) {
+            # If a version has been supplied, check that that version of the package is actually installed.
+            # If that version of the package is not present, don't uninstall other versions by accident.
+            if ($version) {
+                $package_versioned_info = $package | Get-ChocolateyPackageVersion -choco_path $choco_path -version $version
+                $currentlyInstalledVersions = $package_versioned_info.Keys | Where-Object { $null -ne $package_versioned_info.$_ }
+                if (@($currentlyInstalledVersions).Count -eq 0) {
+                    continue
+                }
+            }
+
             # --allow-multiple is buggy for `choco uninstall`.
             # To get the correct behaviour, we have to use it only when multiple side by side package versions
             # are actually installed, or we'll either just get errors, or end up uninstalling all installed versions

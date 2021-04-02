@@ -608,3 +608,20 @@
     - remove_multiple is changed
     - '"{{ test_choco_package1 }}|0.0.1" not in remove_multiple_actual.stdout_lines'
     - '"{{ test_choco_package1 }}|0.1.0" in remove_multiple_actual.stdout_lines'
+
+- name: attempt to uninstall a nonexistent version of an installed package
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: absent
+    version: '2.0.12'
+  register: remove_nonexistent_version
+
+- name: get result of uninstall a nonexistent version of an installed package
+  win_command: choco.exe list --local-only --limit-output --all-versions
+  register: remove_nonexistent_version_result
+
+- name: assert uninstall of nonexistent version of an installed package
+  assert:
+    that:
+    - not remove_nonexistent_version is changed
+    - '"{{ test_choco_package1 }}|0.1.0" in remove_nonexistent_version_result.stdout_lines'
