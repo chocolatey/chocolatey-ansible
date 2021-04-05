@@ -38,6 +38,10 @@ options:
     - Allow the installation of multiple packages when I(version) is specified.
     - Having multiple packages at different versions can cause issues if the
       package doesn't support this. Use at your own risk.
+    - The value of this parameter is ignored if I(state) is C(absent). Instead,
+      this parameter is automatically configured to remove all versions if
+      I(version) is not specified, and the specific version only if I(version)
+      is specified.
     type: bool
     default: no
     version_added: '0.2.8'
@@ -85,7 +89,7 @@ options:
     - Remove a package's dependencies on uninstall.
     type: bool
     default: no
-    version_added: '0.1.1'
+    version_added: '1.1.0'
   install_args:
     description:
     - Arguments to pass to the native installer.

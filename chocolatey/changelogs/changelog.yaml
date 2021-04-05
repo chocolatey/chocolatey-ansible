@@ -1,0 +1,34 @@
+# See: https://github.com/ansible-community/antsibull-changelog/blob/main/docs/changelog.yaml-format.md
+ancestor: null
+releases:
+  1.1.0:
+    release_date: '2021-04-05'
+    changes:
+      release-summary: |
+        1.1.0 - Bugfixes, behaviour reworks, support for --remove-dependencies
+      minor_changes:
+      - win_chocolatey - Support for removing dependencies added with remove_dependencies option.
+      bugfixes:
+      - win_chocolatey - Module can now handle uninstallation correctly for both side-by-side and normal package installations.
+      - All modules - Added fallback to default choco install path for auxiliary modules to workaround issue in OpenSSH library under Windows. (https://github.com/PowerShell/Win32-OpenSSH#1329)
+  1.0.0:
+    release_date: '2020-03-30'
+    changes:
+      release-summary: |
+        Initial Release
+    modules:
+      - name: win_chocolatey
+        description: Manage packages using chocolatey
+        namespace: ''
+      - name: win_chocolatey_config
+        description: Manages Chocolatey config settings
+        namespace: ''
+      - name: win_chocolatey_facts
+        description: Create a facts collection for Chocolatey
+        namespace: ''
+      - name: win_chocolatey_feature
+        description: Manages Chocolatey features
+        namespace: ''
+      - name: win_chocolatey_source
+        description: Manages Chocolatey sources
+        namespace: ''
