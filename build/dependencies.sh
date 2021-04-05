@@ -9,10 +9,14 @@ sudo apt install python2
 curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
 sudo python2 get-pip.py
 
-pip2 --version
-pip3 --version
+
 
 python3 -m venv ~/ansible-venv
 source ~/ansible-venv/bin/activate
+
+pip3 --version
 pip3 install --upgrade wheel
 pip3 install ansible pywinrm
+
+pip2 --version
+pip2 install --upgrade wheel
