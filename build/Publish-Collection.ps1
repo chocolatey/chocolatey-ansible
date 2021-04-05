@@ -40,17 +40,17 @@ param(
 
 $Tarballs = Get-ChildItem -Path $Path -Recurse -File -Filter '*.tar.gz'
 Write-Host "Found collection artifact(s) at:"
-Write-Host $($PackageFile.FullName -join [Environment]::NewLine)
+Write-Host $($Tarballs.FullName -join [Environment]::NewLine)
 
 foreach ($file in $Tarballs) {
     if ($PSBoundParameters.ContainsKey('Server')) {
         foreach ($item in $Server) {
             Write-Host "Publishing collection '$($file.Name)' to targeted server: [$item]"
-            ansible-galaxy collection publish $file.FullName --server $item
+            ansible-galaxy collection publish --server $item $file.FullName
         }
     }
     else {
         Write-Host "Publishing collection '$($file.Name)' to all configured servers"
-        ansible-galaxy collection publish $PackageFile.FullName
+        ansible-galaxy collection publish $file.FullName
     }
 }
