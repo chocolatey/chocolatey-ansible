@@ -177,18 +177,18 @@ stages:
         artifact: '$(collectionArtifactName)'
         targetPath: '$(System.DefaultWorkingDirectory)/artifacts/'
 
-    - task: PowerShell@2
-      displayName: 'Setup ansible.cfg'
-      inputs:
-        pwsh: true
-        targetType: inline
-        script: |
-          $config = Get-Content -Path ./build/ansible.cfg -Raw
-          $config = $config -replace '{{ REPLACE_GALAXY_TOKEN }}', '$(GalaxyApiKey)' -replace '{{ REPLACE_AH_TOKEN }}', '$(AHApiKey)'
-
-          $path = $(ansibleConfigPath)
-          Write-Host "Copying Ansible publishing configuration to '$path'"
-          $config | Set-Content -Path $path
+#    - task: PowerShell@2
+#      displayName: 'Setup ansible.cfg'
+#      inputs:
+#        pwsh: true
+#        targetType: inline
+#        script: |
+#          $config = Get-Content -Path ./build/ansible.cfg -Raw
+#          $config = $config -replace '{{ REPLACE_GALAXY_TOKEN }}', '$(GalaxyApiKey)' -replace '{{ REPLACE_AH_TOKEN }}', '$(AHApiKey)'
+#
+#          $path = "$(ansibleConfigPath)"
+#          Write-Host "Copying Ansible publishing configuration to '$path'"
+#          $config | Set-Content -Path $path
 
     - task: PowerShell@2
       displayName: 'Publish Chocolatey Collection to Galaxy & AH'
