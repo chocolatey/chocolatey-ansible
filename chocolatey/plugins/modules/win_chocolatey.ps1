@@ -249,7 +249,7 @@ Function Install-Chocolatey {
 
         if ($source) {
             # check if the URL already contains the path to PS script
-            if ($source.EndsWith(".ps1")) {
+            if ($source -like "*.ps1") {
                 $script_url = $source
             } else {
                 # chocolatey server automatically serves a script at
