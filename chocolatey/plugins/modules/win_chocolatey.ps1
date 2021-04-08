@@ -248,17 +248,20 @@ Function Install-Chocolatey {
         }
 
         if ($source) {
+            $uri_info = [System.Uri]$source
+
             # check if the URL already contains the path to PS script
             if ($source -like "*.ps1") {
                 $script_url = $source
-            } else {
+            } elseif ($uri_info.AbsolutePath -like '/repository/*') {
+                $script_url = "$($uri_info.Scheme)://$($uri_info.Authority)/$($uri_info.AbsolutePath)/install.ps1" -replace '//','/'
+            }else {
                 # chocolatey server automatically serves a script at
                 # http://host/install.ps1, we rely on this behaviour when a
-                # user specifies the choco source URL. If a custom URL or file
-                # path is desired, they should use win_get_url/win_shell
-                # manually
-                # we need to strip the path off the URL and append install.ps1
-                $uri_info = [System.Uri]$source
+                # user specifies the choco source URL and it doesn't look like a repository style url.
+                # If a custom URL or file path is desired, they should use win_get_url/win_shell
+                # manually.
+                # We need to strip the path off the URL and append install.ps1
                 $script_url = "$($uri_info.Scheme)://$($uri_info.Authority)/install.ps1"
             }
             if ($source_username) {
