@@ -255,7 +255,7 @@ Function Install-Chocolatey {
                 $script_url = $source
             } elseif ($uri_info.AbsolutePath -like '/repository/*') {
                 $script_url = "$($uri_info.Scheme)://$($uri_info.Authority)/$($uri_info.AbsolutePath)/install.ps1" -replace '//','/'
-            }else {
+            } else {
                 # chocolatey server automatically serves a script at
                 # http://host/install.ps1, we rely on this behaviour when a
                 # user specifies the choco source URL and it doesn't look like a repository style url.
