@@ -1,0 +1,90 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+
+# 1.6.0 required for WinRM to work nicely
+Vagrant.require_version ">= 1.6.0"
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define :choco_ansible_server do |server|
+    server.vm.box = "roboxes/ubuntu2010"
+
+    server.vm.hostname = "ansible-server"
+    server.vm.network :private_network, ip: "10.0.0.10"
+
+    server.vm.provider "virtualbox" do |vbox|
+      vbox.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      vbox.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+
+      # Enable 3D Acceleration on virtualbox to avoid screen flicker
+      vbox.customize ["modifyvm", :id, "--vram", "128"]
+      vbox.customize ["modifyvm", :id, "--accelerate3d", "on"]
+    end
+
+    server.vm.provision "shell" do |sh|
+      sh.inline = <<-SH
+        sudo apt-get update
+        sudo apt-get install python3-venv -y
+
+        python3 -m venv ~/ansible
+        source ~/ansible/bin/activate
+
+        pip3 install --upgrade wheel
+        pip3 install ansible pywinrm
+
+        ansible-galaxy collection install chocolatey.chocolatey
+      SH
+      sh.privileged = false
+    end
+
+    server.vm.synced_folder ".", "/vagrant"
+
+  end
+
+  config.vm.define :choco_win_client do |client|
+    client.vm.box = "StefanScherer/windows_10"
+    client.vm.communicator = "winrm"
+    client.vm.guest = :windows
+    client.vm.hostname = "win-client"
+
+    client.vm.network :private_network, ip: "10.0.0.11"
+    client.vm.network :forwarded_port, guest: 5985, host: 5985, id: "winrm", auto_correct: true, host_ip: "127.0.0.1"
+    client.vm.network :forwarded_port, guest: 3389, host: 3389, id: "rdp", auto_correct: true, host_ip: "127.0.0.1"
+    client.vm.network :forwarded_port, guest: 22, host: 2222, id: "ssh", auto_correct: true, host_ip: "127.0.0.1"
+
+    client.winrm.username = "vagrant"
+    client.winrm.password = "vagrant"
+
+    client.vm.provider :virtualbox do |vbox|
+      vbox.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      vbox.gui = false
+      vbox.customize ["modifyvm", :id, "--vram", 32]
+      vbox.customize ["modifyvm", :id, "--memory", "1024"]
+      vbox.customize ["modifyvm", :id, "--audio", "none"]
+      vbox.customize ["modifyvm", :id, "--clipboard", "bidirectional"]
+      vbox.customize ["modifyvm", :id, "--draganddrop", "hosttoguest"]
+      vbox.customize ["modifyvm", :id, "--usb", "off"]
+      # linked clones for speed and size
+      vbox.linked_clone = true if Vagrant::VERSION >= '1.8.0'
+    end
+
+    client.vm.synced_folder "provision_files/", "c:/packages/", create: true
+
+    client.vm.provision "shell" do |ps|
+      ps.inline = <<-PS1
+        # Install Chocolatey
+        $installScript = Invoke-WebRequest -Uri "https://community.chocolatey.org/install.ps1" -UseBasicParsing
+        & ([scriptblock]::Create($installScript))
+
+        # Update Chocolatey to the provided beta version
+        choco upgrade chocolatey -y -s C:/packages --pre
+      PS1
+      ps.privileged = true
+    end
+  end
+end
