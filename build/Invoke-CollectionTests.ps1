@@ -31,18 +31,34 @@ begin {
         '~/.testresults/'
     }
 
-    $Commands = @(
-        'source ~/ansible-venv/bin/activate'
+    $ImportVenv = 'source ~/ansible-venv/bin/activate'
+    $SetCollectionLocation = 'cd ~/.ansible/collections/ansible_collections/chocolatey/chocolatey'
+    $SetupCommands = @(
+        $ImportVenv
         'cd ./chocolatey'
         'ansible-galaxy collection build'
         'ansible-galaxy collection install *.tar.gz'
-        'cd ~/.ansible/collections/ansible_collections/chocolatey/chocolatey'
-        "source ~/ansible-venv/bin/activate"
-        "${Sudo}ansible-test windows-integration -vvvvv --inventory $InventoryFile --requirements"
+    )
+    $RunTests = @(
+        $SetCollectionLocation
+        $ImportVenv
+        "${Sudo}ansible-test windows-integration -vvvv --inventory $InventoryFile --requirements --continue-on-error"
         "${Sudo}ansible-test sanity -vvvvv --requirements"
         "${Sudo}ansible-test coverage xml -vvvvv --requirements"
+    )
+    $CleanupCommands = @(
         "cp -r ./tests/output/ $OutputPath"
         "rm -r $OutputPath/.tmp"
+    )
+    
+    # Join these with && so if the setup fails, the tests don't try to run
+    $Commands = @(
+        $SetupCommands
+        # Join these with ; so if an individual step fails, continue to run so we can get as many results as possible
+        @(
+            $RunTests
+            $CleanupCommands
+        ) -join ' ; '
     ) -join ' && '
 }
 process {
