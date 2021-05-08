@@ -2,3 +2,7 @@
 /tests/output
 .vagrant/
 .testresults/
+/testing-chocolatey/provision-files/*
+!/testing-chocolatey/provision-files/.gitkeep
+/testing-chocolatey/results/*
+!/testing-chocolatey/results/.gitkeep
