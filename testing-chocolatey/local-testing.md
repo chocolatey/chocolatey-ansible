@@ -33,10 +33,10 @@ Once your VMs or servers are ready, follow the instructions in [Running `ansible
 ### Vagrant
 
 1. Download the nupkg containing the Chocolatey version you'd like to test.
-1. Place the nupkg in the `provision_files` folder.
+1. Place the nupkg in the `provision-files` folder.
 1. Run `vagrant up` to spin up the Ubuntu 'server' and Windows 10 'client' VMs.
 
-The Vagrant provisioner will by default install the most recent Chocolatey nupkg version (including pre-release versions) placed in the `provision_files` folder.
+The Vagrant provisioner will by default install the most recent Chocolatey nupkg version (including pre-release versions) placed in the `provision-files` folder.
 However, all files in this folder will still be copied to the VM under `C:\packages`.
 You may wish to take a snapshot of the client VM after provisioning, to allow you to revert back to this point and manually install a different Chocolatey version from the folder for testing purposes.
 
