@@ -204,7 +204,8 @@ Function Install-Chocolatey {
         [String]$source,
         [String]$source_username,
         [String]$source_password,
-        [String]$version
+        [String]$version,
+        [switch]$skipWarning
     )
 
     $choco_app = Get-Command -Name choco.exe -CommandType Application -ErrorAction SilentlyContinue
@@ -289,7 +290,10 @@ Function Install-Chocolatey {
                 $module.Result.stderr = $res.stderr
                 $module.FailJson("Chocolatey bootstrap installation failed.")
             }
-            $module.Warn("Chocolatey was missing from this system, so it was installed during this task run.")
+
+            if (-not $skipWarning) {
+                $module.Warn("Chocolatey was missing from this system, so it was installed during this task run.")
+            }
         }
         $module.Result.changed = $true
 
@@ -715,6 +719,7 @@ if ($version -and "chocolatey" -in $name) {
     # If a version is set and chocolatey is in the package list, pass the chocolatey version to the bootstrapping
     # process.
     $install_params.version = $version
+    $install_params.skipWarning = $true
 }
 $choco_path = Install-Chocolatey @install_params
 
