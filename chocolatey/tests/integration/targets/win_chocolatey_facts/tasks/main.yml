@@ -17,7 +17,6 @@
     source_password: password
     certificate: C:\temp\cert.pfx
 
-
 - name: set a config value
   win_chocolatey_config:
     name: proxyUser
