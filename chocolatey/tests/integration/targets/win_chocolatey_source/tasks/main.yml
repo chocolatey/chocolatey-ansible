@@ -6,7 +6,7 @@
 
 - name: remove original Chocolatey source at the start of the test
   win_chocolatey_source:
-    name: Chocolatey
+    name: chocolatey
     state: absent
 
 - name: ensure test Chocolatey source is removed
@@ -21,7 +21,7 @@
   always:
   - name: ensure original Chocolatey source is re-added
     win_chocolatey_source:
-      name: Chocolatey
+      name: chocolatey
       source: https://chocolatey.org/api/v2/
       state: present
 
