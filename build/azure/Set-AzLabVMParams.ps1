@@ -15,7 +15,8 @@ param(
 )
 
 do {
-    $labVmComputeId = (Get-AzResource -Id $LabVMId).Properties.ComputeId
+    $labVm = Get-AzResource -Id $labVMId
+    $labVmComputeId = $labVM.Properties.ComputeId
     Start-Sleep -Seconds 10
 }
 while (-not $labVmComputeId)
@@ -23,14 +24,11 @@ while (-not $labVmComputeId)
 # Get lab VM resource group name
 $labVmRgName = (Get-AzResource -Id $labVmComputeId).ResourceGroupName
 
-# Get the lab VM Name
-$labVmName = (Get-AzResource -Id $LabVMId).Name
-
 # Get lab VM public IP address
-$labVMIpAddress = (Get-AzPublicIpAddress -ResourceGroupName $labVmRgName -Name $labVmName).IpAddress
+$labVMIpAddress = (Get-AzPublicIpAddress -ResourceGroupName $labVmRgName -Name $labVm.Name).IpAddress
 
 # Get lab VM FQDN
-$labVMFqdn = (Get-AzPublicIpAddress -ResourceGroupName $labVmRgName -Name $labVmName).DnsSettings.Fqdn
+$labVMFqdn = (Get-AzPublicIpAddress -ResourceGroupName $labVmRgName -Name $labVm.Name).DnsSettings.Fqdn
 
 Write-Host "Setting Lab Resource Group Name Var: $labVmRgName"
 Write-Host "##vso[task.setvariable variable=RgName;isOutput=true]$labVmRgName"
@@ -61,7 +59,7 @@ $CertificateScript -f $Username, $Secret | Set-Content -Path $Script.FullName
 
 $params = @{
     ResourceGroupName = 'choco-ci'
-    VMName            = $labVMName
+    VM                = $labVM
     CommandId         = 'RunPowerShellScript'
     ScriptPath        = $Script.FullName
 }
