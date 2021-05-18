@@ -58,7 +58,6 @@ $Script = New-Item -Path ./CertScript.ps1
 $CertificateScript -f $Username, $Secret | Set-Content -Path $Script.FullName
 
 $params = @{
-    ResourceGroupName = 'choco-ci'
     VM                = $labVM
     CommandId         = 'RunPowerShellScript'
     ScriptPath        = $Script.FullName
