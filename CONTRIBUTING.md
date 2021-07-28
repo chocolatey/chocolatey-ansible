@@ -5,11 +5,7 @@ The Chocolatey team has very explicit information here regarding the process for
 
 - [Are You In the Right Place?](#are-you-in-the-right-place)
   - [Reporting an Issue/Bug?](#reporting-an-issuebug)
-    - [SolutionVersion.cs](#solutionversioncs)
-  - [Package Issue?](#package-issue)
-  - [Package Request? Package Missing?](#package-request-package-missing)
   - [Submitting an Enhancement / Feature Request?](#submitting-an-enhancement--feature-request)
-    - [Submitting an Enhancement For Choco](#submitting-an-enhancement-for-choco)
 - [Contributing](#contributing)
   - [Prerequisites](#prerequisites)
     - [Definition of Trivial Contributions](#definition-of-trivial-contributions)
@@ -17,13 +13,6 @@ The Chocolatey team has very explicit information here regarding the process for
 - [Contributing Process](#contributing-process)
   - [Get Buyoff Or Find Open Community Issues/Features](#get-buyoff-or-find-open-community-issuesfeatures)
   - [Set Up Your Environment](#set-up-your-environment)
-  - [Code Format / Design](#code-format--design)
-    - [CSharp](#csharp)
-    - [PowerShell](#powershell)
-  - [Debugging / Testing](#debugging--testing)
-    - [Visual Studio](#visual-studio)
-      - [Automated Tests](#automated-tests)
-    - [Chocolatey Build](#chocolatey-build)
   - [Prepare Commits](#prepare-commits)
   - [Submit Pull Request (PR)](#submit-pull-request-pr)
   - [Respond to Feedback on Pull Request](#respond-to-feedback-on-pull-request)
@@ -39,10 +28,6 @@ Please follow this decision criteria to see if you are in the right location or 
 ### Reporting an Issue/Bug?
 
 Submitting an Issue (or a Bug)? See the **[Submitting Issues](https://github.com/chocolatey/chocolatey-ansible/tree/master/README.md#submitting-issues) section** in the README.
-
-### Package Issue?
-
-Please see [Request Package Fixes or Updates / Become a maintainer of an existing package](https://chocolatey.org/docs/package-triage-process).
 
 ### Submitting an Enhancement / Feature Request?
 
@@ -62,6 +47,7 @@ The process for contributions is roughly as follows:
  * You agree to follow the [etiquette regarding communication](https://github.com/chocolatey/choco#etiquette-regarding-communication).
 
 #### Definition of Trivial Contributions
+
 It's hard to define what is a trivial contribution. Sometimes even a 1 character change can be considered significant. Unfortunately because it can be subjective, the decision on what is trivial comes from the committers of the project and not from folks contributing to the project. It is generally safe to assume that you may be subject to signing the [CLA](https://www.clahub.com/agreements/chocolatey/choco) and be prepared to do so. Ask in advance if you are not sure and for reasons are not able to sign the [CLA](https://www.clahub.com/agreements/chocolatey/choco).
 
 What is generally considered trivial:
@@ -125,6 +111,7 @@ Start with [Prerequisites](#prerequisites) and make sure you can sign the Contri
  * Please do not update your branch from the master unless we ask you to. See the responding to feedback section below.
 
 ### Prepare Commits
+
 This section serves to help you understand what makes a good commit.
 
 A commit should observe the following:
