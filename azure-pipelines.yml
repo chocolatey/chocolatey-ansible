@@ -9,7 +9,7 @@ variables:
 # ChocoCIClient.labVMPassword: <secret>
   ChocoCIClient.ansibleUser: 'ansible-test'
 # ChocoCIClient.ansiblePassword: <secret>
-  collectionArtifactName: 'chocolatey.collection'
+  CollectionArtifactName: 'chocolatey.collection'
   Package.Version: 24.6.26
 
 trigger:
@@ -27,7 +27,63 @@ pr:
 stages:
 - stage: Build
   displayName: '[Build]'
+  jobs:
+  - job: BuildCollection
+    displayName: 'Build chocolatey.chocolatey collection'
+    pool:
+      vmImage: ubuntu-latest
+    variables:
+      Ansible.Package: "ansible-core"
+      Ansible.Version: "2.11"
 
+    steps:
+    - task: Bash@3
+      displayName: 'Install Dependencies'
+      inputs:
+        targetType: filePath
+        filePath: ./build/dependencies.sh
+
+    - task: PowerShell@2
+      displayName: 'Build Collection'
+
+      inputs:
+        targetType: 'inline'
+        script: |
+          $version = if ("$(Build.SourceBranch)" -match '^refs/tags/(?<Tag>.+)') {
+              # Github version tags usually begin with a "v", but we just want the number
+              $matches.Tag -replace '^v'
+          }
+          else {
+              "$env:PACKAGE_VERSION-$(Get-Date -Format 'yyyyMMdd')-$(New-Guid)"
+          }
+
+          Write-Host "Building chocolatey.chocolatey with version '$version'"
+
+          Set-Location ./chocolatey
+
+          (Get-Content -Path 'galaxy.yml' -Raw) -replace '{{ REPLACE_VERSION }}', $version |
+              Set-Content -Path 'galaxy.yml'
+
+          ansible-galaxy collection build
+
+          # Locate the built tarball and expose the path & name in Azure variables
+          $CollectionTarball = Get-ChildItem -Recurse -File -Filter '*chocolatey*.tar.gz'
+
+          Write-Host "Setting artifact path to '$($CollectionTarball.FullName)'"
+          Write-Host "##vso[task.setvariable variable=ArtifactPath]$($CollectionTarball.FullName)"
+
+        errorActionPreference: 'stop'
+        failOnStderr: true
+        pwsh: true
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Collection Tarball Artifact'
+      inputs:
+        path: '$(ArtifactPath)'
+        artifact: '$(CollectionArtifactName)'
+
+- stage: Test
+  displayName: '[Test]'
   jobs:
   - job: CreateVM
     displayName: 'Create Windows VM'
@@ -67,7 +123,7 @@ stages:
         azurePowerShellVersion: LatestVersion
 
   - job: Tests
-    displayName: 'Create & Test Collection'
+    displayName: 'Test Collection'
     dependsOn: CreateVM
     pool:
       vmImage: ubuntu-latest
@@ -77,56 +133,27 @@ stages:
       maxParallel: 1
       matrix:
         ansible29:
-          AnsiblePackage: "ansible"
-          AnsibleVersion: "2.9"
+          Ansible.Package: "ansible"
+          Ansible.Version: "2.9"
         ansible210:
-          AnsiblePackage: "ansible-base"
-          AnsibleVersion: "2.10"
+          Ansible.Package: "ansible-base"
+          Ansible.Version: "2.10"
         ansible211:
-          AnsiblePackage: "ansible-core"
-          AnsibleVersion: "2.11"
+          Ansible.Package: "ansible-core"
+          Ansible.Version: "2.11"
 
     steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Collection'
+      inputs:
+        artifact: '$(CollectionArtifactName)'
+        targetPath: '$(System.DefaultWorkingDirectory)/chocolatey/'
+
     - task: Bash@3
       displayName: 'Install Dependencies'
       inputs:
-        targetType: inline
-        script: |
-          sudo add-apt-repository universe
-          sudo apt update
-          sudo apt install software-properties-common
-
-          sudo apt-get update
-          sudo apt-get install python3 python3-pip python3-venv python3-dev -y
-
-          python3 -m venv ~/ansible-venv
-          source ~/ansible-venv/bin/activate
-
-          pip3 install --upgrade wheel
-          pip3 install pywinrm
-          pip3 install $(AnsiblePackage)==$(AnsibleVersion)
-
-          pip3 --version
-          ansible --version
-
-    - task: PowerShell@2
-      displayName: 'Set Package Version'
-
-      inputs:
-        targetType: 'inline'
-        script: |
-          $version = if ("$(Build.SourceBranch)" -match '^refs/tags/(?<Tag>.+)') {
-              # Github version tags usually begin with a "v", but we just want the number
-              $matches.Tag -replace '^v'
-          }
-          else {
-              "$env:PACKAGE_VERSION-$(Get-Date -Format 'yyyyMMdd')-$(New-Guid)"
-          }
-          Write-Host "##vso[task.setvariable variable=Package.Version]$version"
-
-        errorActionPreference: 'stop'
-        failOnStderr: true
-        pwsh: true
+        targetType: filePath
+        filePath: ./build/dependencies.sh
 
     - task: AzureCLI@2
       displayName: 'Run Ansible-Test for Collection'
@@ -142,13 +169,7 @@ stages:
       condition: succeededOrFailed()
       inputs:
         path: '$(System.DefaultWorkingDirectory)/testresults'
-        artifact: 'Ansible-Test Output Files'
-
-    - task: PublishPipelineArtifact@1
-      displayName: 'Publish Collection Tarball Artifact'
-      inputs:
-        path: '$(TestRun.ArtifactPath)'
-        artifact: '$(collectionArtifactName)'
+        artifact: 'Ansible-Test Output Files (ansible-$(Ansible.Version))'
 
     - task: PublishTestResults@2
       displayName: 'Publish JUnit Results'
@@ -181,10 +202,14 @@ stages:
 
 - stage: Publish
   displayName: '[Publish]'
-  dependsOn: Build
+  dependsOn:
+  - Build
+  - Test
   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
   variables:
     ansibleConfigPath: '~/ansible.cfg'
+    Ansible.Package: 'ansible-core'
+    Ansible.Version: '2.11'
 
   jobs:
   - job: Publish
@@ -202,7 +227,7 @@ stages:
     - task: DownloadPipelineArtifact@2
       displayName: 'Download Tarball Artifact'
       inputs:
-        artifact: '$(collectionArtifactName)'
+        artifact: '$(CollectionArtifactName)'
         targetPath: '$(System.DefaultWorkingDirectory)/artifacts/'
 
 #    - task: PowerShell@2

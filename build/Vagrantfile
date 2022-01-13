@@ -26,6 +26,10 @@ Vagrant.configure("2") do |config|
 
     server.vm.provision "install dependencies", type: "shell" do |shell|
       shell.path = "./dependencies.sh"
+      shell.env = {
+        "ANSIBLE_PACKAGE" => "ansible-core",
+        "ANSIBLE_VERSION" => "2.11"
+      }
     end
 
     server.vm.provision "copy collection files", type: "file" do |file|

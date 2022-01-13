@@ -2,21 +2,17 @@
 
 sudo add-apt-repository universe
 sudo apt update
+sudo apt install software-properties-common
+
 sudo apt-get update
-
 sudo apt-get install python3 python3-pip python3-venv python3-dev -y
-sudo apt install python2
-curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
-sudo python2 get-pip.py
-
-
 
 python3 -m venv ~/ansible-venv
 source ~/ansible-venv/bin/activate
 
-pip3 --version
 pip3 install --upgrade wheel
-pip3 install ansible pywinrm
+pip3 install pywinrm
+pip3 install $ANSIBLE_PACKAGE==$ANSIBLE_VERSION
 
-pip2 --version
-pip2 install --upgrade wheel
+pip3 --version
+ansible --version
