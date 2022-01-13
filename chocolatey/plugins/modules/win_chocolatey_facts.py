@@ -121,7 +121,7 @@ ansible_facts:
               description: The source, can be a folder/file or an url
               returned: always
               type: str
-              sample: https://chocolatey.org/api/v2/
+              sample: https://community.chocolatey.org/api/v2/
             source_username:
               description: Username used to access authenticated feeds
               returned: always
