@@ -73,13 +73,41 @@ stages:
       vmImage: ubuntu-latest
     variables:
       labVmFqdn: $[ dependencies.CreateVM.outputs['AzVmConfig.Fqdn'] ]
+    strategy:
+      maxParallel: 1
+      matrix:
+        ansible29:
+          AnsiblePackage: "ansible"
+          AnsibleVersion: "2.9"
+        ansible210:
+          AnsiblePackage: "ansible-base"
+          AnsibleVersion: "2.10"
+        ansible211:
+          AnsiblePackage: "ansible-core"
+          AnsibleVersion: "2.11"
 
     steps:
     - task: Bash@3
       displayName: 'Install Dependencies'
       inputs:
-        targetType: filePath
-        filePath: ./build/dependencies.sh
+        targetType: inline
+        script: |
+          sudo add-apt-repository universe
+          sudo apt update
+          sudo apt install software-properties-common
+
+          sudo apt-get update
+          sudo apt-get install python3 python3-pip python3-venv python3-dev -y
+
+          python3 -m venv ~/ansible-venv
+          source ~/ansible-venv/bin/activate
+
+          pip3 install --upgrade wheel
+          pip3 install pywinrm
+          pip3 install $(AnsiblePackage)==$(AnsibleVersion)
+
+          pip3 --version
+          ansible --version
 
     - task: PowerShell@2
       displayName: 'Set Package Version'
