@@ -12,7 +12,7 @@ source ~/ansible-venv/bin/activate
 
 pip3 install --upgrade wheel
 pip3 install pywinrm
-pip3 install $ANSIBLE_PACKAGE==$ANSIBLE_VERSION
+pip3 install $ANSIBLE_PACKAGE
 
 pip3 --version
 ansible --version
