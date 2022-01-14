@@ -63,7 +63,7 @@ begin {
     )
     $CleanupCommands = @(
         "cp -r ./tests/output/ $OutputPath"
-        "rm -r $OutputPath/.tmp"
+        "rm -r $OutputPath/.tmp 2> /dev/null"
     )
 #endregion
 
