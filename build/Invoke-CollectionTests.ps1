@@ -53,11 +53,14 @@ begin {
         $ImportVenv
 
         if ($IsCIBuild) {
-            # Copy the CI inventory file into the collection for testing
-            "cp ~/$InventoryFile ./tests/integration/$InventoryFile"
+            # Move the CI inventory file into the collection for testing
+            "mv -f ~/$InventoryFile ./tests/integration/inventory.winrm"
+        }
+        else {
+            "mv -f ./tests/integration/$InventoryFile ./tests/integration/inventory.winrm"
         }
 
-        "${Sudo}ansible-test windows-integration -vvvv --inventory $InventoryFile --requirements --continue-on-error"
+        "${Sudo}ansible-test windows-integration -vvv --requirements --continue-on-error"
         "${Sudo}ansible-test sanity -vvvvv --requirements"
         "${Sudo}ansible-test coverage xml -vvvvv --requirements"
     )
@@ -96,7 +99,7 @@ process {
                 "ansible_winrm_transport=ntlm"
                 "ansible_winrm_server_cert_validation=ignore"
                 "ansible_become_method=runas"
-            )
+            ) -join "`n"
 
             $Inventory | Set-Content -Path "~/$InventoryFile" -Force
 
