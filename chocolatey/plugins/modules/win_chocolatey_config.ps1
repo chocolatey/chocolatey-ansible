@@ -6,31 +6,41 @@
 
 #Requires -Module Ansible.ModuleUtils.ArgvParser
 #Requires -Module Ansible.ModuleUtils.CommandUtil
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
 
 $ErrorActionPreference = "Stop"
 
-$params = Parse-Args -arguments $args -supports_check_mode $true
-$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
-$diff = Get-AnsibleParam -obj $params -name "_ansible_diff" -type "bool" -default $false
+# Documentation: https://docs.ansible.com/ansible/2.10/dev_guide/developing_modules_general_windows.html#windows-new-module-development
 
-$name = Get-AnsibleParam -obj $params -name "name" -type "str" -failifempty $true
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "absent", "present"
-$value = Get-AnsibleParam -obj $params -name "value" -type "str" -failifempty ($state -eq "present")
-
-$result = @{
-    changed = $false
-}
-if ($diff) {
-    $result.diff = @{
-        before = $null
-        after  = $null
+$spec = @{
+    options = @{
+        name = @{ type = "str"; required = $true }
+        state = @{ type = "str"; default = "present"; choices = "absent", "present" }
+        value = @{ type = "str" }
     }
+    required_if = @(
+        # Explicit prefix `,` required, Ansible wants a list of lists for `required_if`
+        # Read as:
+        # ,@( [if] property, [is] value, [require] other_properties, $true_if_only_one_other_is_required ) -- last option is not mandatory
+        ,@( 'state', 'present', @( 'value' ) )
+    )
+    supports_check_mode = $true
+}
+
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+
+$name = $module.Params.name
+$state = $module.Params.state
+$value = $module.Params.value
+
+if ($module.DiffMode) {
+    $module.Diff.before = $null
+    $module.Diff.after = $null
 }
 
 if ($state -eq "present") {
     if ($value -eq "") {
-        Fail-Json -obj $result -message "Cannot set Chocolatey config as an empty string when state=present, use state=absent instead"
+        $module.FailJson("Cannot set Chocolatey config as an empty string when state=present, use state=absent instead")
     }
     # make sure bool values are lower case
     if ($value -ceq "True" -or $value -ceq "False") {
@@ -48,14 +58,14 @@ Function Get-ChocolateyConfig {
     # compared to reading an XML file that already delimits these values
     $choco_config_path = "$(Split-Path -LiteralPath (Split-Path -LiteralPath $choco_app.Path))\config\chocolatey.config"
     if (-not (Test-Path -LiteralPath $choco_config_path)) {
-        Fail-Json -obj $result -message "Expecting Chocolatey config file to exist at '$choco_config_path'"
+        $module.FailJson("Expecting Chocolatey config file to exist at '$choco_config_path'")
     }
 
     try {
         [xml]$choco_config = Get-Content -LiteralPath $choco_config_path
     }
     catch {
-        Fail-Json -obj $result -message "Failed to parse Chocolatey config file at '$choco_config_path': $($_.Exception.Message)"
+        $module.FailJson("Failed to parse Chocolatey config file at '$choco_config_path': $($_.Exception.Message)")
     }
 
     $config_info = @{}
@@ -74,11 +84,11 @@ Function Remove-ChocolateyConfig {
     $command = Argv-ToString -arguments @($choco_app.Path, "config", "unset", "--name", $name)
     $res = Run-Command -command $command
     if ($res.rc -ne 0) {
-        Fail-Json -obj $result -message "Failed to unset Chocolatey config for '$name': $($res.stderr)"
+        $module.FailJson("Failed to unset Chocolatey config for '$name': $($res.stderr)")
     }
 }
 
-Function Set-ChocolateyConfig {
+function Set-ChocolateyConfig {
     param(
         $choco_app,
         $name,
@@ -87,7 +97,7 @@ Function Set-ChocolateyConfig {
     $command = Argv-ToString -arguments @($choco_app.Path, "config", "set", "--name", $name, "--value", $value)
     $res = Run-Command -command $command
     if ($res.rc -ne 0) {
-        Fail-Json -obj $result -message "Failed to set Chocolatey config for '$name' to '$value': $($res.stderr)"
+        $module.FailJson("Failed to set Chocolatey config for '$name' to '$value': $($res.stderr)")
     }
 }
 
@@ -100,33 +110,34 @@ if ($null -eq $choco_app) {
     $choco_app = Get-Command -Name "$choco_dir\bin\choco.exe" -CommandType Application -ErrorAction SilentlyContinue
 }
 if (-not $choco_app) {
-    Fail-Json -obj $result -message "Failed to find Chocolatey installation, make sure choco.exe is in the PATH env value"
+    $module.FailJson("Failed to find Chocolatey installation, make sure choco.exe is in the PATH env value")
 }
 
 $config_info = Get-ChocolateyConfig -choco_app $choco_app
 if ($name -notin $config_info.Keys) {
-    Fail-Json -obj $result -message "The Chocolatey config '$name' is not an existing config value, check the spelling. Valid config names: $($config_info.Keys -join ', ')"
+    $module.FailJson("The Chocolatey config '$name' is not an existing config value, check the spelling. Valid config names: $($config_info.Keys -join ', ')")
 }
-if ($diff) {
-    $result.diff.before = $config_info.$name
+
+if ($module.DiffMode) {
+    $module.Diff.before = $config.$name
 }
 
 if ($state -eq "absent" -and $config_info.$name -ne "") {
-    if (-not $check_mode) {
+    if (-not $module.CheckMode) {
         Remove-ChocolateyConfig -choco_app $choco_app -name $name
     }
-    $result.changed = $true
+    $module.Result.changed = $true
     # choco.exe config set is not case sensitive, it won't make a change if the
     # value is the same but doesn't match
 }
 elseif ($state -eq "present" -and $config_info.$name -ne $value) {
-    if (-not $check_mode) {
+    if (-not $module.CheckMode) {
         Set-ChocolateyConfig -choco_app $choco_app -name $name -value $value
     }
-    $result.changed = $true
-    if ($diff) {
-        $result.diff.after = $value
+    $module.Result.changed = $true
+    if ($module.DiffMode) {
+        $module.Diff.after = $value
     }
 }
 
-Exit-Json -obj $result
+$module.ExitJson()

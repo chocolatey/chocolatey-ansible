@@ -4,7 +4,7 @@
     name: cacheLocation
     state: present
   register: fail_no_value
-  failed_when: 'fail_no_value.msg != "Get-AnsibleParam: Missing required argument: value"'
+  failed_when: 'fail_no_value.msg != "state is present but all of the following are missing: value"'
 
 - name: fail to set invalid config name
   win_chocolatey_config:
