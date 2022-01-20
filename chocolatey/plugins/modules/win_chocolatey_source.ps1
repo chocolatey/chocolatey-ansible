@@ -6,34 +6,53 @@
 
 #Requires -Module Ansible.ModuleUtils.ArgvParser
 #Requires -Module Ansible.ModuleUtils.CommandUtil
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
 
-$params = Parse-Args -arguments $args -supports_check_mode $true
-$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
-$diff = Get-AnsibleParam -obj $params -name "_ansible_diff" -type "bool" -default $false
-
-$name = Get-AnsibleParam -obj $params -name "name" -type "str" -failifempty $true
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "absent", "disabled", "present"
-
-$admin_only = Get-AnsibleParam -obj $params -name "admin_only" -type "bool"
-$allow_self_service = Get-AnsibleParam -obj $params -name "allow_self_service" -type "bool"
-$bypass_proxy = Get-AnsibleParam -obj $params -name "bypass_proxy" -type "bool"
-$certificate = Get-AnsibleParam -obj $params -name "certificate" -type "str"
-$certificate_password = Get-AnsibleParam -obj $params -name "certificate_password" -type "str"
-$priority = Get-AnsibleParam -obj $params -name "priority" -type "int"
-$source = Get-AnsibleParam -obj $params -name "source" -type "str"
-$source_username = Get-AnsibleParam -obj $params -name "source_username" -type "str"
-$source_password = Get-AnsibleParam -obj $params -name "source_password" -type "str" -failifempty ($null -ne $source_username)
-$update_password = Get-AnsibleParam -obj $params -name "update_password" -type "str" -default "always" -validateset "always", "on_create"
-
-$result = @{
-    changed = $false
-}
-if ($diff) {
-    $result.diff = @{
-        before = @{}
-        after  = @{}
+# Documentation: https://docs.ansible.com/ansible/2.10/dev_guide/developing_modules_general_windows.html#windows-new-module-development
+$spec = @{
+    options             = @{
+        name                 = @{ type = "str"; required = $true }
+        state                = @{ type = "str"; default = "present"; choices = "absent", "disabled", "present" }
+        admin_only           = @{ type = "bool" }
+        allow_self_service   = @{ type = "bool" }
+        bypass_proxy         = @{ type = "bool" }
+        certificate          = @{ type = "str" }
+        certificate_password = @{ type = "str" }
+        priority             = @{ type = "int" }
+        source               = @{ type = "str" }
+        source_username      = @{ type = "str" }
+        source_password      = @{ type = "str" }
+        update_password      = @{ type = "str"; default = "always"; choices = "always", "on_create" }
     }
+    supports_check_mode = $true
+    required_together   = @(
+        # Explicit `,` prefix required to prevent the array unrolling, Ansible requires nested arrays here.
+        , @( 'source_username', 'source_password' )
+    )
+    required_by         = @{
+        'certificate_password' = 'certificate'
+    }
+}
+
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+
+$name = $module.Params.name
+$state = $module.Params.state
+
+$admin_only = $module.Params.admin_only
+$allow_self_service = $module.Params.allow_self_service
+$bypass_proxy = $module.Params.bypass_proxy
+$certificate = $module.Params.certificate
+$certificate_password = $module.Params.certificate_password
+$priority = $module.Params.priority
+$source = $module.Params.source
+$source_username = $module.Params.source_username
+$source_password = $module.Params.source_password
+$update_password = $module.Params.update_password
+
+if ($module.DiffMode) {
+    $module.Diff.before = @{}
+    $module.Diff.after = @{}
 }
 
 Function Get-ChocolateySources {
@@ -41,7 +60,7 @@ Function Get-ChocolateySources {
 
     $choco_config_path = "$(Split-Path -LiteralPath (Split-Path -LiteralPath $choco_app.Path))\config\chocolatey.config"
     if (-not (Test-Path -LiteralPath $choco_config_path)) {
-        Fail-Json -obj $result -message "Expecting Chocolatey config file to exist at '$choco_config_path'"
+        $module.FailJson("Expecting Chocolatey config file to exist at '$choco_config_path'")
     }
 
     # would prefer to enumerate the existing sources with an actual API but the
@@ -54,7 +73,7 @@ Function Get-ChocolateySources {
         [xml]$choco_config = Get-Content -LiteralPath $choco_config_path
     }
     catch {
-        Fail-Json -obj $result -message "Failed to parse Chocolatey config file at '$choco_config_path': $($_.Exception.Message)"
+        $module.FailJson("Failed to parse Chocolatey config file at '$choco_config_path': $($_.Exception.Message)", $_)
     }
 
     $sources = [System.Collections.ArrayList]@()
@@ -168,14 +187,14 @@ Function New-ChocolateySource {
         $admin_only = $false
     }
 
-    if ($check_mode) {
+    if ($module.CheckMode) {
         $arguments.Add("--what-if") > $null
     }
 
     $command = Argv-ToString -arguments $arguments
     $res = Run-Command -command $command
     if ($res.rc -ne 0) {
-        Fail-Json -obj $result -message "Failed to add Chocolatey source '$name': $($res.stderr)"
+        $module.FailJson("Failed to add Chocolatey source '$name': $($res.stderr)")
     }
 
     $source_info = @{
@@ -198,13 +217,13 @@ Function Remove-ChocolateySource {
         $name
     )
     $arguments = [System.Collections.ArrayList]@($choco_app.Path, "source", "remove", "--name", $name)
-    if ($check_mode) {
+    if ($module.CheckMode) {
         $arguments.Add("--what-if") > $null
     }
     $command = Argv-ToString -arguments $arguments
     $res = Run-Command -command $command
     if ($res.rc -ne 0) {
-        Fail-Json -obj $result -message "Failed to remove Chocolatey source '$name': $($_.res.stderr)"
+        $module.FailJson("Failed to remove Chocolatey source '$name': $($_.res.stderr)")
     }
 }
 
@@ -218,29 +237,32 @@ if ($null -eq $choco_app) {
 }
 
 if (-not $choco_app) {
-    Fail-Json -obj $result -message "Failed to find Chocolatey installation, make sure choco.exe is in the PATH env value"
+    $module.FailJson("Failed to find Chocolatey installation, make sure choco.exe is in the PATH env value")
 }
+
 $actual_sources = Get-ChocolateySources -choco_app $choco_app
 $actual_source = $actual_sources | Where-Object { $_.name -eq $name }
-if ($diff) {
+
+if ($module.DiffMode) {
     if ($null -ne $actual_source) {
         $before = $actual_source.Clone()
     }
     else {
         $before = @{}
     }
-    $result.diff.before = $before
+
+    $module.Diff.before = $before
 }
 
 if ($state -eq "absent" -and $null -ne $actual_source) {
     Remove-ChocolateySource -choco_app $choco_app -name $name
-    $result.changed = $true
+    $module.Result.changed = $true
 }
 elseif ($state -in ("disabled", "present")) {
     $change = $false
     if ($null -eq $actual_source) {
         if ($null -eq $source) {
-            Fail-Json -obj $result -message "The source option must be set when creating a new source"
+            $module.FailJson("The source option must be set when creating a new source")
         }
         $change = $true
     }
@@ -275,7 +297,7 @@ elseif ($state -in ("disabled", "present")) {
 
         if ($change) {
             Remove-ChocolateySource -choco_app $choco_app -name $name
-            $result.changed = $true
+            $module.Result.changed = $true
         }
     }
 
@@ -285,7 +307,7 @@ elseif ($state -in ("disabled", "present")) {
             -certificate $certificate -certificate_password $certificate_password `
             -priority $priority -bypass_proxy $bypass_proxy -allow_self_service $allow_self_service `
             -admin_only $admin_only
-        $result.changed = $true
+        $module.Result.changed = $true
     }
 
     # enable/disable the source if necessary
@@ -298,27 +320,27 @@ elseif ($state -in ("disabled", "present")) {
     }
     if ($null -ne $status_action) {
         $arguments = [System.Collections.ArrayList]@($choco_app.Path, "source", $status_action, "--name", $name)
-        if ($check_mode) {
+        if ($module.CheckMode) {
             $arguments.Add("--what-if") > $null
         }
         $command = Argv-ToString -arguments $arguments
         $res = Run-Command -command $command
         if ($res.rc -ne 0) {
-            Fail-Json -obj $result -message "Failed to $status_action Chocolatey source '$name': $($res.stderr)"
+            $module.FailJson("Failed to $status_action Chocolatey source '$name': $($res.stderr)")
         }
         $actual_source.disabled = ($status_action -eq "disable")
-        $result.changed = $true
+        $module.Result.changed = $true
     }
 
-    if ($diff) {
-        $after = $actual_source
-        $result.diff.after = $after
+    if ($module.DiffMode) {
+        $module.Diff.after = $actual_source
     }
 }
 
 # finally remove the diff if there was no change
-if (-not $result.changed -and $diff) {
-    $result.diff = @{}
+if ($module.DiffMode -and -not $module.Result.changed) {
+    $module.Diff.before = @{}
+    $module.Diff.after = @{}
 }
 
-Exit-Json -obj $result
+$module.ExitJson()
