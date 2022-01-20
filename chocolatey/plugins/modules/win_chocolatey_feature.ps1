@@ -5,26 +5,30 @@
 # GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #Requires -Module Ansible.ModuleUtils.CommandUtil
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
 
 $ErrorActionPreference = "Stop"
 
-$params = Parse-Args -arguments $args -supports_check_mode $true
-$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
-
-$name = Get-AnsibleParam -obj $params -name "name" -type "str" -failifempty $true
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "enabled" -validateset "disabled", "enabled"
-
-$result = @{
-    changed = $false
+# Documentation: https://docs.ansible.com/ansible/2.10/dev_guide/developing_modules_general_windows.html#windows-new-module-development
+$spec = @{
+    options = @{
+        name = @{ type = "str"; required = $true }
+        state = @{ type = "str"; default = "enabled"; choices = "disabled", "enabled" }
+    }
+    supports_check_mode = $true
 }
+
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+
+$name = $module.Params.name
+$state = $module.Params.state
 
 Function Get-ChocolateyFeatures {
     param($choco_app)
 
     $res = Run-Command -command "`"$($choco_app.Path)`" feature list -r"
     if ($res.rc -ne 0) {
-        Fail-Json -obj $result -message "Failed to list Chocolatey features: $($res.stderr)"
+        $module.FailJson("Failed to list Chocolatey features: $($res.stderr)")
     }
     $feature_info = @{}
     $res.stdout -split "`r`n" | Where-Object { $_ -ne "" } | ForEach-Object {
@@ -50,7 +54,7 @@ Function Set-ChocolateyFeature {
     }
     $res = Run-Command -command "`"$($choco_app.Path)`" feature $state_string --name `"$name`""
     if ($res.rc -ne 0) {
-        Fail-Json -obj $result -message "Failed to set Chocolatey feature $name to $($state_string): $($res.stderr)"
+        $module.FailJson("Failed to set Chocolatey feature $name to $($state_string): $($res.stderr)")
     }
 }
 
@@ -63,21 +67,22 @@ if ($null -eq $choco_app) {
     $choco_app = Get-Command -Name "$choco_dir\bin\choco.exe" -CommandType Application -ErrorAction SilentlyContinue
 }
 if (-not $choco_app) {
-    Fail-Json -obj $result -message "Failed to find Chocolatey installation, make sure choco.exe is in the PATH env value"
+    $module.FailJson("Failed to find Chocolatey installation, make sure choco.exe is in the PATH env value")
 }
 
 $feature_info = Get-ChocolateyFeatures -choco_app $choco_app
 if ($name -notin $feature_info.keys) {
-    Fail-Json -obj $result -message "Invalid feature name '$name' specified, valid features are: $($feature_info.keys -join ', ')"
+    $module.FailJson("Invalid feature name '$name' specified, valid features are: $($feature_info.keys -join ', ')")
 }
 
 $expected_status = $state -eq "enabled"
 $feature_status = $feature_info.$name
 if ($feature_status -ne $expected_status) {
-    if (-not $check_mode) {
+    if (-not $module.CheckMode) {
         Set-ChocolateyFeature -choco_app $choco_app -name $name -enabled $expected_status
     }
-    $result.changed = $true
+
+    $module.Result.changed = $true
 }
 
-Exit-Json -obj $result
+$module.ExitJson()
