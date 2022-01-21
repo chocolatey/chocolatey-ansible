@@ -39,101 +39,119 @@ if ($module.DiffMode) {
 }
 
 if ($state -eq "present") {
-    if ($value -eq "") {
+    if ([string]::IsNullOrEmpty($value)) {
         $module.FailJson("Cannot set Chocolatey config as an empty string when state=present, use state=absent instead")
     }
+
     # make sure bool values are lower case
     if ($value -ceq "True" -or $value -ceq "False") {
         $value = $value.ToLower()
     }
 }
 
-Function Get-ChocolateyConfig {
-    param($choco_app)
+function Get-ChocolateyConfig {
+    param($ChocoCommand)
 
-    # 'choco config list -r' does not display an easily parsable config entries
-    # It contains config/sources/feature in the one command, and is in the
-    # structure 'configKey = configValue | description', if the key or value
-    # contains a = or |, it will make it quite hard to easily parse it,
-    # compared to reading an XML file that already delimits these values
-    $choco_config_path = "$(Split-Path -LiteralPath (Split-Path -LiteralPath $choco_app.Path))\config\chocolatey.config"
-    if (-not (Test-Path -LiteralPath $choco_config_path)) {
-        $module.FailJson("Expecting Chocolatey config file to exist at '$choco_config_path'")
+    # `choco config list -r` does not display easily parsable config entries.
+    # It contains config/sources/feature in the same output, and is in the
+    # structure `configKey = configValue | description`.
+    # If the key or value contains a `=` or `|`, it will make it quite hard to
+    # parse it, compared to reading a well-formed XML file with the same values.
+    $chocoInstall = Split-Path -LiteralPath (Split-Path -LiteralPath $ChocoCommand.Path)
+    $configPath = "$chocoInstall\config\chocolatey.config"
+    if (-not (Test-Path -LiteralPath $configPath)) {
+        $module.FailJson("Could not find Chocolatey config file at expected path '$configPath'")
     }
 
     try {
-        [xml]$choco_config = Get-Content -LiteralPath $choco_config_path
+        [xml]$configXml = Get-Content -LiteralPath $configPath
     }
     catch {
-        $module.FailJson("Failed to parse Chocolatey config file at '$choco_config_path': $($_.Exception.Message)")
+        $module.FailJson("Failed to parse Chocolatey config file at '$configPath': $($_.Exception.Message)")
     }
 
-    $config_info = @{}
-    foreach ($config in $choco_config.chocolatey.config.GetEnumerator()) {
-        $config_info."$($config.key)" = $config.value
+    $config = @{}
+    foreach ($node in $configXml.chocolatey.config.GetEnumerator()) {
+        $config[$node.key] = $node.value
     }
 
-    return , $config_info
+    $config
 }
 
-Function Remove-ChocolateyConfig {
+function Remove-ChocolateyConfig {
     param(
-        $choco_app,
-        $name
+        $ChocoCommand,
+        $Name
     )
-    $command = Argv-ToString -arguments @($choco_app.Path, "config", "unset", "--name", $name)
-    $res = Run-Command -command $command
-    if ($res.rc -ne 0) {
-        $module.FailJson("Failed to unset Chocolatey config for '$name': $($res.stderr)")
+
+    $command = Argv-ToString -Arguments @($ChocoCommand.Path, "config", "unset", "--name", $Name)
+    $result = Run-Command -Command $command
+    if ($result.rc -ne 0) {
+        $module.FailJson("Failed to unset Chocolatey config for '$Name': $($result.stderr)")
     }
 }
 
 function Set-ChocolateyConfig {
     param(
-        $choco_app,
-        $name,
-        $value
+        $ChocoCommand,
+        $Name,
+        $Value
     )
-    $command = Argv-ToString -arguments @($choco_app.Path, "config", "set", "--name", $name, "--value", $value)
-    $res = Run-Command -command $command
-    if ($res.rc -ne 0) {
-        $module.FailJson("Failed to set Chocolatey config for '$name' to '$value': $($res.stderr)")
+
+    $command = Argv-ToString -Arguments @($ChocoCommand.Path, "config", "set", "--name", $Name, "--value", $Value)
+    $result = Run-Command -Command $command
+    if ($result.rc -ne 0) {
+        $module.FailJson("Failed to set Chocolatey config for '$Name' to '$Value': $($result.stderr)")
     }
 }
 
-$choco_app = Get-Command -Name choco.exe -CommandType Application -ErrorAction SilentlyContinue
-if ($null -eq $choco_app) {
-    $choco_dir = $env:ChocolateyInstall
-    if ($null -eq $choco_dir) {
-        $choco_dir = "$env:SYSTEMDRIVE\ProgramData\Chocolatey"
+function Get-ChocolateyCommand {
+    $command = Get-Command -Name choco.exe -CommandType Application -ErrorAction SilentlyContinue
+    if (-not $command) {
+        $installDir = if ($env:ChocolateyInstall) {
+            $env:ChocolateyInstall
+        }
+        else {
+            "$env:SYSTEMDRIVE\ProgramData\Chocolatey"
+        }
+
+        $command = Get-Command -Name "$installDir\bin\choco.exe" -CommandType Application -ErrorAction SilentlyContinue
+
+        if (-not $command) {
+            $module.FailJson("Failed to find Chocolatey installation, make sure choco.exe is in the PATH env value")
+        }
     }
-    $choco_app = Get-Command -Name "$choco_dir\bin\choco.exe" -CommandType Application -ErrorAction SilentlyContinue
-}
-if (-not $choco_app) {
-    $module.FailJson("Failed to find Chocolatey installation, make sure choco.exe is in the PATH env value")
+
+    $command
 }
 
-$config_info = Get-ChocolateyConfig -choco_app $choco_app
-if ($name -notin $config_info.Keys) {
-    $module.FailJson("The Chocolatey config '$name' is not an existing config value, check the spelling. Valid config names: $($config_info.Keys -join ', ')")
+$chocoCommand = Get-ChocolateyCommand
+
+$config = Get-ChocolateyConfig -ChocoCommand $chocoCommand
+if ($name -notin $config.Keys) {
+    $module.FailJson("The Chocolatey config '$name' is not an existing config value, check the spelling. Valid config names: $($config.Keys -join ', ')")
 }
 
 if ($module.DiffMode) {
     $module.Diff.before = $config.$name
 }
 
-if ($state -eq "absent" -and $config_info.$name -ne "") {
+if ($state -eq "absent" -and $config.$name -ne "") {
     if (-not $module.CheckMode) {
-        Remove-ChocolateyConfig -choco_app $choco_app -name $name
+        Remove-ChocolateyConfig -ChocoCommand $chocoCommand -Name $name
     }
+
     $module.Result.changed = $true
-    # choco.exe config set is not case sensitive, it won't make a change if the
-    # value is the same but doesn't match
 }
-elseif ($state -eq "present" -and $config_info.$name -ne $value) {
+elseif ($state -eq "present" -and $config.$name -ne $value) {
+    # choco.exe config set is not case sensitive, it won't make a change if the
+    # value is the same but doesn't match, so we skip setting it as well in that
+    # case.
+
     if (-not $module.CheckMode) {
-        Set-ChocolateyConfig -choco_app $choco_app -name $name -value $value
+        Set-ChocolateyConfig -ChocoCommand $chocoCommand -Name $name -Value $value
     }
+
     $module.Result.changed = $true
     if ($module.DiffMode) {
         $module.Diff.after = $value
