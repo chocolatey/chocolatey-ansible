@@ -8,187 +8,202 @@
 
 #Requires -Module Ansible.ModuleUtils.ArgvParser
 #Requires -Module Ansible.ModuleUtils.CommandUtil
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
 
-# Create a new result object
-$result = @{
-    changed       = $false
-    ansible_facts = @{
-        ansible_chocolatey = @{
-            config   = @{}
-            feature  = @{}
-            sources  = @()
-            packages = @()
+# Documentation: https://docs.ansible.com/ansible/2.10/dev_guide/developing_modules_general_windows.html#windows-new-module-development
+$spec = @{
+    options = @{}
+    supports_check_mode = $true
+}
+
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+
+function Get-ChocolateyCommand {
+    $command = Get-Command -Name choco.exe -CommandType Application -ErrorAction SilentlyContinue
+    if (-not $command) {
+        $installDir = if ($env:ChocolateyInstall) {
+            $env:ChocolateyInstall
+        }
+        else {
+            "$env:SYSTEMDRIVE\ProgramData\Chocolatey"
+        }
+
+        $command = Get-Command -Name "$installDir\bin\choco.exe" -CommandType Application -ErrorAction SilentlyContinue
+
+        if (-not $command) {
+            $module.FailJson("Failed to find Chocolatey installation, make sure choco.exe is in the PATH env value")
         }
     }
+
+    $command
 }
 
-$choco_app = Get-Command -Name choco.exe -CommandType Application -ErrorAction SilentlyContinue
-if ($null -eq $choco_app) {
-    $choco_dir = $env:ChocolateyInstall
-    if ($null -eq $choco_dir) {
-        $choco_dir = "$env:SYSTEMDRIVE\ProgramData\Chocolatey"
-    }
-    $choco_app = Get-Command -Name "$choco_dir\bin\choco.exe" -CommandType Application -ErrorAction SilentlyContinue
-}
-if (-not $choco_app) {
-    Fail-Json -obj $result -message "Failed to find Chocolatey installation, make sure choco.exe is in the PATH env value"
-}
+function Get-ChocolateyFeature {
+    param($ChocoCommand)
 
-Function Get-ChocolateyFeature {
+    $command = Argv-ToString -Arguments $ChocoCommand.Path, "feature", "list", "-r"
+    $result = Run-Command -Command $command
 
-    param($choco_app)
-
-    $command = Argv-ToString -arguments $choco_app.Path, "feature", "list", "-r"
-    $res = Run-Command -command $command
-    if ($res.rc -ne 0) {
-        $result.stdout = $res.stdout
-        $result.stderr = $res.stderr
-        $result.rc = $res.rc
-        Fail-Json -obj $result -message "Failed to list Chocolatey features, see stderr"
+    if ($result.rc -ne 0) {
+        $module.Result.stdout = $result.stdout
+        $module.Result.stderr = $result.stderr
+        $module.Result.rc = $result.rc
+        $module.FailJson("Failed to list Chocolatey features, see stderr")
     }
 
-    $feature_info = @{}
-    $res.stdout -split "`r`n" | Where-Object { $_ -ne "" } | ForEach-Object {
-        $feature_split = $_ -split "\|"
-        $feature_info."$($feature_split[0])" = $feature_split[1] -eq "Enabled"
-    }
-    $result.ansible_facts.ansible_chocolatey.feature = $feature_info
+    $features = @{}
+    $result.stdout -split "\r?\n" |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+        ForEach-Object {
+            $name, $value, $null = $_ -split "\|"
+            $features.$name = $value -eq "Enabled"
+        }
+
+    $features
 }
 
-Function Get-ChocolateyConfig {
+function Get-ChocolateyConfig {
+    param($ChocoCommand)
 
-    param($choco_app)
-
-    $choco_config_path = "$(Split-Path -LiteralPath (Split-Path -LiteralPath $choco_app.Path))\config\chocolatey.config"
-    if (-not (Test-Path -LiteralPath $choco_config_path)) {
-        Fail-Json -obj $result -message "Expecting Chocolatey config file to exist at '$choco_config_path'"
+    $configPath = "$(Split-Path -LiteralPath (Split-Path -LiteralPath $ChocoCommand.Path))\config\chocolatey.config"
+    if (-not (Test-Path -LiteralPath $configPath)) {
+        $module.FailJson("Expecting Chocolatey config file to exist at '$configPath'")
     }
 
     try {
-        [xml]$choco_config = Get-Content -LiteralPath $choco_config_path
+        [xml]$configXml = Get-Content -LiteralPath $configPath
     }
     catch {
-        Fail-Json -obj $result -message "Failed to parse Chocolatey config file at '$choco_config_path': $($_.Exception.Message)"
+        $module.FailJson("Failed to parse Chocolatey config file at '$configPath': $($_.Exception.Message)")
     }
 
-    $config_info = @{}
-    foreach ($config in $choco_config.chocolatey.config.GetEnumerator()) {
-        # try and parse as a boot, then an int, fallback to string
-        try {
-            $value = [System.Boolean]::Parse($config.value)
+    $config = @{}
+    foreach ($node in $configXml.chocolatey.config.GetEnumerator()) {
+        # try to parse as a bool, then an int, fallback to string
+
+        $value = try {
+            [System.Boolean]::Parse($node.value)
         }
         catch {
             try {
-                $value = [System.Int32]::Parse($config.value)
+                [System.Int32]::Parse($node.value)
             }
             catch {
-                $value = $config.value
+                $node.value
             }
         }
-        $config_info."$($config.key)" = $value
+
+        $config.$($node.key) = $value
     }
-    $result.ansible_facts.ansible_chocolatey.config = $config_info
+
+    $config
 }
 
-Function Get-ChocolateyPackages {
+function Get-ChocolateyPackages {
+    param($ChocoCommand)
 
-    param($choco_app)
-
-    $command = Argv-ToString -arguments $choco_app.Path, "list", "--local-only", "--limit-output", "--all-versions"
-    $res = Run-Command -command $command
-    if ($res.rc -ne 0) {
-        $result.stdout = $res.stdout
-        $result.stderr = $res.stderr
-        $result.rc = $res.rc
-        Fail-Json -obj $result -message "Failed to list Chocolatey Packages, see stderr"
+    $command = Argv-ToString -Arguments $ChocoCommand.Path, "list", "--local-only", "--limit-output", "--all-versions"
+    $result = Run-Command -Command $command
+    if ($result.rc -ne 0) {
+        $module.Result.stdout = $result.stdout
+        $module.Result.stderr = $result.stderr
+        $module.Result.rc = $result.rc
+        $module.FailJson("Failed to list Chocolatey Packages, see stderr")
     }
 
-    $packages_info = [System.Collections.ArrayList]@()
-    $res.stdout.Split("`r`n", [System.StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object {
-        $packages_split = $_ -split "\|"
-        $package_info = @{
-            package = $packages_split[0]
-            version = $packages_split[1]
+    $result.stdout.Split("`r`n", [System.StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object {
+        $package, $version, $null = $_ -split "\|"
+
+        @{
+            package = $package
+            version = $version
         }
-        $packages_info.Add($package_info) > $null
     }
-    $result.ansible_facts.ansible_chocolatey.packages = $packages_info
 }
 
-Function Get-ChocolateySources {
-    param($choco_app)
+function Get-ChocolateySources {
+    param($ChocoCommand)
 
-    $choco_config_path = "$(Split-Path -LiteralPath (Split-Path -LiteralPath $choco_app.Path))\config\chocolatey.config"
-    if (-not (Test-Path -LiteralPath $choco_config_path)) {
-        Fail-Json -obj $result -message "Expecting Chocolatey config file to exist at '$choco_config_path'"
+    $configPath = "$(Split-Path -LiteralPath (Split-Path -LiteralPath $ChocoCommand.Path))\config\chocolatey.config"
+    if (-not (Test-Path -LiteralPath $configPath)) {
+        $module.FailJson("Expecting Chocolatey config file to exist at '$configPath'")
     }
 
     try {
-        [xml]$choco_config = Get-Content -LiteralPath $choco_config_path
+        [xml]$configXml = Get-Content -LiteralPath $configPath
     }
     catch {
-        Fail-Json -obj $result -message "Failed to parse Chocolatey config file at '$choco_config_path': $($_.Exception.Message)"
+        $module.FailJson("Failed to parse Chocolatey config file at '$configPath': $($_.Exception.Message)")
     }
 
-    $sources = [System.Collections.ArrayList]@()
-    foreach ($xml_source in $choco_config.chocolatey.sources.GetEnumerator()) {
-        $source_username = $xml_source.Attributes.GetNamedItem("user")
-        if ($null -ne $source_username) {
-            $source_username = $source_username.Value
+    foreach ($sourceNode in $configXml.chocolatey.sources.GetEnumerator()) {
+        $username = $sourceNode.Attributes.GetNamedItem("user")
+        if ($null -ne $username) {
+            $username = $username.Value
         }
 
         # 0.9.9.9+
-        $priority = $xml_source.Attributes.GetNamedItem("priority")
+        $priority = $sourceNode.Attributes.GetNamedItem("priority")
         if ($null -ne $priority) {
             $priority = [int]$priority.Value
         }
 
         # 0.9.10+
-        $certificate = $xml_source.Attributes.GetNamedItem("certificate")
+        $certificate = $sourceNode.Attributes.GetNamedItem("certificate")
         if ($null -ne $certificate) {
             $certificate = $certificate.Value
         }
 
         # 0.10.4+
-        $bypass_proxy = $xml_source.Attributes.GetNamedItem("bypassProxy")
-        if ($null -ne $bypass_proxy) {
-            $bypass_proxy = [System.Convert]::ToBoolean($bypass_proxy.Value)
+        $bypassProxy = $sourceNode.Attributes.GetNamedItem("bypassProxy")
+        if ($null -ne $bypassProxy) {
+            $bypassProxy = [System.Convert]::ToBoolean($bypassProxy.Value)
         }
-        $allow_self_service = $xml_source.Attributes.GetNamedItem("selfService")
-        if ($null -ne $allow_self_service) {
-            $allow_self_service = [System.Convert]::ToBoolean($allow_self_service.Value)
+
+        $allowSelfService = $sourceNode.Attributes.GetNamedItem("selfService")
+        if ($null -ne $allowSelfService) {
+            $allowSelfService = [System.Convert]::ToBoolean($allowSelfService.Value)
         }
 
         # 0.10.8+
-        $admin_only = $xml_source.Attributes.GetNamedItem("adminOnly")
-        if ($null -ne $admin_only) {
-            $admin_only = [System.Convert]::ToBoolean($admin_only.Value)
+        $adminOnly = $sourceNode.Attributes.GetNamedItem("adminOnly")
+        if ($null -ne $adminOnly) {
+            $adminOnly = [System.Convert]::ToBoolean($adminOnly.Value)
         }
 
-        $source_info = @{
-            name               = $xml_source.id
-            source             = $xml_source.value
-            disabled           = [System.Convert]::ToBoolean($xml_source.disabled)
-            source_username    = $source_username
+        @{
+            name               = $sourceNode.id
+            source             = $sourceNode.value
+            disabled           = [System.Convert]::ToBoolean($sourceNode.disabled)
+            source_username    = $username
             priority           = $priority
             certificate        = $certificate
-            bypass_proxy       = $bypass_proxy
-            allow_self_service = $allow_self_service
-            admin_only         = $admin_only
+            bypass_proxy       = $bypassProxy
+            allow_self_service = $allowSelfService
+            admin_only         = $adminOnly
         }
-        $sources.Add($source_info) > $null
     }
-    $result.ansible_facts.ansible_chocolatey.sources = $sources
 }
 
-Get-ChocolateyConfig -choco_app $choco_app
-Get-ChocolateyFeature -choco_app $choco_app
-Get-ChocolateyPackages -choco_app $choco_app
-Get-ChocolateySources -choco_app $choco_app
+$chocoCommand = Get-ChocolateyCommand
+
+$module.Result.ansible_facts = @{
+    ansible_chocolatey = @{
+        config   = @{}
+        feature  = @{}
+        sources  = @()
+        packages = @()
+    }
+}
+
+$chocolateyFacts = $module.Result.ansible_facts.ansible_chocolatey
+$chocolateyFacts.config = Get-ChocolateyConfig -ChocoCommand $chocoCommand
+$chocolateyFacts.feature = Get-ChocolateyFeature -ChocoCommand $chocoCommand
+$chocolateyFacts.sources = @(Get-ChocolateySources -ChocoCommand $chocoCommand)
+$chocolateyFacts.packages = @(Get-ChocolateyPackages -ChocoCommand $chocoCommand)
 
 # Return result
-Exit-Json -obj $result
+$module.ExitJson()
