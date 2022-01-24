@@ -2,7 +2,7 @@
 - name: create source (check mode)
   win_chocolatey_source:
     name: chocolatey
-    source: https://chocolatey.org/api/v2/
+    source: https://community.chocolatey.org/api/v2/
     state: present
   register: create_check
   check_mode: yes
@@ -20,7 +20,7 @@
 - name: create source
   win_chocolatey_source:
     name: chocolatey
-    source: https://chocolatey.org/api/v2/
+    source: https://community.chocolatey.org/api/v2/
     state: present
   register: create
 
@@ -34,7 +34,7 @@
     - create is changed
     - create_actual.sources|length == 1
     - create_actual.sources[0].name == 'chocolatey'
-    - create_actual.sources[0].source == 'https://chocolatey.org/api/v2/'
+    - create_actual.sources[0].source == 'https://community.chocolatey.org/api/v2/'
     - create_actual.sources[0].disabled == False
     - create_actual.sources[0].source_username == None
     - create_actual.sources[0].priority == 0
@@ -46,7 +46,7 @@
 - name: create source (idempotent)
   win_chocolatey_source:
     name: chocolatey
-    source: https://chocolatey.org/api/v2/
+    source: https://community.chocolatey.org/api/v2/
     state: present
   register: create_again
 

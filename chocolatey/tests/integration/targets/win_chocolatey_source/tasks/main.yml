@@ -22,7 +22,7 @@
   - name: ensure original Chocolatey source is re-added
     win_chocolatey_source:
       name: chocolatey
-      source: https://chocolatey.org/api/v2/
+      source: https://community.chocolatey.org/api/v2/
       state: present
 
   - name: remove test Chocolatey source
