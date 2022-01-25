@@ -197,11 +197,11 @@ options:
     - When C(present), will ensure the package is installed.
     - When C(downgrade), will allow Chocolatey to downgrade a package if
       I(version) is older than the installed version.
-    - When C(latest), will ensure the package is installed to the latest
+    - When C(latest) or C(upgrade), will ensure the package is installed to the latest
       available version.
     - When C(reinstalled), will uninstall and reinstall the package.
     type: str
-    choices: [ absent, downgrade, latest, present, reinstalled ]
+    choices: [ absent, downgrade, upgrade, latest, present, reinstalled ]
     default: present
   timeout:
     description:
@@ -226,8 +226,11 @@ options:
     - Specific version of the package to be installed.
     - When I(state) is set to C(absent), will uninstall the specific version
       otherwise all versions of that package will be removed.
-    - If a different version of package is installed, I(state) must be C(latest)
-      or I(force) set to C(yes) to install the desired version.
+    - When I(state) is set to C(present) and the package is already installed
+      at a version that does not match, this task fails.
+    - If a different version of package is already installed, I(state) must be
+      C(latest), C(upgrade), or C(downgrade), or I(force) must be set to C(yes) to install
+      the desired version.
     - Provide as a string (e.g. C('6.1')), otherwise it is considered to be
       a floating-point number and depending on the locale could become C(6,1),
       which will cause a failure.
