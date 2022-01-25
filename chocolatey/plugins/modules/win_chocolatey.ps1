@@ -36,7 +36,7 @@ $spec = @{
         source = @{ type = "str" }
         source_username = @{ type = "str" }
         source_password = @{ type = "str"; no_log = $true }
-        state = @{ type = "str"; default = "present"; choices = "absent", "downgrade", "latest", "present", "reinstalled" }
+        state = @{ type = "str"; default = "present"; choices = "absent", "downgrade", "upgrade", "latest", "present", "reinstalled" }
         timeout = @{ type = "int"; default = 2700; aliases = @("execution_timeout") }
         validate_certs = @{ type = "bool"; default = $true }
         version = @{ type = "str" }
@@ -763,7 +763,7 @@ if ($state -in "absent", "reinstalled") {
     }
 }
 
-if ($state -in @("downgrade", "latest", "present", "reinstalled")) {
+if ($state -in @("downgrade", "latest", "upgrade", "present", "reinstalled")) {
     if ($state -eq "present" -and $force) {
         # when present and force, we just run the install step with the packages specified
         $missing_packages = $name
@@ -784,7 +784,7 @@ if ($state -in @("downgrade", "latest", "present", "reinstalled")) {
             $package_versions = [System.Collections.ArrayList]$package_info.$package
             if ($package_versions.Count -gt 0) {
                 if (-not $package_versions.Contains($version) -and -not $allow_multiple) {
-                    $module.FailJson("Chocolatey package '$package' is already installed with version(s) '$($package_versions -join "', '")' but was expecting '$version'. Either change the expected version, set state=latest, set allow_multiple=yes, or set force=yes to continue")
+                    $module.FailJson("Chocolatey package '$package' is already installed with version(s) '$($package_versions -join "', '")' but was expecting '$version'. Either change the expected version, set state=latest or state=upgrade, set allow_multiple=yes, or set force=yes to continue")
                 } elseif ($version -notin $package_versions -and $allow_multiple) {
                     # add the package back into the list of missing packages if installing multiple
                     $missing_packages.Add($package) > $null
@@ -820,7 +820,7 @@ if ($state -in @("downgrade", "latest", "present", "reinstalled")) {
         Install-ChocolateyPackage -packages $missing_packages @common_args
     }
 
-    if ($state -eq "latest" -or ($state -eq "downgrade" -and $null -ne $version)) {
+    if ($state -in @("latest", "upgrade") -or ($state -eq "downgrade" -and $null -ne $version)) {
         # when in a downgrade/latest situation, we want to run choco upgrade on
         # the remaining packages that were already installed, don't run this if
         # state=downgrade and a version isn't specified (this will actually
