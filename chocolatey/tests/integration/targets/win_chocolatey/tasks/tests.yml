@@ -278,7 +278,7 @@
     state: present
     version: 0.1.0
   register: fail_multiple_versions
-  failed_when: fail_multiple_versions.msg != "Chocolatey package '" + test_choco_package1 + "' is already installed with version(s) '0.0.1' but was expecting '0.1.0'. Either change the expected version, set state=latest, set allow_multiple=yes, or set force=yes to continue"
+  failed_when: fail_multiple_versions.msg != "Chocolatey package '" + test_choco_package1 + "' is already installed with version(s) '0.0.1' but was expecting '0.1.0'. Either change the expected version, set state=latest or state=upgrade, set allow_multiple=yes, or set force=yes to continue"
 
 - name: force the upgrade of an existing version
   win_chocolatey:
@@ -408,6 +408,28 @@
     that:
     - upgrade_package is changed
     - upgrade_package_actual.stdout_lines == [test_choco_package1 + "|0.1.0"]
+
+- name: downgrade package again
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: downgrade
+    version: '0.0.1'
+
+- name: upgrade package with state=upgrade
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: upgrade
+  register: upgrade_package_with_state_upgrade
+
+- name: get result of upgrade package with state=upgrade
+  win_command: choco.exe list --local-only --limit-output --exact {{ test_choco_package1|quote }}
+  register: actual_after_upgrade_with_state_upgrade
+
+- name: assert upgrade package with state=upgrade
+  assert:
+    that:
+    - upgrade_package_with_state_upgrade is changed
+    - actual_after_upgrade_with_state_upgrade.stdout_lines == [test_choco_package1 + "|0.1.0"]
 
 - name: upgrade package (idempotent)
   win_chocolatey:
