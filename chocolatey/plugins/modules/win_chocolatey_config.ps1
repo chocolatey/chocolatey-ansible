@@ -59,6 +59,7 @@ function Get-ChocolateyConfig {
     # parse it, compared to reading a well-formed XML file with the same values.
     $chocoInstall = Split-Path -LiteralPath (Split-Path -LiteralPath $ChocoCommand.Path)
     $configPath = "$chocoInstall\config\chocolatey.config"
+
     if (-not (Test-Path -LiteralPath $configPath)) {
         $module.FailJson("Could not find Chocolatey config file at expected path '$configPath'")
     }
@@ -71,6 +72,7 @@ function Get-ChocolateyConfig {
     }
 
     $config = @{}
+
     foreach ($node in $configXml.chocolatey.config.GetEnumerator()) {
         $config[$node.key] = $node.value
     }
@@ -86,6 +88,7 @@ function Remove-ChocolateyConfig {
 
     $command = Argv-ToString -Arguments @($ChocoCommand.Path, "config", "unset", "--name", $Name)
     $result = Run-Command -Command $command
+
     if ($result.rc -ne 0) {
         $module.FailJson("Failed to unset Chocolatey config for '$Name': $($result.stderr)")
     }
@@ -100,6 +103,7 @@ function Set-ChocolateyConfig {
 
     $command = Argv-ToString -Arguments @($ChocoCommand.Path, "config", "set", "--name", $Name, "--value", $Value)
     $result = Run-Command -Command $command
+
     if ($result.rc -ne 0) {
         $module.FailJson("Failed to set Chocolatey config for '$Name' to '$Value': $($result.stderr)")
     }
@@ -107,6 +111,7 @@ function Set-ChocolateyConfig {
 
 function Get-ChocolateyCommand {
     $command = Get-Command -Name choco.exe -CommandType Application -ErrorAction SilentlyContinue
+
     if (-not $command) {
         $installDir = if ($env:ChocolateyInstall) {
             $env:ChocolateyInstall
@@ -126,8 +131,8 @@ function Get-ChocolateyCommand {
 }
 
 $chocoCommand = Get-ChocolateyCommand
-
 $config = Get-ChocolateyConfig -ChocoCommand $chocoCommand
+
 if ($name -notin $config.Keys) {
     $module.FailJson("The Chocolatey config '$name' is not an existing config value, check the spelling. Valid config names: $($config.Keys -join ', ')")
 }

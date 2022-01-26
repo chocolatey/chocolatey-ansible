@@ -60,6 +60,7 @@ function Get-ChocolateySource {
 
     $configFolder = Split-Path -LiteralPath (Split-Path -LiteralPath $ChocoCommand.Path)
     $configPath = "$configFolder\config\chocolatey.config"
+
     if (-not (Test-Path -LiteralPath $configPath)) {
         $module.FailJson("Expecting Chocolatey config file to exist at '$configPath'")
     }
@@ -79,35 +80,41 @@ function Get-ChocolateySource {
 
     foreach ($sourceNode in $configXml.chocolatey.sources.GetEnumerator()) {
         $username = $sourceNode.Attributes.GetNamedItem("user")
+
         if ($null -ne $username) {
             $username = $username.Value
         }
 
         # 0.9.9.9+
         $priority = $sourceNode.Attributes.GetNamedItem("priority")
+
         if ($null -ne $priority) {
             $priority = [int]$priority.Value
         }
 
         # 0.9.10+
         $certificate = $sourceNode.Attributes.GetNamedItem("certificate")
+
         if ($null -ne $certificate) {
             $certificate = $certificate.Value
         }
 
         # 0.10.4+
         $bypassProxy = $sourceNode.Attributes.GetNamedItem("bypassProxy")
+
         if ($null -ne $bypassProxy) {
             $bypassProxy = [System.Convert]::ToBoolean($bypassProxy.Value)
         }
 
         $allowSelfService = $sourceNode.Attributes.GetNamedItem("selfService")
+
         if ($null -ne $allowSelfService) {
             $allowSelfService = [System.Convert]::ToBoolean($allowSelfService.Value)
         }
 
         # 0.10.8+
         $adminOnly = $sourceNode.Attributes.GetNamedItem("adminOnly")
+
         if ($null -ne $adminOnly) {
             $adminOnly = [System.Convert]::ToBoolean($adminOnly.Value)
         }
@@ -196,12 +203,13 @@ function New-ChocolateySource {
 
 
     $command = Argv-ToString -Arguments $arguments
-    $res = Run-Command -Command $command
-    if ($res.rc -ne 0) {
-        $module.Result.rc = $res.rc
-        $module.Result.stdout = $res.stdout
-        $module.Result.stderr = $res.stderr
-        $module.FailJson("Failed to add Chocolatey source '$Name': $($res.stderr)")
+    $result = Run-Command -Command $command
+
+    if ($result.rc -ne 0) {
+        $module.Result.rc = $result.rc
+        $module.Result.stdout = $result.stdout
+        $module.Result.stderr = $result.stderr
+        $module.FailJson("Failed to add Chocolatey source '$Name': $($result.stderr)")
     }
 
     @{
@@ -233,14 +241,16 @@ function Remove-ChocolateySource {
         }
     )
     $command = Argv-ToString -Arguments $arguments
-    $res = Run-Command -Command $command
-    if ($res.rc -ne 0) {
-        $module.FailJson("Failed to remove Chocolatey source '$Name': $($_.res.stderr)")
+    $result = Run-Command -Command $command
+
+    if ($result.rc -ne 0) {
+        $module.FailJson("Failed to remove Chocolatey source '$Name': $($result.stderr)")
     }
 }
 
 function Get-ChocolateyCommand {
     $command = Get-Command -Name choco.exe -CommandType Application -ErrorAction SilentlyContinue
+
     if (-not $command) {
         $installDir = if ($env:ChocolateyInstall) {
             $env:ChocolateyInstall
@@ -280,6 +290,7 @@ if ($state -eq "absent" -and $null -ne $targetSource) {
 }
 elseif ($state -in ("disabled", "present")) {
     $change = $false
+
     if ($null -eq $targetSource) {
         if ($null -eq $source) {
             $module.FailJson("The source option must be set when creating a new source")
@@ -351,6 +362,7 @@ elseif ($state -in ("disabled", "present")) {
 
     # enable/disable the source if necessary
     $action = $null
+
     if ($state -ne "disabled" -and $targetSource.disabled) {
         $action = "enable"
     }
@@ -371,6 +383,7 @@ elseif ($state -in ("disabled", "present")) {
 
         $command = Argv-ToString -Arguments $arguments
         $result = Run-Command -Command $command
+
         if ($result.rc -ne 0) {
             $module.FailJson("Failed to $action Chocolatey source '$name': $($result.stderr)")
         }

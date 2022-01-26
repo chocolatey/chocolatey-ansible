@@ -35,6 +35,7 @@ function Get-ChocolateyFeature {
 
     $command = Argv-ToString -Arguments $arguments
     $result = Run-Command -Command $command
+
     if ($result.rc -ne 0) {
         $module.FailJson("Failed to list Chocolatey features: $($result.stderr)")
     }
@@ -75,6 +76,7 @@ function Set-ChocolateyFeature {
 
 function Get-ChocolateyCommand {
     $command = Get-Command -Name choco.exe -CommandType Application -ErrorAction SilentlyContinue
+
     if (-not $command) {
         $installDir = if ($env:ChocolateyInstall) {
             $env:ChocolateyInstall
@@ -95,6 +97,7 @@ function Get-ChocolateyCommand {
 
 $chocoCommand = Get-ChocolateyCommand
 $featureStates = Get-ChocolateyFeature -ChocoCommand $chocoCommand
+
 if ($name -notin $featureStates.Keys) {
     $module.FailJson("Invalid feature name '$name' specified, valid features are: $($featureStates.Keys -join ', ')")
 }
