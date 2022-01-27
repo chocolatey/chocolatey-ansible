@@ -20,10 +20,10 @@ $spec = @{
         allow_multiple = @{ type = "bool"; default = $false }
         allow_prerelease = @{ type = "bool"; default = $false }
         architecture = @{ type = "str"; default = "default"; choices = "default", "x86" }
+        choco_args = @{ type = "list"; elements = "str"; aliases = "licensed_args" }
         force = @{ type = "bool"; default = $false }
         ignore_checksums = @{ type = "bool"; default = $false }
         ignore_dependencies = @{ type = "bool"; default = $false }
-        remove_dependencies = @{ type = "bool"; default = $false }
         install_args = @{ type = "str" }
         name = @{ type = "list"; elements = "str"; required = $true }
         override_args = @{ type = "bool"; default = $false }
@@ -32,6 +32,7 @@ $spec = @{
         proxy_url = @{ type = "str" }
         proxy_username = @{ type = "str" }
         proxy_password = @{ type = "str"; no_log = $true }
+        remove_dependencies = @{ type = "bool"; default = $false }
         skip_scripts = @{  type = "bool"; default = $false }
         source = @{ type = "str" }
         source_username = @{ type = "str" }
@@ -49,10 +50,10 @@ $allow_empty_checksums = $module.Params.allow_empty_checksums
 $allow_multiple = $module.Params.allow_multiple
 $allow_prerelease = $module.Params.allow_prerelease
 $architecture = $module.Params.architecture
+$choco_args = $module.Params.choco_args
 $force = $module.Params.force
 $ignore_checksums = $module.Params.ignore_checksums
 $ignore_dependencies = $module.Params.ignore_dependencies
-$remove_dependencies = $module.Params.remove_dependencies
 $install_args = $module.Params.install_args
 $name = $module.Params.name
 $override_args = $module.Params.override_args
@@ -61,6 +62,7 @@ $pinned = $module.Params.pinned
 $proxy_url = $module.Params.proxy_url
 $proxy_username = $module.Params.proxy_username
 $proxy_password = $module.Params.proxy_password
+$remove_dependencies = $module.Params.remove_dependencies
 $skip_scripts = $module.Params.skip_scripts
 $source = $module.Params.source
 $source_username = $module.Params.source_username
@@ -103,6 +105,7 @@ Function Get-InstallChocolateyArguments {
         [bool]$allow_multiple,
         [bool]$allow_prerelease,
         [String]$architecture,
+        [string[]] $choco_args,
         [bool]$force,
         [bool]$ignore_dependencies,
         [String]$install_args,
@@ -191,6 +194,9 @@ Function Get-InstallChocolateyArguments {
     if ($version) {
         $arguments.Add("--version") > $null
         $arguments.Add($version) > $null
+    }
+    if ($choco_args) {
+        $arguments.AddRange($choco_args)
     }
 
     return ,$arguments
@@ -509,6 +515,7 @@ Function Update-ChocolateyPackage {
         [bool]$allow_multiple,
         [bool]$allow_prerelease,
         [String]$architecture,
+        [string[]] $choco_args,
         [bool]$force,
         [bool]$ignore_checksums,
         [bool]$ignore_dependencies,
@@ -535,6 +542,7 @@ Function Update-ChocolateyPackage {
         allow_multiple = $allow_multiple
         allow_prerelease = $allow_prerelease
         architecture = $architecture
+        choco_args = $choco_args
         force = $force
         ignore_checksums = $ignore_checksums
         ignore_dependencies = $ignore_dependencies
@@ -586,6 +594,7 @@ Function Install-ChocolateyPackage {
         [bool]$allow_multiple,
         [bool]$allow_prerelease,
         [String]$architecture,
+        [string[]] $choco_args,
         [bool]$force,
         [bool]$ignore_checksums,
         [bool]$ignore_dependencies,
@@ -611,6 +620,7 @@ Function Install-ChocolateyPackage {
         allow_multiple = $allow_multiple
         allow_prerelease = $allow_prerelease
         architecture = $architecture
+        choco_args = $choco_args
         force = $force
         ignore_checksums = $ignore_checksums
         ignore_dependencies = $ignore_dependencies
@@ -811,6 +821,7 @@ if ($state -in @("downgrade", "latest", "upgrade", "present", "reinstalled")) {
         allow_multiple = $allow_multiple
         allow_prerelease = $allow_prerelease
         architecture = $architecture
+        choco_args = $choco_args
         force = $force
         ignore_checksums = $ignore_checksums
         ignore_dependencies = $ignore_dependencies

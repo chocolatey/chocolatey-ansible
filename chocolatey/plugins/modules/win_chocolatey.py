@@ -121,6 +121,20 @@ options:
     type: str
     version_added: '0.2.1'
     aliases: [ params ]
+  choco_args:
+    description:
+    - Additional parameters to pass to choco.exe
+    - These may be any additional parameters to pass through directly to
+      Chocolatey, in addition to the arguments already specified via other
+      parameters.
+    - This may be used to pass licensed options to Chocolatey, for example
+      C(--package-parameters-sensitive) or C(--install-directory).
+    - Passing licensed options may result in them being ignored or causing
+      errors if the targeted node is unlicensed or missing the
+      chocolatey.extension package.
+    type: list
+    version_added: '1.2.0'
+    aliases: [ licensed_args ]
   pinned:
     description:
     - Whether to pin the Chocolatey package or not.
@@ -384,6 +398,15 @@ EXAMPLES = r'''
     name: notepadplusplus
     pinned: no
     state: present
+
+- name: install a package with options that require licensed edition
+  win_chocolatey:
+    name: foo
+    state: present
+    choco_args:
+    - --skip-download-cache
+    - --package-parameters-sensitive
+    - '/Password=SecretPassword'
 '''
 
 RETURN = r'''
