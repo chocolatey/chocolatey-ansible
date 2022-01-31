@@ -4,80 +4,113 @@
 # Copyright: (c) 2020, Chocolatey Software
 # GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+#Requires -Module Ansible.ModuleUtils.ArgvParser
 #Requires -Module Ansible.ModuleUtils.CommandUtil
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
 
 $ErrorActionPreference = "Stop"
 
-$params = Parse-Args -arguments $args -supports_check_mode $true
-$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
-
-$name = Get-AnsibleParam -obj $params -name "name" -type "str" -failifempty $true
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "enabled" -validateset "disabled", "enabled"
-
-$result = @{
-    changed = $false
+# Documentation: https://docs.ansible.com/ansible/2.10/dev_guide/developing_modules_general_windows.html#windows-new-module-development
+$spec = @{
+    options             = @{
+        name  = @{ type = "str"; required = $true }
+        state = @{ type = "str"; default = "enabled"; choices = "disabled", "enabled" }
+    }
+    supports_check_mode = $true
 }
 
-Function Get-ChocolateyFeatures {
-    param($choco_app)
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
-    $res = Run-Command -command "`"$($choco_app.Path)`" feature list -r"
-    if ($res.rc -ne 0) {
-        Fail-Json -obj $result -message "Failed to list Chocolatey features: $($res.stderr)"
-    }
-    $feature_info = @{}
-    $res.stdout -split "`r`n" | Where-Object { $_ -ne "" } | ForEach-Object {
-        $feature_split = $_ -split "\|"
-        $feature_info."$($feature_split[0])" = $feature_split[1] -eq "Enabled"
-    }
+$name = $module.Params.name
+$state = $module.Params.state
 
-    return , $feature_info
-}
+function Get-ChocolateyFeature {
+    param($ChocoCommand)
 
-Function Set-ChocolateyFeature {
-    param(
-        $choco_app,
-        $name,
-        $enabled
+    $arguments = @(
+        $ChocoCommand.Path
+        "feature", "list"
+        "-r"
     )
 
-    if ($enabled) {
-        $state_string = "enable"
+    $command = Argv-ToString -Arguments $arguments
+    $result = Run-Command -Command $command
+
+    if ($result.rc -ne 0) {
+        $module.FailJson("Failed to list Chocolatey features: $($result.stderr)")
     }
-    else {
-        $state_string = "disable"
-    }
-    $res = Run-Command -command "`"$($choco_app.Path)`" feature $state_string --name `"$name`""
-    if ($res.rc -ne 0) {
-        Fail-Json -obj $result -message "Failed to set Chocolatey feature $name to $($state_string): $($res.stderr)"
+
+    # Build a hashtable of features where each feature name has a value of `$true` (enabled), or `$false` (disabled)
+    $features = @{}
+    $result.stdout -split "\r?\n" |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+        ForEach-Object {
+            $name, $state, $null = $_ -split "\|"
+            $features.$name = $state -eq "Enabled"
+        }
+
+    $features
+}
+
+function Set-ChocolateyFeature {
+    param(
+        $ChocoCommand,
+        $Name,
+        $Enabled
+    )
+
+    $stateCommand = if ($Enabled) { "enable" } else { "disable" }
+    $arguments = @(
+        $ChocoCommand.Path
+        "feature", $stateCommand
+        "--name", $Name
+    )
+
+    $command = Argv-ToString -Arguments $arguments
+    $result = Run-Command -Command $command
+
+    if ($result.rc -ne 0) {
+        $module.FailJson("Failed to set Chocolatey feature $Name to $($stateCommand): $($result.stderr)")
     }
 }
 
-$choco_app = Get-Command -Name choco.exe -CommandType Application -ErrorAction SilentlyContinue
-if ($null -eq $choco_app) {
-    $choco_dir = $env:ChocolateyInstall
-    if ($null -eq $choco_dir) {
-        $choco_dir = "$env:SYSTEMDRIVE\ProgramData\Chocolatey"
+function Get-ChocolateyCommand {
+    $command = Get-Command -Name choco.exe -CommandType Application -ErrorAction SilentlyContinue
+
+    if (-not $command) {
+        $installDir = if ($env:ChocolateyInstall) {
+            $env:ChocolateyInstall
+        }
+        else {
+            "$env:SYSTEMDRIVE\ProgramData\Chocolatey"
+        }
+
+        $command = Get-Command -Name "$installDir\bin\choco.exe" -CommandType Application -ErrorAction SilentlyContinue
+
+        if (-not $command) {
+            $module.FailJson("Failed to find Chocolatey installation, make sure choco.exe is in the PATH env value")
+        }
     }
-    $choco_app = Get-Command -Name "$choco_dir\bin\choco.exe" -CommandType Application -ErrorAction SilentlyContinue
-}
-if (-not $choco_app) {
-    Fail-Json -obj $result -message "Failed to find Chocolatey installation, make sure choco.exe is in the PATH env value"
+
+    $command
 }
 
-$feature_info = Get-ChocolateyFeatures -choco_app $choco_app
-if ($name -notin $feature_info.keys) {
-    Fail-Json -obj $result -message "Invalid feature name '$name' specified, valid features are: $($feature_info.keys -join ', ')"
+$chocoCommand = Get-ChocolateyCommand
+$featureStates = Get-ChocolateyFeature -ChocoCommand $chocoCommand
+
+if ($name -notin $featureStates.Keys) {
+    $module.FailJson("Invalid feature name '$name' specified, valid features are: $($featureStates.Keys -join ', ')")
 }
 
-$expected_status = $state -eq "enabled"
-$feature_status = $feature_info.$name
-if ($feature_status -ne $expected_status) {
-    if (-not $check_mode) {
-        Set-ChocolateyFeature -choco_app $choco_app -name $name -enabled $expected_status
+$shouldBeEnabled = $state -eq "enabled"
+$isEnabled = $featureStates.$name
+
+if ($isEnabled -ne $shouldBeEnabled) {
+    if (-not $module.CheckMode) {
+        Set-ChocolateyFeature -ChocoCommand $chocoCommand -Name $name -Enabled $shouldBeEnabled
     }
-    $result.changed = $true
+
+    $module.Result.changed = $true
 }
 
-Exit-Json -obj $result
+$module.ExitJson()

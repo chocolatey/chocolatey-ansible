@@ -181,6 +181,7 @@ stages:
         searchFolder: '$(System.DefaultWorkingDirectory)/testresults'
         testResultsFiles: '**/*.xml'
         publishRunAttachments: true
+        failTaskOnFailedTests: true
 
   - job: DestroyVM
     displayName: 'Destroy Azure Labs VM'
