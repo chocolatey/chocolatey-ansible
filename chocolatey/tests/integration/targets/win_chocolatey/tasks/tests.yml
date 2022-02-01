@@ -260,6 +260,53 @@
     - (install_params_info.stdout|from_json).source == "normal"
     - (install_params_info.stdout|from_json).timeout == "2700000"
 
+- name: reinstall package with manually specified params
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: reinstalled
+    choco_args:
+    - --install-args
+    - '/install_arg 1 /install_arg 2'
+    - --override-arguments
+    - --package-parameters
+    - '/param1 /param2:value'
+    - --allow-empty-checksums
+    - --x86
+    - --force
+    - --ignore-checksums
+    - --version
+    - '0.0.1'
+    - --proxy
+    - 'http://proxyhost'
+
+  register: install_manual_params
+
+- name: get result of install package with manually specified params
+  win_command: choco.exe list --local-only --limit-output --exact {{ test_choco_package1|quote }}
+  register: install_manual_params_actual
+
+- name: get info of install package with manually specified params
+  win_shell: Get-Content -Path '{{ test_choco_path }}\{{ test_choco_package1 }}-0.0.1.txt'
+  register: install_manual_params_info
+
+- name: assert install package with manually specified params
+  assert:
+    that:
+    - install_manual_params is changed
+    - install_manual_params_actual.stdout_lines == [test_choco_package1 + "|0.0.1"]
+    - (install_manual_params_info.stdout|from_json).allow_empty_checksums == True
+    - (install_manual_params_info.stdout|from_json).force == True
+    - (install_manual_params_info.stdout|from_json).force_x86 == True
+    - (install_manual_params_info.stdout|from_json).ignore_checksums == True
+    - (install_manual_params_info.stdout|from_json).install_args == "/install_arg 1 /install_arg 2"
+    - (install_manual_params_info.stdout|from_json).override_args == True
+    - (install_manual_params_info.stdout|from_json).package_params.keys()|count == 2
+    - (install_manual_params_info.stdout|from_json).package_params.param1 == True
+    - (install_manual_params_info.stdout|from_json).package_params.param2 == "value"
+    - (install_manual_params_info.stdout|from_json).proxy_url == "http://proxyhost"
+    - (install_manual_params_info.stdout|from_json).source == "normal"
+    - (install_manual_params_info.stdout|from_json).timeout == "2700000"
+
 - name: install package with version (idempotent)
   win_chocolatey:
     name: '{{ test_choco_package1 }}'
