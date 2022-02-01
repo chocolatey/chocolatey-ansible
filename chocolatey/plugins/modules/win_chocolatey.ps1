@@ -274,20 +274,31 @@ Function Install-Chocolatey {
                 $client.Credentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $source_username, $sec_source_password
             }
         } else {
-            $script_url = "https://chocolatey.org/install.ps1"
+            $script_url = "https://community.chocolatey.org/install.ps1"
         }
 
         try {
-            $install_script = $client.DownloadString($script_url)
+            $installScript = $client.DownloadString($script_url)
         } catch {
             $module.FailJson("Failed to download Chocolatey script from '$script_url'; $($_.Exception.Message)", $_)
         }
+
         if (-not $module.CheckMode) {
-            $res = Run-Command -command "powershell.exe -" -stdin $install_script -environment $environment
-            if ($res.rc -ne 0) {
-                $module.Result.rc = $res.rc
-                $module.Result.stdout = $res.stdout
-                $module.Result.stderr = $res.stderr
+            $scriptFile = New-Item -Path (Join-Path $module.TmpDir -ChildPath 'chocolateyInstall.ps1') -ItemType File
+            $installScript | Set-Content -Path $scriptFile
+
+            # These commands will be sent over stdin for the PowerShell process, and will be read line by line,
+            # so we must join them on \r\n line-feeds to have them read as separate commands.
+            $commands = @(
+                '$ProgressPreference = "SilentlyContinue"'
+                '& "{0}"' -f $scriptFile
+            ) -join "`r`n"
+
+            $result = Run-Command -Command "powershell.exe -" -Stdin $commands -Environment $environment
+            if ($result.rc -ne 0) {
+                $module.Result.rc = $result.rc
+                $module.Result.stdout = $result.stdout
+                $module.Result.stderr = $result.stderr
                 $module.FailJson("Chocolatey bootstrap installation failed.")
             }
 
@@ -295,6 +306,7 @@ Function Install-Chocolatey {
                 $module.Warn("Chocolatey was missing from this system, so it was installed during this task run.")
             }
         }
+
         $module.Result.changed = $true
 
         # locate the newly installed choco.exe
