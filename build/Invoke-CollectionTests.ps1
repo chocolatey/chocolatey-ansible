@@ -35,11 +35,11 @@ begin {
 #region Bash Commands
     # All command strings in this region must be valid Bash command lines; the lines following this region join
     # the provided commands into a single command string.
-    $ImportVenv = 'source ~/ansible-venv/bin/activate'
+    $ImportVenv = '. ~/ansible-venv/bin/activate'
     $SetCollectionLocation = 'cd ~/.ansible/collections/ansible_collections/chocolatey/chocolatey'
     $SetupCommands = @(
         $ImportVenv
-        'cd ./chocolatey'
+        'cd chocolatey'
 
         # Skip building collection in CI; this will have been done already by a previous CI step.
         if (-not $IsCIBuild) {
@@ -57,7 +57,7 @@ begin {
             "mv -f ~/$InventoryFile ./tests/integration/inventory.winrm"
         }
         else {
-            "mv -f ./tests/integration/$InventoryFile ./tests/integration/inventory.winrm"
+            "mv -f tests/integration/$InventoryFile tests/integration/inventory.winrm"
         }
 
         "${Sudo}ansible-test windows-integration -vvv --requirements --continue-on-error"
@@ -117,7 +117,7 @@ process {
                 $env:PACKAGE_VERSION = '24.6.26'
             }
 
-            vagrant ssh choco_ansible_server --command "sed -i ./chocolatey/galaxy.yml 's/{{ REPLACE_VERSION }}/$env:PACKAGE_VERSION/g'"
+            vagrant ssh choco_ansible_server --command "sed -i 's/{{ REPLACE_VERSION }}/$env:PACKAGE_VERSION/g' ./chocolatey/galaxy.yml"
             vagrant ssh choco_ansible_server --command $Commands
             $Result = [PSCustomObject]@{
                 Success  = $?
