@@ -17,11 +17,11 @@ $spec = @{
         allow_self_service   = @{ type = "bool" }
         bypass_proxy         = @{ type = "bool" }
         certificate          = @{ type = "str" }
-        certificate_password = @{ type = "str" }
+        certificate_password = @{ type = "str"; no_log = $true }
         priority             = @{ type = "int" }
         source               = @{ type = "str" }
         source_username      = @{ type = "str" }
-        source_password      = @{ type = "str" }
+        source_password      = @{ type = "str"; no_log = $true }
         update_password      = @{ type = "str"; default = "always"; choices = "always", "on_create" }
     }
     supports_check_mode = $true

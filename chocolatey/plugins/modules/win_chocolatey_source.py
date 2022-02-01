@@ -45,10 +45,12 @@ options:
     description:
     - The password for I(certificate) if required.
     - Requires Chocolatey >= 0.9.10.
+    type: str
   name:
     description:
     - The name of the source to configure.
     required: yes
+    type: str
   priority:
     description:
     - The priority order of this source compared to other sources, lower is
@@ -63,13 +65,16 @@ options:
     - The file/folder/url of the source.
     - Required when I(state) is C(present) or C(disabled) and the source does
       not already exist.
+    type: str
   source_username:
     description:
     - The username used to access I(source).
+    type: str
   source_password:
     description:
     - The password for I(source_username).
     - Required if I(source_username) is set.
+    type: str
   state:
     description:
     - When C(absent), will remove the source.
@@ -80,6 +85,7 @@ options:
     - disabled
     - present
     default: present
+    type: str
   update_password:
     description:
     - When C(always), the module will always set the password and report a
@@ -90,6 +96,7 @@ options:
     - always
     - on_create
     default: always
+    type: str
 seealso:
 - module: win_chocolatey
 - module: win_chocolatey_config
