@@ -9,8 +9,8 @@
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
 
-#AnsibleRequires -PowerShell ..module_utils.Common
-#AnsibleRequires -PowerShell ..module_utils.Sources
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Common
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Sources
 
 # Documentation: https://docs.ansible.com/ansible/2.10/dev_guide/developing_modules_general_windows.html#windows-new-module-development
 $spec = @{
@@ -39,7 +39,8 @@ $spec = @{
     }
 }
 
-$module = New-AnsibleModule -Specifications $spec -Arguments $args
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+Set-ActiveModule $module
 
 $name = $module.Params.name
 $state = $module.Params.state
@@ -112,14 +113,26 @@ elseif ($state -in ("disabled", "present")) {
             ChocoCommand = $chocoCommand
             Name = $name
             Source = $source
-            Username = $source_username
-            Password = $source_password
-            Certificate = $certificate
-            CertificatePassword = $certificate_password
-            Priority = $priority
             BypassProxy = $bypass_proxy
             AllowSelfService = $allow_self_service
             AdminOnly = $admin_only
+        }
+
+        if ($null -ne $priority) {
+            $sourceParams.Priority = $priority
+        }
+
+        if ($null -ne $source_username) {
+            $sourceParams.Username = $source_username
+            $sourceParams.Password = $source_password
+        }
+
+        if ($null -ne $certificate) {
+            $sourceParams.Certificate = $certificate
+
+            if ($null -ne $certificate_password) {
+                $sourceParams.CertificatePassword = $certificate_password
+            }
         }
 
         $targetSource = New-ChocolateySource @sourceParams

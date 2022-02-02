@@ -9,8 +9,8 @@
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
 
-#AnsibleRequires -PowerShell ..module_utils.Common
-#AnsibleRequires -PowerShell ..module_utils.Config
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Common
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Config
 
 $ErrorActionPreference = "Stop"
 
@@ -31,7 +31,8 @@ $spec = @{
     supports_check_mode = $true
 }
 
-$module = New-AnsibleModule -Specifications $spec -Arguments $args
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+Set-ActiveModule $module
 
 $name = $module.Params.name
 $state = $module.Params.state

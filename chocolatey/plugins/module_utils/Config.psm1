@@ -1,11 +1,20 @@
 #Requires -Module Ansible.ModuleUtils.ArgvParser
 #Requires -Module Ansible.ModuleUtils.CommandUtil
 
-#AnsibleRequires -PowerShell ..module_utils.Common
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Common
 
 function Get-ChocolateyConfig {
+    <#
+        .SYNOPSIS
+        Outputs a hashtable containing the Chocolatey configuration information.
+
+        .DESCRIPTION
+        Inspects the `chocolatey.config` file from the current Chocolatey installation
+        and creates a hashtable containing all the configuration values.
+    #>
     [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand
@@ -55,12 +64,18 @@ function Get-ChocolateyConfig {
 }
 
 function Remove-ChocolateyConfig {
+    <#
+        .SYNOPSIS
+        Unsets the given Chocolatey configuration entry, reverting it to the default value.
+    #>
     [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand,
 
+        # The name of the configuration entry to unset.
         [Parameter(Mandatory = $true)]
         [string]
         $Name
@@ -80,15 +95,23 @@ function Remove-ChocolateyConfig {
 }
 
 function Set-ChocolateyConfig {
+    <#
+        .SYNOPSIS
+        Sets the given Chocolatey configuration entry to the requested value.
+    #>
+    [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand,
 
+        # The name of the configuration entry to set.
         [Parameter(Mandatory = $true)]
         [string]
         $Name,
 
+        # The value to set the configuration entry to.
         [Parameter(Mandatory = $true)]
         [string]
         $Value
@@ -107,3 +130,5 @@ function Set-ChocolateyConfig {
         Assert-TaskFailed -Message $message -CommandResult $result
     }
 }
+
+Export-ModuleMember -Function Get-ChocolateyConfig, Set-ChocolateyConfig, Remove-ChocolateyConfig

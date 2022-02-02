@@ -1,19 +1,25 @@
 #Requires -Module Ansible.ModuleUtils.ArgvParser
 #Requires -Module Ansible.ModuleUtils.CommandUtil
 
-#AnsibleRequires -PowerShell ..module_utils.Common
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Common
 
 # As of chocolatey 0.9.10, non-zero success exit codes can be returned
 # See https://github.com/chocolatey/choco/issues/512#issuecomment-214284461
 $script:successExitCodes = (0, 1605, 1614, 1641, 3010)
 
 function Get-ChocolateyPackage {
+    <#
+        .SYNOPSIS
+        Retrieves the list of Chocolatey packages already present on the local system.
+    #>
     [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand,
 
+        # The version of packages to retrieve. Defaults to all package versions.
         [Parameter()]
         [string]
         $Version
@@ -36,12 +42,12 @@ function Get-ChocolateyPackage {
 
     # Chocolatey v0.10.12 introduced enhanced exit codes, 2 means no results, e.g. no package
     if ($result.rc -notin @(0, 2)) {
-        $module.Result.command = $command
         $message = 'Error checking installation status for chocolatey packages'
-        Assert-TaskFailed -Message $message
+        Assert-TaskFailed -Message $message -Command $command -CommandResult $result
     }
 
-    $result.stdout.Trim().Split([System.Environment]::NewLine, [System.StringSplitOptions]::RemoveEmptyEntries) |
+    $result |
+        Get-StdoutLines |
         ForEach-Object {
             # Sanity check in case additional output is added in the future.
             if ($_.Contains('|')) {
@@ -56,21 +62,27 @@ function Get-ChocolateyPackage {
 }
 
 function Get-ChocolateyPackageVersion {
+    <#
+        .SYNOPSIS
+        Gets entries of a specific Chocolatey package installed on the local system, if any.
+    #>
     [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand,
 
+        # The name of the package to look for.
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]
         $Name,
 
+        # The version of the package to look for.
         [Parameter()]
         [string]
         $Version
     )
-
     begin {
         $versionSplat = if ([string]::IsNullOrEmpty($Version)) { @{} } else { @{ Version = $Version } }
 
@@ -104,111 +116,161 @@ function Get-ChocolateyPackageVersion {
 }
 
 function Get-CommonChocolateyArguments {
+    <#
+        .SYNOPSIS
+        Retrieves a set of common Chocolatey arguments.
+
+        .DESCRIPTION
+        Retrieves the default set of Chocolatey arguments, constructed to function
+        best in headless environments (disable progress, auto-confirm) as well as
+        setting the verbosity levels of output to match the provided Ansible module.
+    #>
+    [CmdletBinding()]
+    param(
+        # The Ansible module object to check for verbosity levels and check mode.
+        # Defaults to the currently active module.
+        [Parameter()]
+        [Ansible.Basic.AnsibleModule]
+        $Module = (Get-AnsibleModule)
+    )
+
     # uses global vars like check_mode and verbosity to control the common args
     # run with Chocolatey
     "--yes"
     "--no-progress"
 
     # global vars that control the arguments
-    if ($module.CheckMode) {
+    if ($Module.CheckMode) {
         "--what-if"
     }
 
-    if ($module.Verbosity -ge 4) {
-        if ($module.Verbosity -ge 5) {
+    if ($Module.Verbosity -ge 4) {
+        if ($Module.Verbosity -ge 5) {
             "--debug"
         }
 
         "--verbose"
     }
-    elseif ($module.Verbosity -le 2) {
+    elseif ($Module.Verbosity -le 2) {
         "--limit-output"
     }
 }
 
 function Get-InstallChocolateyArguments {
+    <#
+        .SYNOPSIS
+        Translates parameters into commonly used Chocolatey command line arguments.
+
+        .DESCRIPTION
+        Takes the provided parameters and outputs an array of raw command line
+        parameters to pass to Chocolatey, including a set of
+    #>
     [CmdletBinding()]
     param(
+        # Whether to permit downgrading packages with `choco upgrade`.
         [Parameter()]
         [switch]
         $AllowDowngrade,
 
+        # Whether to ignore missing checksums in packages' downloaded files.
         [Parameter()]
         [switch]
         $AllowEmptyChecksums,
 
+        # Whether to permit multiple side by side installations of the same package.
         [Parameter()]
         [switch]
         $AllowMultiple,
 
+        # Whether to consider pre-release packages as valid selections to install.
         [Parameter()]
         [switch]
         $AllowPrerelease,
 
+        # Set to `x86` to force Chocolatey to install x86 binaries.
         [Parameter()]
         [string]
         $Architecture,
 
+        # Any additional arguments to be passed directly to `choco.exe`
         [Parameter()]
         [string[]]
         $ChocoArgs,
 
+        # Set to force choco to reinstall the package if the package (version)
+        # is already installed.
         [Parameter()]
         [switch]
         $Force,
 
+        # Set to ignore mismatched checksums for files downloaded by packages.
         [Parameter()]
         [switch]
         $IgnoreChecksums,
 
+        # Set to ignore any defined package dependencies.
         [Parameter()]
         [switch]
         $IgnoreDependencies,
 
+        # Installation args to be provided to installers in a given package.
         [Parameter()]
         [string]
         $InstallArgs,
 
+        # Set to have `-InstallArgs` completely overwrite rather than append to
+        # normal arguments provided by the package installation script.
         [Parameter()]
         [switch]
         $OverrideArgs,
 
+        # Add specific package parameters to the package installation.
         [Parameter()]
         [string]
         $PackageParams,
 
+        # Set a proxy URL to use when downloading packages.
         [Parameter()]
         [string]
         $ProxyUrl,
 
+        # Set a username for the proxy used when downloading packages.
         [Parameter()]
         [string]
         $ProxyUsername,
 
+        # Set the password for the proxy used for downloading packages.
         [Parameter()]
         [string]
         $ProxyPassword,
 
+        # Skip any .ps1 scripts for the package and just manage the package files
+        # in the lib folder directly.
         [Parameter()]
         [bool]
         $SkipScripts,
 
+        # Define a specific source or sources to search for the package.
         [Parameter()]
         [string]
         $Source,
 
+        # Set a username to access authenticated sources.
         [Parameter()]
         [string]
         $SourceUsername,
 
+        # Set the password to access authenticated sources.
         [Parameter()]
         [string]
         $SourcePassword,
 
+        # Set a specific timout in seconds to apply to the operation.
         [Parameter()]
         [int]
         $Timeout,
 
+        # The version for the package to install or uninstall.
         [Parameter()]
         [string]
         $Version
@@ -247,8 +309,17 @@ function Get-InstallChocolateyArguments {
 }
 
 function Get-ChocolateyPin {
+    <#
+        .SYNOPSIS
+        Gets a hashtable containing all configured pins for installed packages.
+
+        .DESCRIPTION
+        Outputs a hashtable with keys corresponding to installed package names,
+        and the values as a collection of version numbers.
+    #>
     [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand
@@ -262,40 +333,51 @@ function Get-ChocolateyPin {
     $result = Run-Command -Command $command
 
     if ($result.rc -ne 0) {
-        Assert-TaskFailed -Message "Error getting list of pinned packages" -Command $command
+        $message = "Error getting list of pinned packages"
+        Assert-TaskFailed -Message $message -Command $command -CommandResult $result
     }
 
     $pins = @{}
 
-    $result | Get-StdoutLines | ForEach-Object {
-        $package, $version, $null = $_.Split('|')
+    $result |
+        Get-StdoutLines |
+        ForEach-Object {
+            $package, $version, $null = $_.Split('|')
 
-        if ($pins.ContainsKey($package)) {
-            $pins.$package.Add($version)
+            if ($pins.ContainsKey($package)) {
+                $pins.$package.Add($version)
+            }
+            else {
+                $pins.$package = [System.Collections.Generic.List[string]]@( $version )
+            }
         }
-        else {
-            $pins.$package = [System.Collections.Generic.List[string]]@( $version )
-        }
-    }
 
     $pins
 }
 
 function Set-ChocolateyPin {
+    <#
+        .SYNOPSIS
+        Sets the pin configuration for the target package.
+    #>
     [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand,
 
+        # The name of the package to pin.
         [Parameter(Mandatory = $true)]
         [string]
         $Name,
 
+        # Set to pin the package, otherwise it will be unpinned.
         [Parameter()]
         [switch]
         $Pin,
 
+        # The specific version to pin.
         [Parameter()]
         [string]
         $Version
@@ -326,107 +408,140 @@ function Set-ChocolateyPin {
     $command = Argv-ToString -Arguments $arguments
     $result = Run-Command -Command $command
     if ($result.rc -ne 0) {
-        Assert-TaskFailed -Message $errorMessage -CommandResult $result -Command $command
+        Assert-TaskFailed -Message $errorMessage -Command $command -CommandResult $result
     }
 
     Set-TaskResultChanged
 }
 
 function Update-ChocolateyPackage {
+    <#
+        .SYNOPSIS
+        Updates one or more Chocolatey packages.
+    #>
     [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand,
 
+        # The package or packages to upgrade.
         [Parameter(Mandatory = $true)]
         [string[]]
         $Package,
 
+        # The current module, will be used to set the response codes and
+        # any other information needing to be returned.
+        # Defaults to the currently active module.
         [Parameter()]
         [Ansible.Basic.AnsibleModule]
         $Module = (Get-AnsibleModule),
 
+        # Whether to permit downgrading packages with `choco upgrade`.
         [Parameter()]
         [switch]
         $AllowDowngrade,
 
+        # Whether to ignore missing checksums in packages' downloaded files.
         [Parameter()]
         [switch]
         $AllowEmptyChecksums,
 
+        # Whether to permit multiple side by side installations of the same package.
         [Parameter()]
         [switch]
         $AllowMultiple,
 
+        # Whether to consider pre-release packages as valid selections to install.
         [Parameter()]
         [switch]
         $AllowPrerelease,
 
+        # Set to `x86` to force Chocolatey to install x86 binaries.
         [Parameter()]
         [string]
         $Architecture,
 
+        # Any additional arguments to be passed directly to `choco.exe`
         [Parameter()]
         [string[]]
         $ChocoArgs,
 
+        # Set to force choco to reinstall the package if the package (version)
+        # is already installed.
         [Parameter()]
         [switch]
         $Force,
 
+        # Set to ignore mismatched checksums for files downloaded by packages.
         [Parameter()]
         [switch]
         $IgnoreChecksums,
 
+        # Set to ignore any defined package dependencies.
         [Parameter()]
         [switch]
         $IgnoreDependencies,
 
+        # Installation args to be provided to installers in a given package.
         [Parameter()]
         [string]
         $InstallArgs,
 
+        # Set to have `-InstallArgs` completely overwrite rather than append to
+        # normal arguments provided by the package installation script.
         [Parameter()]
         [switch]
         $OverrideArgs,
 
+        # Add specific package parameters to the package installation.
         [Parameter()]
         [string]
         $PackageParams,
 
+        # Set a proxy URL to use when downloading packages.
         [Parameter()]
         [string]
         $ProxyUrl,
 
+        # Set a username for the proxy used when downloading packages.
         [Parameter()]
         [string]
         $ProxyUsername,
 
+        # Set the password for the proxy used for downloading packages.
         [Parameter()]
         [string]
         $ProxyPassword,
 
+        # Skip any .ps1 scripts for the package and just manage the package files
+        # in the lib folder directly.
         [Parameter()]
         [bool]
         $SkipScripts,
 
+        # Define a specific source or sources to search for the package.
         [Parameter()]
         [string]
         $Source,
 
+        # Set a username to access authenticated sources.
         [Parameter()]
         [string]
         $SourceUsername,
 
+        # Set the password to access authenticated sources.
         [Parameter()]
         [string]
         $SourcePassword,
 
+        # Set a specific timout in seconds to apply to the operation.
         [Parameter()]
         [int]
         $Timeout,
 
+        # The version for the package to upgrade.
         [Parameter()]
         [string]
         $Version
@@ -450,7 +565,7 @@ function Update-ChocolateyPackage {
     $result = Run-Command -Command $command
     $Module.Result.rc = $result.rc
 
-    if ($res.rc -notin $script:successExitCodes) {
+    if ($result.rc -notin $script:successExitCodes) {
         $message = "Error updating package(s) '$($Package -join ", ")'"
         Assert-TaskFailed -Message $message -Command $command -CommandResult $result
     }
@@ -470,100 +585,133 @@ function Update-ChocolateyPackage {
 }
 
 function Install-ChocolateyPackage {
+    <#
+        .SYNOPSIS
+        Installs one or more Chocolatey packages.
+    #>
     [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand,
 
+        # The package or packages to install.
         [Parameter(Mandatory = $true)]
         [string[]]
         $Package,
 
+        # The current module, will be used to set the response codes and
+        # any other information needing to be returned.
+        # Defaults to the currently active module.
         [Parameter()]
         [Ansible.Basic.AnsibleModule]
         $Module = (Get-AnsibleModule),
 
+        # Whether to permit downgrading packages with `choco upgrade`.
         [Parameter()]
         [switch]
         $AllowDowngrade,
 
+        # Whether to ignore missing checksums in packages' downloaded files.
         [Parameter()]
         [switch]
         $AllowEmptyChecksums,
 
+        # Whether to permit multiple side by side installations of the same package.
         [Parameter()]
         [switch]
         $AllowMultiple,
 
+        # Whether to consider pre-release packages as valid selections to install.
         [Parameter()]
         [switch]
         $AllowPrerelease,
 
+        # Set to `x86` to force Chocolatey to install x86 binaries.
         [Parameter()]
         [string]
         $Architecture,
 
+        # Any additional arguments to be passed directly to `choco.exe`
         [Parameter()]
         [string[]]
         $ChocoArgs,
 
+        # Set to force choco to reinstall the package if the package (version)
+        # is already installed.
         [Parameter()]
         [switch]
         $Force,
 
+        # Set to ignore mismatched checksums for files downloaded by packages.
         [Parameter()]
         [switch]
         $IgnoreChecksums,
 
+        # Set to ignore any defined package dependencies.
         [Parameter()]
         [switch]
         $IgnoreDependencies,
 
+        # Installation args to be provided to installers in a given package.
         [Parameter()]
         [string]
         $InstallArgs,
 
+        # Set to have `-InstallArgs` completely overwrite rather than append to
+        # normal arguments provided by the package installation script.
         [Parameter()]
         [switch]
         $OverrideArgs,
 
+        # Add specific package parameters to the package installation.
         [Parameter()]
         [string]
         $PackageParams,
 
+        # Set a proxy URL to use when downloading packages.
         [Parameter()]
         [string]
         $ProxyUrl,
 
+        # Set a username for the proxy used when downloading packages.
         [Parameter()]
         [string]
         $ProxyUsername,
 
+        # Set the password for the proxy used for downloading packages.
         [Parameter()]
         [string]
         $ProxyPassword,
 
+        # Skip any .ps1 scripts for the package and just manage the package files
+        # in the lib folder directly.
         [Parameter()]
         [bool]
         $SkipScripts,
 
+        # Define a specific source or sources to search for the package.
         [Parameter()]
         [string]
         $Source,
 
+        # Set a username to access authenticated sources.
         [Parameter()]
         [string]
         $SourceUsername,
 
+        # Set the password to access authenticated sources.
         [Parameter()]
         [string]
         $SourcePassword,
 
+        # Set a specific timout in seconds to apply to the operation.
         [Parameter()]
         [int]
         $Timeout,
 
+        # The version for the package to install.
         [Parameter()]
         [string]
         $Version
@@ -587,7 +735,7 @@ function Install-ChocolateyPackage {
     $result = Run-Command -Command $command
     $Module.Result.rc = $result.rc
 
-    if ($res.rc -notin $script:successExitCodes) {
+    if ($result.rc -notin $script:successExitCodes) {
         $message = "Error installing package(s) '$($Package -join ", ")'"
         Assert-TaskFailed -Message $message -Command $command -CommandResult $result
     }
@@ -603,44 +751,62 @@ function Install-ChocolateyPackage {
 }
 
 function Uninstall-ChocolateyPackage {
+    <#
+        .SYNOPSIS
+        Uninstalls one or more Chocolatey packages.
+    #>
     [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand,
 
+        # The package or packages to uninstall.
         [Parameter(Mandatory = $true)]
         [string[]]
         $Package,
 
+        # The current module, will be used to set the response codes and
+        # any other information needing to be returned.
+        # Defaults to the currently active module.
         [Parameter()]
         [Ansible.Basic.AnsibleModule]
         $Module = (Get-AnsibleModule),
 
+        # Set to force choco to reinstall the package if the package (version)
+        # is already installed.
         [Parameter()]
         [switch]
         $Force,
 
+        # Add specific package parameters to the package installation.
         [Parameter()]
         [string]
         $PackageParams,
 
+        # Skip any .ps1 scripts for the package and just manage the package files
+        # in the lib folder directly.
         [Parameter()]
         [switch]
         $SkipScripts,
 
+        # Uninstall all dependencies for this package as well.
         [Parameter()]
         [switch]
         $RemoveDependencies,
 
+        # Whether to permit multiple side by side installations of the same package.
         [Parameter()]
         [switch]
         $AllowMultiple,
 
+        # Set a specific timout in seconds to apply to the operation.
         [Parameter()]
         [int]
         $Timeout,
 
+        # The version for the package to uninstall.
         [Parameter()]
         [string]
         $Version
@@ -674,7 +840,7 @@ function Uninstall-ChocolateyPackage {
     $result = Run-Command -Command $command
     $Module.Result.rc = $result.rc
 
-    if ($res.rc -notin $script:successExitCodes) {
+    if ($result.rc -notin $script:successExitCodes) {
         $message = "Error uninstalling package(s) '$($Package -join ", ")'"
         Assert-TaskFailed -Message $message -Command $command -CommandResult $result
     }
@@ -692,34 +858,49 @@ function Uninstall-ChocolateyPackage {
 function Install-Chocolatey {
     [CmdletBinding()]
     param(
+        # The current module, will be used to set the response codes and
+        # any other information needing to be returned.
+        # Defaults to the currently active module.
+        [Parameter()]
+        [Ansible.Basic.AnsibleModule]
+        $Module = (Get-AnsibleModule),
+
+        # Set a proxy URL to use when downloading Chocolatey.
         [Parameter()]
         [string]
         $ProxyUrl,
 
+        # Set a proxy username to use when downloading Chocolatey.
         [Parameter()]
         [string]
         $ProxyUsername,
 
+        # Set a proxy password to use when downloading Chocolatey.
         [Parameter()]
         [string]
         $ProxyPassword,
 
+        # Set the source URL to find the chocolatey install script in.
         [Parameter()]
         [string]
         $Source,
 
+        # The username to authenticate to the source repository.
         [Parameter()]
         [string]
         $SourceUsername,
 
+        # The password to authenticate to the source repository.
         [Parameter()]
         [string]
         $SourcePassword,
 
+        # The version of Chocolatey to install.
         [Parameter()]
         [string]
         $Version,
 
+        # Set to skip writing the warning message when Chocolatey is not yet present.
         [Parameter()]
         [switch]
         $SkipWarning
@@ -812,8 +993,8 @@ function Install-Chocolatey {
             Assert-TaskFailed -Message $message -Exception $_
         }
 
-        if (-not $module.CheckMode) {
-            $scriptFile = New-Item -Path (Join-Path $module.TmpDir -ChildPath 'chocolateyInstall.ps1') -ItemType File
+        if (-not $Module.CheckMode) {
+            $scriptFile = New-Item -Path (Join-Path $Module.TmpDir -ChildPath 'chocolateyInstall.ps1') -ItemType File
             $installScript | Set-Content -Path $scriptFile
 
             # These commands will be sent over stdin for the PowerShell process, and will be read line by line,
@@ -830,7 +1011,7 @@ function Install-Chocolatey {
             }
 
             if (-not $SkipWarning) {
-                $module.Warn("Chocolatey was missing from this system, so it was installed during this task run.")
+                $Module.Warn("Chocolatey was missing from this system, so it was installed during this task run.")
             }
         }
 
@@ -841,10 +1022,10 @@ function Install-Chocolatey {
     }
 
     if ($null -eq $chocoCommand -or -not (Test-Path -LiteralPath $chocoCommand.Path)) {
-        if ($module.CheckMode) {
-            $module.Result.skipped = $true
-            $module.Result.msg = "Skipped check mode run on win_chocolatey as choco.exe cannot be found on the system"
-            $module.ExitJson()
+        if ($Module.CheckMode) {
+            $Module.Result.skipped = $true
+            $Module.Result.msg = "Skipped check mode run on win_chocolatey as choco.exe cannot be found on the system"
+            $Module.ExitJson()
         }
         else {
             $message = "Failed to find choco.exe, make sure it is added to the PATH or the env var 'ChocolateyInstall' is set"
@@ -852,25 +1033,25 @@ function Install-Chocolatey {
         }
     }
 
-    $actualVersion = @(Get-ChocolateyPackageVersion -ChocoCommand $chocoCommand -Name 'chocolatey')[0]
+    $actualVersion = (Get-ChocolateyPackageVersion -ChocoCommand $chocoCommand -Name 'chocolatey').chocolatey[0]
     try {
         # The Chocolatey version may not be in the strict form of major.minor.build and will fail to cast to
         # System.Version. We want to warn if this is the case saying module behaviour may be incorrect.
         $actualVersion = [Version]$actualVersion
     }
     catch {
-        $module.Warn("Failed to parse Chocolatey version '$actualVersion' for checking module requirements, module may not work correctly: $($_.Exception.Message)")
+        $Module.Warn("Failed to parse Chocolatey version '$actualVersion' for checking module requirements, module may not work correctly: $($_.Exception.Message)")
         $actualVersion = $null
     }
 
     if ($null -ne $actualVersion -and $actualVersion -lt [Version]"0.10.5") {
-        if ($module.CheckMode) {
-            $module.Result.skipped = $true
-            $module.Result.msg = "Skipped check mode run on win_chocolatey as choco.exe is too old, a real run would have upgraded the executable. Actual: '$actualVersion', Minimum Version: '0.10.5'"
-            $module.ExitJson()
+        if ($Module.CheckMode) {
+            $Module.Result.skipped = $true
+            $Module.Result.msg = "Skipped check mode run on win_chocolatey as choco.exe is too old, a real run would have upgraded the executable. Actual: '$actualVersion', Minimum Version: '0.10.5'"
+            $Module.ExitJson()
         }
 
-        $module.Warn("Chocolatey was older than v0.10.5 so it will be upgraded during this task run.")
+        $Module.Warn("Chocolatey was older than v0.10.5 so it will be upgraded during this task run.")
         $params = @{
             ChocoCommand   = $chocoCommand
             Packages       = @("chocolatey")
@@ -886,3 +1067,16 @@ function Install-Chocolatey {
 
     $chocoCommand
 }
+
+Export-ModuleMember -Function @(
+    'Get-ChocolateyPackage'
+    'Get-ChocolateyPackageVersion'
+    'Get-ChocolateyPin'
+    'Get-CommonChocolateyArguments'
+    'Get-InstallChocolateyArguments'
+    'Set-ChocolateyPin'
+    'Install-Chocolatey'
+    'Install-ChocolateyPackage'
+    'Uninstall-ChocolateyPackage'
+    'Update-ChocolateyPackage'
+)

@@ -1,11 +1,20 @@
 #Requires -Module Ansible.ModuleUtils.ArgvParser
 #Requires -Module Ansible.ModuleUtils.CommandUtil
 
-#AnsibleRequires -PowerShell ..module_utils.Common
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Common
 
 function Get-ChocolateySource {
+    <#
+        .SYNOPSIS
+        Gets a list of all Chocolatey sources.
+
+        .DESCRIPTION
+        Outputs a list of hashtables, each containing the properties of a configured
+        Chocolatey source.
+    #>
     [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand
@@ -45,7 +54,7 @@ function Get-ChocolateySource {
             @{ attribute = 'priority'; type = [int] }
             @{ attribute = 'certificate'; type = [string] }
             @{ attribute = 'bypassProxy'; type = [bool]; name = 'bypass_proxy' }
-            @{ attribute = 'selfService'; type = [bool]; name = 'self_service' }
+            @{ attribute = 'selfService'; type = [bool]; name = 'allow_self_service' }
             @{ attribute = 'adminOnly'; type = [bool]; name = 'admin_only' }
         )
 
@@ -74,51 +83,76 @@ function Get-ChocolateySource {
 }
 
 function New-ChocolateySource {
+    <#
+        .SYNOPSIS
+        Adds a new Chocolatey source configuration.
+
+        .DESCRIPTION
+        Inserts a new Chocolatey source configuration with the requested
+        parameters set for the source.
+    #>
     [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand,
 
+        # The "friendly" name of the source.
         [Parameter(Mandatory = $true)]
         [string]
         $Name,
 
+        # The URL to the source repository.
         [Parameter(Mandatory = $true)]
         [string]
         $Source,
 
+        # The username required to authenticate to the source, if any.
         [Parameter()]
         [string]
         $Username,
 
+        # The password required to authenticate to the source, if any.
         [Parameter()]
         [string]
         $Password,
 
+        # The certificate required to authenticate to the source, if any.
         [Parameter()]
         [string]
         $Certificate,
 
+        # The password for the certificate required to authenticate to the source, if applicable.
         [Parameter()]
         [string]
         $CertificatePassword,
 
+        # The priority level of the source.
         [Parameter()]
         [int]
         $Priority,
 
+        # Set to bypass the proxy configuration when retrieving packages from this source.
         [Parameter()]
         [switch]
         $BypassProxy,
 
+        # Set to allow non-admin users to use the source when self-service is enabled.
         [Parameter()]
         [switch]
         $AllowSelfService,
 
+        # Set to restrict usage of the source to administrator users only.
         [Parameter()]
         [switch]
-        $AdminOnly
+        $AdminOnly,
+
+        # The Ansible module object to check for verbosity levels and check mode.
+        # Defaults to the currently active module.
+        [Parameter()]
+        [Ansible.Basic.AnsibleModule]
+        $Module = (Get-AnsibleModule)
     )
 
     $arguments = @(
@@ -129,20 +163,20 @@ function New-ChocolateySource {
         "--source", $Source
 
         # Add optional arguments from user input
-        if ($null -ne $Username) {
+        if ($PSBoundParameters.ContainsKey('Username')) {
             "--user", $Username
             "--password", $Password
         }
 
-        if ($null -ne $Certificate) {
+        if ($PSBoundParameters.ContainsKey('Certificate')) {
             "--cert", $Certificate
 
-            if ($null -ne $CertificatePassword) {
+            if ($PSBoundParameters.ContainsKey('CertificatePassword')) {
                 "--certpassword", $CertificatePassword
             }
         }
 
-        if ($null -ne $Priority) {
+        if ($PSBoundParameters.ContainsKey('Priority')) {
             "--priority", $Priority
         }
         else {
@@ -161,7 +195,7 @@ function New-ChocolateySource {
             "--admin-only"
         }
 
-        if ($module.CheckMode) {
+        if ($Module.CheckMode) {
             "--what-if"
         }
     )
@@ -189,15 +223,27 @@ function New-ChocolateySource {
 }
 
 function Remove-ChocolateySource {
+    <#
+        .SYNOPSIS
+        Removes the target Chocolatey source configuration.
+    #>
     [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand,
 
+        # The "friendly" name of the source to remove.
         [Parameter(Mandatory = $true)]
         [string]
-        $Name
+        $Name,
+
+        # The Ansible module object to check for verbosity levels and check mode.
+        # Defaults to the currently active module.
+        [Parameter()]
+        [Ansible.Basic.AnsibleModule]
+        $Module = (Get-AnsibleModule)
     )
 
     $arguments = @(
@@ -205,7 +251,7 @@ function Remove-ChocolateySource {
         "source", "remove"
         "--name", $Name
 
-        if ($module.CheckMode) {
+        if ($Module.CheckMode) {
             "--what-if"
         }
     )
@@ -217,3 +263,9 @@ function Remove-ChocolateySource {
         Assert-TaskFailed -Message $message -CommandResult $result
     }
 }
+
+Export-ModuleMember -Function @(
+    'Get-ChocolateySource'
+    'New-ChocolateySource'
+    'Remove-ChocolateySource'
+)

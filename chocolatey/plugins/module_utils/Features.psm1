@@ -1,11 +1,20 @@
 #Requires -Module Ansible.ModuleUtils.ArgvParser
 #Requires -Module Ansible.ModuleUtils.CommandUtil
 
-#AnsibleRequires -PowerShell ..module_utils.Common
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Common
 
 function Get-ChocolateyFeature {
+    <#
+        .SYNOPSIS
+        Retrieves a hashtable containing the feature states of all Chocolatey features.
+
+        .DESCRIPTION
+        Outputs a hashtable where the keys correspond to configuration names, and the
+        values are set to `$true` if the feature is enabled, and `$false` otherwise.
+    #>
     [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand
@@ -28,7 +37,8 @@ function Get-ChocolateyFeature {
     # Build a hashtable of features where each feature name has a value of
     # either `$true` (enabled), or `$false` (disabled)
     $features = @{}
-    $result.stdout -split "\r?\n" |
+    $result |
+        Get-StdoutLines |
         Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
         ForEach-Object {
             $name, $state, $null = $_ -split "\|"
@@ -39,15 +49,27 @@ function Get-ChocolateyFeature {
 }
 
 function Set-ChocolateyFeature {
+    <#
+        .SYNOPSIS
+        Sets the target Chocolatey feature to the desired state.
+
+        .DESCRIPTION
+        If the `-Enabled` switch is not provided, disables the target Chocolatey feature.
+        Otherwise, enables the target Chocolatey feature.
+    #>
+    [CmdletBinding()]
     param(
+        # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
         $ChocoCommand,
 
+        # The name of the target Chocolatey feature.
         [Parameter(Mandatory = $true)]
         [string]
         $Name,
 
+        # If set, enables the targeted feature.
         [Parameter()]
         [switch]
         $Enabled
@@ -68,3 +90,5 @@ function Set-ChocolateyFeature {
         Assert-TaskFailed -Message $message -CommandResult $result
     }
 }
+
+Export-ModuleMember -Function Get-ChocolateyFeature, Set-ChocolateyFeature

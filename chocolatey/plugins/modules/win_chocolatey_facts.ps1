@@ -11,11 +11,11 @@
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
 
-#AnsibleRequires -PowerShell ..module_utils.Common
-#AnsibleRequires -PowerShell ..module_utils.Config
-#AnsibleRequires -PowerShell ..module_utils.Sources
-#AnsibleRequires -PowerShell ..module_utils.Features
-#AnsibleRequires -PowerShell ..module_utils.Packages
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Common
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Config
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Sources
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Features
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Packages
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
@@ -26,7 +26,8 @@ $spec = @{
     supports_check_mode = $true
 }
 
-$module = New-AnsibleModule -Specifications $spec -Arguments $args
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+Set-ActiveModule $module
 
 $chocoCommand = Get-ChocolateyCommand
 

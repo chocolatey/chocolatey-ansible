@@ -10,8 +10,8 @@
 #Requires -Module Ansible.ModuleUtils.CommandUtil
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
-#AnsibleRequires -PowerShell ..module_utils.Common
-#AnsibleRequires -PowerShell ..module_utils.Packages
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Common
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Packages
 
 # As of chocolatey 0.9.10, non-zero success exit codes can be returned
 # See https://github.com/chocolatey/choco/issues/512#issuecomment-214284461
@@ -48,7 +48,8 @@ $spec = @{
     supports_check_mode = $true
 }
 
-$module = New-AnsibleModule -Specifications $spec -Arguments $args
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+Set-ActiveModule $module
 
 $allow_empty_checksums = $module.Params.allow_empty_checksums
 $allow_multiple = $module.Params.allow_multiple
