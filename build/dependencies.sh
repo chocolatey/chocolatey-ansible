@@ -19,10 +19,14 @@ sudo apt-get install -y powershell
 python3 -m venv ~/ansible-venv
 source ~/ansible-venv/bin/activate
 
+pip3 install --upgrade pip
 pip3 install --upgrade wheel
+pip3 install packaging
 pip3 install 'pyOpenSSL<22.0.0'
 pip3 install pywinrm
 pip3 install "$ANSIBLE_PACKAGE"
+
+ansible-galaxy collection install ansible.windows
 
 pip3 --version
 ansible --version

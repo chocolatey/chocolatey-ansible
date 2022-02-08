@@ -133,6 +133,7 @@ options:
       errors if the targeted node is unlicensed or missing the
       chocolatey.extension package.
     type: list
+    elements: str
     version_added: '1.2.0'
     aliases: [ licensed_args ]
   pinned:
