@@ -104,6 +104,17 @@ process {
             $Inventory | Set-Content -Path "~/$InventoryFile" -Force
 
             bash -c $Commands
+
+            $Result = [PSCustomObject]@{
+                Success  = $?
+                ExitCode = $LASTEXITCODE
+            }
+
+            $Result | Out-String | Write-Host
+
+            if (-not $Result.Success) {
+                throw "Test failures occurred. Refer to the logs and test results."
+            }
         }
         else {
             Set-Location -Path $PSScriptRoot
@@ -126,7 +137,7 @@ process {
 
             vagrant destroy --force
 
-            $Result
+            $Result | Out-String | Write-Host
 
             if (-not $Result.Success) {
                 throw "Test failures occurred. Refer to the Vagrant log."

@@ -1,0 +1,3 @@
+integration_tests_dependencies:
+- ansible.windows
+unit_tests_dependencies: []
