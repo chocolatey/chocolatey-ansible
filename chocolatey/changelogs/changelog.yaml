@@ -1,10 +1,23 @@
 # See: https://github.com/ansible-community/antsibull-changelog/blob/main/docs/changelog.yaml-format.md
 ancestor: null
 releases:
+  1.2.0:
+    release_date: '2022-02-09'
+    changes:
+      release_summary: |
+        1.2.0 - Bugfixes, support for choco_args and state: upgrade
+      major_changes:
+      - win_chocolatey - Added choco_args option to pass additional arguments directly to Chocolatey.
+      minor_changes:
+      - 'win_chocolatey - Added state: upgrade as an alias for state: latest.'
+      - win_chocolatey - Improved automatic URL handling for getting the install.ps1 script from a custom source URL.
+      - 'win_chocolatey - Removed warning for installing Chocolatey if when specifically installing it with `name: chocolatey`.'
+      - win_chocolatey - Improved handling of Chocolatey bootstrapping installation script.
+      - All modules - Ported away from the Ansible.Legacy format, using Ansible.Basic.Module instead.
   1.1.0:
     release_date: '2021-04-05'
     changes:
-      release-summary: |
+      release_summary: |
         1.1.0 - Bugfixes, behaviour reworks, support for --remove-dependencies
       minor_changes:
       - win_chocolatey - Support for removing dependencies added with remove_dependencies option.
@@ -14,7 +27,7 @@ releases:
   1.0.0:
     release_date: '2020-03-30'
     changes:
-      release-summary: |
+      release_summary: |
         Initial Release
     modules:
       - name: win_chocolatey
