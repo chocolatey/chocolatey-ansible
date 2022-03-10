@@ -4,9 +4,12 @@
 | :----------------------------------------------: |
 | [![Build Status][pipeline-badge]][pipeline-link] |
 
-This repo hosts the `chocolatey.chocolatey` Ansible Collection.
+The `chocolatey.chocolatey` Ansible Collection includes the modules required to configure Chocolatey, as well as manage packages on Windows using Chocolatey.
 
-The collection includes the modules required to configure Chocolatey, as well as manage packages on Windows using Chocolatey.
+## Ansible version compatibility
+
+This collection has been tested against the following Ansible versions:
+**>=2.9, 2.10, 2.11, 2.12**
 
 ## Installation and Usage
 
@@ -29,7 +32,7 @@ This collection provides the following modules you can use in your own roles:
 
 | Name                          | Description                               |
 |-------------------------------|-------------------------------------------|
-|`win_chocolatey`               | Manage packages using chocolatey          |  
+|`win_chocolatey`               | Manage packages using chocolatey          |
 |`win_chocolatey_config`        | Manage Chocolatey config settings         |
 |`win_chocolatey_facts`         | Create a facts collection for Chocolatey  |
 |`win_chocolatey_feature`       | Manage Chocolatey features                |
