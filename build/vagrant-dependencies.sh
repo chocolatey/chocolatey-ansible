@@ -23,8 +23,6 @@ virtualenv /home/vagrant/ansible-venv
 pip3 install --upgrade pip
 pip3 install wheel
 pip3 install packaging
-pip3 install 'pyOpenSSL<22.0.0'
-pip3 install pywinrm
 pip3 install "$ANSIBLE_PACKAGE"
 
 ansible-galaxy collection install ansible.windows
