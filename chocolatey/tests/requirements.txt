@@ -1,0 +1,2 @@
+ansible.windows
+Jinja2<3.1.0
