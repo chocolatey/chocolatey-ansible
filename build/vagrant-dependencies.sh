@@ -21,8 +21,9 @@ virtualenv /home/vagrant/ansible-venv
 . /home/vagrant/ansible-venv/bin/activate
 
 pip3 install --upgrade pip
-pip3 install wheel
+pip3 install --upgrade wheel
 pip3 install packaging
+pip3 install "Jinja2<3.1.0"
 pip3 install "$ANSIBLE_PACKAGE"
 
 ansible-galaxy collection install ansible.windows

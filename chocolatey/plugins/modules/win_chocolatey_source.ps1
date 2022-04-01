@@ -6,13 +6,18 @@
 
 #Requires -Module Ansible.ModuleUtils.ArgvParser
 #Requires -Module Ansible.ModuleUtils.CommandUtil
+
 #AnsibleRequires -CSharpUtil Ansible.Basic
+
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Common
+#AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Sources
 
 # Documentation: https://docs.ansible.com/ansible/2.10/dev_guide/developing_modules_general_windows.html#windows-new-module-development
 $spec = @{
     options             = @{
         name                 = @{ type = "str"; required = $true }
         state                = @{ type = "str"; default = "present"; choices = "absent", "disabled", "present" }
+
         admin_only           = @{ type = "bool" }
         allow_self_service   = @{ type = "bool" }
         bypass_proxy         = @{ type = "bool" }
@@ -35,6 +40,7 @@ $spec = @{
 }
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+Set-ActiveModule $module
 
 $name = $module.Params.name
 $state = $module.Params.state
@@ -55,223 +61,9 @@ if ($module.DiffMode) {
     $module.Diff.after = @{}
 }
 
-function Get-ChocolateySource {
-    param($ChocoCommand)
-
-    $configFolder = Split-Path -LiteralPath (Split-Path -LiteralPath $ChocoCommand.Path)
-    $configPath = "$configFolder\config\chocolatey.config"
-
-    if (-not (Test-Path -LiteralPath $configPath)) {
-        $module.FailJson("Expecting Chocolatey config file to exist at '$configPath'")
-    }
-
-    # would prefer to enumerate the existing sources with an actual API but the
-    # only stable interface is choco.exe source list and that does not output
-    # the sources in an easily parsable list. Using -r will split each entry by
-    # | like a psv but does not quote values that have a | already in it making
-    # it inadequete for our tasks. Instead we will parse the chocolatey.config
-    # file and get the values from there
-    try {
-        [xml]$configXml = Get-Content -LiteralPath $configPath
-    }
-    catch {
-        $module.FailJson("Failed to parse Chocolatey config file at '$configPath': $($_.Exception.Message)", $_)
-    }
-
-    foreach ($sourceNode in $configXml.chocolatey.sources.GetEnumerator()) {
-        $username = $sourceNode.Attributes.GetNamedItem("user")
-
-        if ($null -ne $username) {
-            $username = $username.Value
-        }
-
-        # 0.9.9.9+
-        $priority = $sourceNode.Attributes.GetNamedItem("priority")
-
-        if ($null -ne $priority) {
-            $priority = [int]$priority.Value
-        }
-
-        # 0.9.10+
-        $certificate = $sourceNode.Attributes.GetNamedItem("certificate")
-
-        if ($null -ne $certificate) {
-            $certificate = $certificate.Value
-        }
-
-        # 0.10.4+
-        $bypassProxy = $sourceNode.Attributes.GetNamedItem("bypassProxy")
-
-        if ($null -ne $bypassProxy) {
-            $bypassProxy = [System.Convert]::ToBoolean($bypassProxy.Value)
-        }
-
-        $allowSelfService = $sourceNode.Attributes.GetNamedItem("selfService")
-
-        if ($null -ne $allowSelfService) {
-            $allowSelfService = [System.Convert]::ToBoolean($allowSelfService.Value)
-        }
-
-        # 0.10.8+
-        $adminOnly = $sourceNode.Attributes.GetNamedItem("adminOnly")
-
-        if ($null -ne $adminOnly) {
-            $adminOnly = [System.Convert]::ToBoolean($adminOnly.Value)
-        }
-
-        @{
-            name               = $sourceNode.id
-            source             = $sourceNode.value
-            disabled           = [System.Convert]::ToBoolean($sourceNode.disabled)
-            source_username    = $username
-            priority           = $priority
-            certificate        = $certificate
-            bypass_proxy       = $bypassProxy
-            allow_self_service = $allowSelfService
-            admin_only         = $adminOnly
-        }
-    }
-}
-
-function New-ChocolateySource {
-    param(
-        $ChocoCommand,
-        $Name,
-        $Source,
-        $Username,
-        $Password,
-        $Certificate,
-        $CertificatePassword,
-        $Priority,
-        [switch]$BypassProxy,
-        [switch]$AllowSelfService,
-        [switch]$AdminOnly
-    )
-    $arguments = @(
-        # Add the base arguments
-        $ChocoCommand.Path
-        "source", "add"
-        "--name", $Name
-        "--source", $Source
-
-        # Add optional arguments from user input
-        if ($null -ne $Username) {
-            "--user", $Username
-            "--password", $Password
-        }
-
-        if ($null -ne $Certificate) {
-            "--cert", $Certificate
-
-            if ($null -ne $CertificatePassword) {
-                "--certpassword", $CertificatePassword
-            }
-        }
-
-        if ($null -ne $Priority) {
-            "--priority", $Priority
-        }
-        else {
-            $Priority = 0
-        }
-
-        if ($BypassProxy) {
-            "--bypass-proxy"
-        }
-        else {
-            $BypassProxy = $false
-        }
-
-        if ($AllowSelfService) {
-            "--allow-self-service"
-        }
-        else {
-            $AllowSelfService = $false
-        }
-
-        if ($AdminOnly) {
-            "--admin-only"
-        }
-        else {
-            $AdminOnly = $false
-        }
-
-        if ($module.CheckMode) {
-            "--what-if"
-        }
-    )
-
-
-    $command = Argv-ToString -Arguments $arguments
-    $result = Run-Command -Command $command
-
-    if ($result.rc -ne 0) {
-        $module.Result.rc = $result.rc
-        $module.Result.stdout = $result.stdout
-        $module.Result.stderr = $result.stderr
-        $module.FailJson("Failed to add Chocolatey source '$Name': $($result.stderr)")
-    }
-
-    @{
-        name               = $Name
-        source             = $Source
-        disabled           = $false
-        source_username    = $Username
-        priority           = $Priority
-        certificate        = $Certificate
-        bypass_proxy       = $BypassProxy
-        allow_self_service = $AllowSelfService
-        admin_only         = $AdminOnly
-    }
-}
-
-function Remove-ChocolateySource {
-    param(
-        $ChocoCommand,
-        $Name
-    )
-
-    $arguments = @(
-        $ChocoCommand.Path
-        "source", "remove"
-        "--name", $Name
-
-        if ($module.CheckMode) {
-            "--what-if"
-        }
-    )
-    $command = Argv-ToString -Arguments $arguments
-    $result = Run-Command -Command $command
-
-    if ($result.rc -ne 0) {
-        $module.FailJson("Failed to remove Chocolatey source '$Name': $($result.stderr)")
-    }
-}
-
-function Get-ChocolateyCommand {
-    $command = Get-Command -Name choco.exe -CommandType Application -ErrorAction SilentlyContinue
-
-    if (-not $command) {
-        $installDir = if ($env:ChocolateyInstall) {
-            $env:ChocolateyInstall
-        }
-        else {
-            "$env:SYSTEMDRIVE\ProgramData\Chocolatey"
-        }
-
-        $command = Get-Command -Name "$installDir\bin\choco.exe" -CommandType Application -ErrorAction SilentlyContinue
-
-        if (-not $command) {
-            $module.FailJson("Failed to find Chocolatey installation, make sure choco.exe is in the PATH env value")
-        }
-    }
-
-    $command
-}
-
 $chocoCommand = Get-ChocolateyCommand
 
-$targetSource = Get-ChocolateySource -ChocoCommand $ChocoCommand | Where-Object { $_.name -eq $name }
+$targetSource = Get-ChocolateySource -ChocoCommand $chocoCommand | Where-Object { $_.name -eq $name }
 
 if ($module.DiffMode) {
     if ($null -ne $targetSource) {
@@ -285,7 +77,7 @@ if ($module.DiffMode) {
 }
 
 if ($state -eq "absent" -and $null -ne $targetSource) {
-    Remove-ChocolateySource -ChocoCommand $ChocoCommand -Name $name
+    Remove-ChocolateySource -ChocoCommand $chocoCommand -Name $name
     $module.Result.changed = $true
 }
 elseif ($state -in ("disabled", "present")) {
@@ -293,47 +85,22 @@ elseif ($state -in ("disabled", "present")) {
 
     if ($null -eq $targetSource) {
         if ($null -eq $source) {
-            $module.FailJson("The source option must be set when creating a new source")
+            $message = "The source option must be set when creating a new source"
+            Assert-TaskFailed -Message $message
         }
 
         $change = $true
     }
     else {
-        if ($null -ne $source -and $source -ne $targetSource.source) {
-            $change = $true
-        }
-
-        if ($null -ne $source_username -and $source_username -ne $targetSource.source_username) {
-            $change = $true
-        }
-
-        if ($null -ne $source_password -and $update_password -eq "always") {
-            $change = $true
-        }
-
-        if ($null -ne $certificate -and $certificate -ne $targetSource.certificate) {
-            $change = $true
-        }
-
-        if ($null -ne $certificate_password -and $update_password -eq "always") {
-            $change = $true
-        }
-
-        if ($null -ne $priority -and $priority -ne $targetSource.priority) {
-            $change = $true
-        }
-
-        if ($null -ne $bypass_proxy -and $bypass_proxy -ne $targetSource.bypass_proxy) {
-            $change = $true
-        }
-
-        if ($null -ne $allow_self_service -and $allow_self_service -ne $targetSource.allow_self_service) {
-            $change = $true
-        }
-
-        if ($null -ne $admin_only -and $admin_only -ne $targetSource.admin_only) {
-            $change = $true
-        }
+        $change = ($null -ne $source -and $source -ne $targetSource.source) -or
+            ($null -ne $source_username -and $source_username -ne $targetSource.source_username) -or
+            ($null -ne $source_password -and $update_password -eq "always") -or
+            ($null -ne $certificate -and $certificate -ne $targetSource.certificate) -or
+            ($null -ne $certificate_password -and $update_password -eq "always") -or
+            ($null -ne $priority -and $priority -ne $targetSource.priority) -or
+            ($null -ne $bypass_proxy -and $bypass_proxy -ne $targetSource.bypass_proxy) -or
+            ($null -ne $allow_self_service -and $allow_self_service -ne $targetSource.allow_self_service) -or
+            ($null -ne $admin_only -and $admin_only -ne $targetSource.admin_only)
 
         if ($change) {
             Remove-ChocolateySource -ChocoCommand $chocoCommand -Name $Name
@@ -346,14 +113,26 @@ elseif ($state -in ("disabled", "present")) {
             ChocoCommand = $chocoCommand
             Name = $name
             Source = $source
-            Username = $source_username
-            Password = $source_password
-            Certificate = $certificate
-            CertificatePassword = $certificate_password
-            Priority = $priority
             BypassProxy = $bypass_proxy
             AllowSelfService = $allow_self_service
             AdminOnly = $admin_only
+        }
+
+        if ($null -ne $priority) {
+            $sourceParams.Priority = $priority
+        }
+
+        if ($null -ne $source_username) {
+            $sourceParams.Username = $source_username
+            $sourceParams.Password = $source_password
+        }
+
+        if ($null -ne $certificate) {
+            $sourceParams.Certificate = $certificate
+
+            if ($null -ne $certificate_password) {
+                $sourceParams.CertificatePassword = $certificate_password
+            }
         }
 
         $targetSource = New-ChocolateySource @sourceParams
@@ -361,13 +140,14 @@ elseif ($state -in ("disabled", "present")) {
     }
 
     # enable/disable the source if necessary
-    $action = $null
-
-    if ($state -ne "disabled" -and $targetSource.disabled) {
-        $action = "enable"
+    $action = if ($state -ne "disabled" -and $targetSource.disabled) {
+        "enable"
     }
     elseif ($state -eq "disabled" -and (-not $targetSource.disabled)) {
-        $action = "disable"
+        "disable"
+    }
+    else {
+        $null
     }
 
     if ($null -ne $action) {
@@ -385,7 +165,8 @@ elseif ($state -in ("disabled", "present")) {
         $result = Run-Command -Command $command
 
         if ($result.rc -ne 0) {
-            $module.FailJson("Failed to $action Chocolatey source '$name': $($result.stderr)")
+            $message = "Failed to $action Chocolatey source '$name': $($result.stderr)"
+            Assert-TaskFailed -Message $message -CommandResult $result
         }
 
         $targetSource.disabled = ($action -eq "disable")
