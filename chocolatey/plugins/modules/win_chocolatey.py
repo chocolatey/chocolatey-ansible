@@ -63,6 +63,24 @@ options:
     choices: [ default, x86 ]
     default: default
     version_added: '0.2.7'
+  bootstrap_script:
+    description:
+    - Specify the bootstrap script URL that can be used to install Chocolatey
+      if it is not already present on the system.
+    - Use this parameter when I(name) is C(chocolatey) to ensure that a
+      custom bootstrap script is used.
+    - If neither this parameter nor I(source) is set, the bootstrap script
+      url will be C(https://community.chocolatey.org/install.ps1)
+    - If this parameter is not set, and I(source) is set to a url, the
+      bootstrap script url will be determined from that url instead.
+    - This parameter only defines which bootstrap script is used to download
+      and install Chocolatey. To define the URL to a specific Chocolatey
+      nupkg to install, note that many bootstrap scripts respect the value
+      of the C(chocolateyDownloadUrl) environment variable, which can be set
+      for the task as well.
+    type: str
+    version_added: '1.3.0'
+    aliases: [ install_ps1, bootstrap_ps1 ]
   force:
     description:
     - Forces the install of a package, even if it already is installed.
@@ -186,8 +204,16 @@ options:
     - This value can either be the URL to a Chocolatey feed, a path to a folder
       containing C(.nupkg) packages or the name of a source defined by
       M(chocolatey.chocolatey.win_chocolatey_source).
-    - This value is also used when Chocolatey is not installed as the location
-      of the install.ps1 script and only supports URLs for this case.
+    - When Chocolatey is not yet installed, prefer using I(bootstrap_script)
+      instead to determine where to pull the bootstrap script from.
+    - This value may also be used when Chocolatey is not installed as the
+      location of the install.ps1 script if I(bootstrap_script) is not set, and
+      only supports URLs for this case.
+      In this case, if the URL ends in ".ps1", it is used as-is. Otherwise,
+      if the URL appears to contain a "/repository/" fragment, the module
+      will attempt to append "/install.ps1" to find an install script. If
+      neither of these checks pass, the module will strip off the URL path and
+      try to find an "/install.ps1" from the root of the server.
     type: str
   source_username:
     description:
@@ -332,10 +358,32 @@ EXAMPLES = r'''
     name: git
     source: internal_repo
 
-- name: Ensure Chocolatey itself is installed and use internal repo as source
+- name: Ensure Chocolatey itself is installed, using community repo for the bootstrap
+  win_chocolatey:
+    name: chocolatey
+
+- name: Ensure Chocolatey itself is installed, bootstrapping with a specific nupkg url
+  win_chocolatey:
+    name: chocolatey
+  environment:
+    - chocolateyDownloadUrl: "https://internal-web-server/files/chocolatey.1.1.0.nupkg"
+
+- name: Ensure Chocolatey itself is installed and use internal repo as source for bootstrap script
   win_chocolatey:
     name: chocolatey
     source: http://someserver/chocolatey
+
+- name: Ensure Chocolatey itself is installed, using a specific bootstrap script
+  win_chocolatey:
+    name: chocolatey
+    bootstrap_script: https://internal-web-server/files/custom-chocolatey-install.ps1
+
+- name: Ensure Chocolatey itself is installed, using a specific bootstrap script and target nupkg
+  win_chocolatey:
+    name: chocolatey
+    bootstrap_script: https://internal-web-server/files/custom-chocolatey-install.ps1
+  environment:
+    - chocolateyDownloadUrl: "https://internal-web-server/files/chocolatey.1.1.0.nupkg"
 
 - name: Uninstall git
   win_chocolatey:
