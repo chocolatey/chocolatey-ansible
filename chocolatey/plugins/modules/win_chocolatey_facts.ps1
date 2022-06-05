@@ -37,6 +37,7 @@ $module.Result.ansible_facts = @{
         feature  = @{}
         sources  = @()
         packages = @()
+        outdated = @()
     }
 }
 
@@ -45,6 +46,7 @@ $chocolateyFacts.config = Get-ChocolateyConfig -ChocoCommand $chocoCommand
 $chocolateyFacts.feature = Get-ChocolateyFeature -ChocoCommand $chocoCommand
 $chocolateyFacts.sources = @(Get-ChocolateySource -ChocoCommand $chocoCommand)
 $chocolateyFacts.packages = @(Get-ChocolateyPackage -ChocoCommand $chocoCommand)
+$chocolateyFacts.outdated = @(Get-ChocolateyOutdated -ChocoCommand $chocoCommand)
 
 # Return result
 $module.ExitJson()

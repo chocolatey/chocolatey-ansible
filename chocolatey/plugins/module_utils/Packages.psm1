@@ -7,6 +7,62 @@
 # See https://github.com/chocolatey/choco/issues/512#issuecomment-214284461
 $script:successExitCodes = (0, 1605, 1614, 1641, 3010)
 
+
+function Get-ChocolateyOutdated {
+    <#
+        .SYNOPSIS
+        Retrieves the list of Chocolatey packages, already present on the local system, for which an updated is available.
+    #>
+    [CmdletBinding()]
+    param(
+        # A CommandInfo object containing the path to choco.exe.
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.CommandInfo]
+        $ChocoCommand,
+
+        # The version of packages to retrieve. Defaults to all package versions.
+        [Parameter()]
+        [string]
+        $Version
+    )
+
+    $command = Argv-ToString -Arguments @(
+        $ChocoCommand.Path
+        "outdated"
+        "--local-only"
+        "--limit-output"
+
+        if ($Version) {
+            '--version', $Version
+        }
+        else {
+            '--all-versions'
+        }
+    )
+    $result = Run-Command -Command $command
+
+    # Chocolatey v0.10.12 introduced enhanced exit codes, 2 means no results, e.g. no package
+    if ($result.rc -notin @(0, 2)) {
+        $message = 'Error checking installation status for chocolatey packages'
+        Assert-TaskFailed -Message $message -Command $command -CommandResult $result
+    }
+
+    $result |
+        Get-StdoutLines |
+        ForEach-Object {
+            # Sanity check in case additional output is added in the future.
+            if ($_.Contains('|')) {
+                $package, $version, $null = $_.Split('|')
+
+                @{
+                    package = $package
+                    version = $version
+                }
+            }
+        }
+}
+
+
 function Get-ChocolateyPackage {
     <#
         .SYNOPSIS
@@ -1069,6 +1125,7 @@ function Install-Chocolatey {
 }
 
 Export-ModuleMember -Function @(
+    'Get-ChocolateyOutdated'
     'Get-ChocolateyPackage'
     'Get-ChocolateyPackageVersion'
     'Get-ChocolateyPin'
