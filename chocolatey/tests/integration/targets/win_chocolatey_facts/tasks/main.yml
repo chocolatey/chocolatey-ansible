@@ -48,6 +48,7 @@
     - ansible_chocolatey.feature.checksumFiles == true
     - ansible_chocolatey.packages[0].package == 'chocolatey'
     - ansible_chocolatey.packages[0].version is defined
+    - ansible_chocolatey.outdated is defined
     - ansible_chocolatey.sources[0].admin_only == False
     - ansible_chocolatey.sources[0].allow_self_service == False
     - ansible_chocolatey.sources[0].bypass_proxy == False

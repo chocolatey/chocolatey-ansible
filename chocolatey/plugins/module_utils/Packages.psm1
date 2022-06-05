@@ -18,26 +18,13 @@ function Get-ChocolateyOutdated {
         # A CommandInfo object containing the path to choco.exe.
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.CommandInfo]
-        $ChocoCommand,
-
-        # The version of packages to retrieve. Defaults to all package versions.
-        [Parameter()]
-        [string]
-        $Version
+        $ChocoCommand
     )
 
     $command = Argv-ToString -Arguments @(
         $ChocoCommand.Path
         "outdated"
-        "--local-only"
         "--limit-output"
-
-        if ($Version) {
-            '--version', $Version
-        }
-        else {
-            '--all-versions'
-        }
     )
     $result = Run-Command -Command $command
 
@@ -52,11 +39,13 @@ function Get-ChocolateyOutdated {
         ForEach-Object {
             # Sanity check in case additional output is added in the future.
             if ($_.Contains('|')) {
-                $package, $version, $null = $_.Split('|')
+                $package, $current_version, $available_version, $pinned, $null = $_.Split('|')
 
                 @{
                     package = $package
-                    version = $version
+                    current_version = $current_version
+                    available_version = $available_version
+                    pinned = $pinned
                 }
             }
         }
