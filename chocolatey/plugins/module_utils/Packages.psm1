@@ -7,7 +7,6 @@
 # See https://github.com/chocolatey/choco/issues/512#issuecomment-214284461
 $script:successExitCodes = (0, 1605, 1614, 1641, 3010)
 
-
 function Get-ChocolateyOutdated {
     <#
         .SYNOPSIS
@@ -50,7 +49,6 @@ function Get-ChocolateyOutdated {
             }
         }
 }
-
 
 function Get-ChocolateyPackage {
     <#
