@@ -44,7 +44,7 @@ function Get-ChocolateyOutdated {
                     package = $package
                     current_version = $current_version
                     available_version = $available_version
-                    pinned = $pinned
+                    pinned = [System.Boolean]::Parse($pinned)
                 }
             }
         }
