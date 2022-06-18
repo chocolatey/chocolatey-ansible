@@ -87,6 +87,11 @@
     src: '{{ test_choco_source2 }}'
 
 - block:
+  # Everything needed for installing and updating packages has been set up above. We use that 
+  # to run the tests for chocolatey outdated packages here instead of in win_chocolatey_facts 
+  - name: win_chocolatey_fact outdated tests
+    include_tasks: test_outdated.yml
+
   - name: run tests
     include_tasks: tests.yml
 
