@@ -9,17 +9,25 @@
   - name: Gather facts from chocolatey
     win_chocolatey_facts:
 
-    #  "outdated": [
-    #       {
-    #           "available_version": "0.1.0",
-    #           "current_version": "0.0.1",
-    #           "package": "ansible",
-    #           "pinned": false
-    #       },
+  # Example output
+  #  "outdated": [
+  #       {
+  #           "available_version": "0.1.0",
+  #           "current_version": "0.0.1",
+  #           "package": "ansible",
+  #           "pinned": false
+  #       },
 
+  # When using selectattr in Ansible 2.9 we need to convert to a list with '| list' to prevent the error below:
+  #'TASK [win_chocolatey : Debug selected_package] *****************************************************************************************************************************************************************************************
+  # ok: [win10] => {
+  #     "selected_package": "<generator object select_or_reject at 0x7fda04eaeea0> "
+  # }
+  # See: https://www.0xf8.org/2021/03/filtering-with-ansibles-selectattr-rejectattr-when-the-tested-attribute-can-be-absent/
+  # This can be removed if we no longer support Ansible 2.9
   - name: set_fact selected_package
     set_fact:
-      selected_package: "{{ ansible_chocolatey.outdated | selectattr( 'package', 'eq', test_choco_package1 )}} "
+      selected_package: "{{ ansible_chocolatey.outdated | selectattr('package', 'eq', test_choco_package1) | list}} "
 
   - name: Debug selected_package
     debug:
@@ -47,7 +55,7 @@
 
   - name: set_fact selected_package
     set_fact:
-      selected_package: "{{ ansible_chocolatey.outdated | selectattr( 'package', 'eq', test_choco_package1 )}} "
+      selected_package: "{{ ansible_chocolatey.outdated | selectattr('package', 'eq', test_choco_package1) | list}} "
 
   - name: Debug selected_package
     debug:
