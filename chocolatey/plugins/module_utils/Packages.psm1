@@ -10,7 +10,7 @@ $script:successExitCodes = (0, 1605, 1614, 1641, 3010)
 function Get-ChocolateyOutdated {
     <#
         .SYNOPSIS
-        Retrieves the list of Chocolatey packages, already present on the local system, for which an updated is available.
+        Retrieves the list of Chocolatey packages, already present on the local system, for which an update is available.
     #>
     [CmdletBinding()]
     param(
@@ -29,7 +29,7 @@ function Get-ChocolateyOutdated {
 
     # Chocolatey v0.10.12 introduced enhanced exit codes, 2 means no results, e.g. no package
     if ($result.rc -notin @(0, 2)) {
-        $message = 'Error checking installation status for chocolatey packages'
+        $message = 'Error checking outdated status for installed chocolatey packages'
         Assert-TaskFailed -Message $message -Command $command -CommandResult $result
     }
 
