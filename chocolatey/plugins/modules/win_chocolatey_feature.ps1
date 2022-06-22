@@ -12,16 +12,29 @@
 #AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Common
 #AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Features
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSUseConsistentWhitespace',
+    '',
+    Justification = 'Relax whitespace rule for better readability in module spec',
+    Scope = 'function',
+    # Apply suppression specifically to module spec
+    Target = 'Get-ModuleSpec')]
+param()
+
 $ErrorActionPreference = "Stop"
 
 # Documentation: https://docs.ansible.com/ansible/2.10/dev_guide/developing_modules_general_windows.html#windows-new-module-development
-$spec = @{
-    options             = @{
-        name  = @{ type = "str"; required = $true }
-        state = @{ type = "str"; default = "enabled"; choices = "disabled", "enabled" }
+function Get-ModuleSpec {
+    @{
+        options             = @{
+            name  = @{ type = "str"; required = $true }
+            state = @{ type = "str"; default = "enabled"; choices = "disabled", "enabled" }
+        }
+        supports_check_mode = $true
     }
-    supports_check_mode = $true
 }
+
+$spec = Get-ModuleSpec
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 Set-ActiveModule $module

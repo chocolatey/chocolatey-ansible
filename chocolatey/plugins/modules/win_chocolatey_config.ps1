@@ -12,24 +12,36 @@
 #AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Common
 #AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Config
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSUseConsistentWhitespace',
+    '',
+    Justification = 'Relax whitespace rule for better readability in module spec',
+    Scope = 'function',
+    # Apply suppression specifically to module spec
+    Target = 'Get-ModuleSpec')]
+param()
+
 $ErrorActionPreference = "Stop"
 
 # Documentation: https://docs.ansible.com/ansible/2.10/dev_guide/developing_modules_general_windows.html#windows-new-module-development
-
-$spec = @{
-    options             = @{
-        name  = @{ type = "str"; required = $true }
-        state = @{ type = "str"; default = "present"; choices = "absent", "present" }
-        value = @{ type = "str" }
+function Get-ModuleSpec {
+    @{
+        options             = @{
+            name  = @{ type = "str"; required = $true }
+            state = @{ type = "str"; default = "present"; choices = "absent", "present" }
+            value = @{ type = "str" }
+        }
+        required_if         = @(
+            # Explicit prefix `,` required, Ansible wants a list of lists for `required_if`
+            # Read as:
+            # ,@( [if] property, [is] value, [require] other_properties, $true_if_only_one_other_is_required ) -- last option is not mandatory
+            , @( 'state', 'present', @( 'value' ) )
+        )
+        supports_check_mode = $true
     }
-    required_if         = @(
-        # Explicit prefix `,` required, Ansible wants a list of lists for `required_if`
-        # Read as:
-        # ,@( [if] property, [is] value, [require] other_properties, $true_if_only_one_other_is_required ) -- last option is not mandatory
-        , @( 'state', 'present', @( 'value' ) )
-    )
-    supports_check_mode = $true
 }
+
+$spec = Get-ModuleSpec
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 Set-ActiveModule $module

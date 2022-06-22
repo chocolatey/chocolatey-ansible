@@ -13,40 +13,53 @@
 #AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Common
 #AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Packages
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSUseConsistentWhitespace',
+    '',
+    Justification = 'Relax whitespace rule for better readability in module spec',
+    Scope = 'function',
+    # Apply suppression specifically to module spec
+    Target = 'Get-ModuleSpec')]
+param()
+
 # As of chocolatey 0.9.10, non-zero success exit codes can be returned
 # See https://github.com/chocolatey/choco/issues/512#issuecomment-214284461
 $script:successExitCodes = (0, 1605, 1614, 1641, 3010)
 
-$spec = @{
-    options             = @{
-        allow_empty_checksums = @{ type = "bool"; default = $false }
-        allow_multiple        = @{ type = "bool"; default = $false }
-        allow_prerelease      = @{ type = "bool"; default = $false }
-        architecture          = @{ type = "str"; default = "default"; choices = "default", "x86" }
-        choco_args            = @{ type = "list"; elements = "str"; aliases = "licensed_args" }
-        force                 = @{ type = "bool"; default = $false }
-        ignore_checksums      = @{ type = "bool"; default = $false }
-        ignore_dependencies   = @{ type = "bool"; default = $false }
-        install_args          = @{ type = "str" }
-        name                  = @{ type = "list"; elements = "str"; required = $true }
-        override_args         = @{ type = "bool"; default = $false }
-        package_params        = @{ type = "str"; aliases = @("params") }
-        pinned                = @{ type = "bool" }
-        proxy_url             = @{ type = "str" }
-        proxy_username        = @{ type = "str" }
-        proxy_password        = @{ type = "str"; no_log = $true }
-        remove_dependencies   = @{ type = "bool"; default = $false }
-        skip_scripts          = @{ type = "bool"; default = $false }
-        source                = @{ type = "str" }
-        source_username       = @{ type = "str" }
-        source_password       = @{ type = "str"; no_log = $true }
-        state                 = @{ type = "str"; default = "present"; choices = "absent", "downgrade", "upgrade", "latest", "present", "reinstalled" }
-        timeout               = @{ type = "int"; default = 2700; aliases = @("execution_timeout") }
-        validate_certs        = @{ type = "bool"; default = $true }
-        version               = @{ type = "str" }
+function Get-ModuleSpec {
+    @{
+        options             = @{
+            allow_empty_checksums = @{ type = "bool"; default = $false }
+            allow_multiple        = @{ type = "bool"; default = $false }
+            allow_prerelease      = @{ type = "bool"; default = $false }
+            architecture          = @{ type = "str"; default = "default"; choices = "default", "x86" }
+            choco_args            = @{ type = "list"; elements = "str"; aliases = "licensed_args" }
+            force                 = @{ type = "bool"; default = $false }
+            ignore_checksums      = @{ type = "bool"; default = $false }
+            ignore_dependencies   = @{ type = "bool"; default = $false }
+            install_args          = @{ type = "str" }
+            name                  = @{ type = "list"; elements = "str"; required = $true }
+            override_args         = @{ type = "bool"; default = $false }
+            package_params        = @{ type = "str"; aliases = @("params") }
+            pinned                = @{ type = "bool" }
+            proxy_url             = @{ type = "str" }
+            proxy_username        = @{ type = "str" }
+            proxy_password        = @{ type = "str"; no_log = $true }
+            remove_dependencies   = @{ type = "bool"; default = $false }
+            skip_scripts          = @{ type = "bool"; default = $false }
+            source                = @{ type = "str" }
+            source_username       = @{ type = "str" }
+            source_password       = @{ type = "str"; no_log = $true }
+            state                 = @{ type = "str"; default = "present"; choices = "absent", "downgrade", "upgrade", "latest", "present", "reinstalled" }
+            timeout               = @{ type = "int"; default = 2700; aliases = @("execution_timeout") }
+            validate_certs        = @{ type = "bool"; default = $true }
+            version               = @{ type = "str" }
+        }
+        supports_check_mode = $true
     }
-    supports_check_mode = $true
 }
+
+$spec = Get-ModuleSpec
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 Set-ActiveModule $module
@@ -131,15 +144,15 @@ if ($state -in "absent", "reinstalled") {
             # even if a specific version is targeted.
             $useAllowMultiple = $packageInfo.$package.Count -gt 1
             $uninstallParams = @{
-                ChocoCommand       = $chocoCommand
-                Package            = $package
-                Force              = $force
-                PackageParams      = $package_params
-                SkipScripts        = $skip_scripts
+                ChocoCommand = $chocoCommand
+                Package = $package
+                Force = $force
+                PackageParams = $package_params
+                SkipScripts = $skip_scripts
                 RemoveDependencies = $remove_dependencies
-                Timeout            = $timeout
-                Version            = $version
-                AllowMultiple      = $useAllowMultiple
+                Timeout = $timeout
+                Version = $version
+                AllowMultiple = $useAllowMultiple
             }
             Uninstall-ChocolateyPackage @uninstallParams
         }

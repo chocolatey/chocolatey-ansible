@@ -1096,12 +1096,12 @@ function Install-Chocolatey {
 
         $Module.Warn("Chocolatey was older than v0.10.5 so it will be upgraded during this task run.")
         $params = @{
-            ChocoCommand   = $chocoCommand
-            Packages       = @("chocolatey")
-            ProxyUrl       = $ProxyUrl
-            ProxyUsername  = $ProxyUsername
-            ProxyPassword  = $ProxyPassword
-            Source         = $Source
+            ChocoCommand = $chocoCommand
+            Packages = @("chocolatey")
+            ProxyUrl = $ProxyUrl
+            ProxyUsername = $ProxyUsername
+            ProxyPassword = $ProxyPassword
+            Source = $Source
             SourceUsername = $SourceUsername
             SourcePassword = $SourcePassword
         }
