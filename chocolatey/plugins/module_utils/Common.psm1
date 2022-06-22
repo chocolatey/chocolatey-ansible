@@ -153,8 +153,9 @@ function ConvertFrom-Stdout {
         [hashtable]
         $CommandResult
     )
-
-    $CommandResult.stdout.Trim() -split "\r?\n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    process {
+        $CommandResult.stdout.Trim() -split "\r?\n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    }
 }
 
 function Set-TaskResultChanged {
