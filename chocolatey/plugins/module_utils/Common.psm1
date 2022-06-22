@@ -136,7 +136,7 @@ function Assert-TaskFailed {
     }
 }
 
-function Get-StdoutLines {
+function ConvertFrom-Stdout {
     <#
         .SYNOPSIS
         Trims and splits the stdout from the given result so that individual
@@ -177,7 +177,7 @@ function Set-TaskResultChanged {
 Export-ModuleMember -Function @(
     'Get-ChocolateyCommand'
     'Get-AnsibleModule'
-    'Get-StdoutLines'
+    'ConvertFrom-Stdout'
     'Set-ActiveModule'
     'Set-TaskResultChanged'
     'Assert-TaskFailed'

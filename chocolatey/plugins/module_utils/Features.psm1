@@ -38,7 +38,7 @@ function Get-ChocolateyFeature {
     # either `$true` (enabled), or `$false` (disabled)
     $features = @{}
     $result |
-        Get-StdoutLines |
+        ConvertFrom-Stdout |
         Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
         ForEach-Object {
             $name, $state, $null = $_ -split "\|"
