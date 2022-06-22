@@ -189,7 +189,11 @@ if ($state -in @("downgrade", "latest", "upgrade", "present", "reinstalled")) {
 
             if ($packageVersions.Count -gt 0) {
                 if (-not $packageVersions.Contains($version) -and -not $allow_multiple) {
-                    $message = "Chocolatey package '$package' is already installed with version(s) '$($packageVersions -join "', '")' but was expecting '$version'. Either change the expected version, set state=latest or state=upgrade, set allow_multiple=yes, or set force=yes to continue"
+                    $message = @(
+                        "Chocolatey package '$package' is already installed with version(s) '$($packageVersions -join "', '")'"
+                        "but was expecting '$version'. Either change the expected version, set state=latest or state=upgrade,"
+                        "set allow_multiple=yes, or set force=yes to continue"
+                    ) -join ' '
                     Assert-TaskFailed -Message $message
                 }
                 elseif ($version -notin $packageVersions -and $allow_multiple) {

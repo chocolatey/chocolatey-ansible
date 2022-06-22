@@ -1083,14 +1083,21 @@ function Install-Chocolatey {
         $actualVersion = [Version]$actualVersion
     }
     catch {
-        $Module.Warn("Failed to parse Chocolatey version '$actualVersion' for checking module requirements, module may not work correctly: $($_.Exception.Message)")
+        $warning = @(
+            "Failed to parse Chocolatey version '$actualVersion' for checking module requirements."
+            "Module may not work correctly: $($_.Exception.Message)"
+        ) -join ' '
+        $Module.Warn($warning)
         $actualVersion = $null
     }
 
     if ($null -ne $actualVersion -and $actualVersion -lt [Version]"0.10.5") {
         if ($Module.CheckMode) {
             $Module.Result.skipped = $true
-            $Module.Result.msg = "Skipped check mode run on win_chocolatey as choco.exe is too old, a real run would have upgraded the executable. Actual: '$actualVersion', Minimum Version: '0.10.5'"
+            $Module.Result.msg = @(
+                "Skipped check mode run on win_chocolatey as choco.exe is too old, a real run would have upgraded the executable."
+                "Actual: '$actualVersion', Minimum Version: '0.10.5'"
+            ) -join ' '
             $Module.ExitJson()
         }
 
