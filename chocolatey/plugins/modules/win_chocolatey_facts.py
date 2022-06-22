@@ -17,7 +17,7 @@ module: win_chocolatey_facts
 version_added: '0.2.8'
 short_description: Create a facts collection for Chocolatey
 description:
-- This module shows information from Chocolatey, such as installed packages, configuration, feature and sources.
+- This module shows information from Chocolatey, such as installed packages, outdated packages, configuration, feature and sources.
 notes:
 - Chocolatey must be installed beforehand, use M(win_chocolatey) to do this.
 seealso:
@@ -49,6 +49,10 @@ EXAMPLES = r'''
 - name: Displays the Packages
   debug:
     var: ansible_chocolatey.packages
+
+- name: Displays the Outdated packages
+  debug:
+    var: ansible_chocolatey.outdated
 '''
 
 RETURN = r'''
@@ -142,4 +146,29 @@ ansible_facts:
               returned: always
               type: str
               sample: '1.27.2'
+        outdated:  
+          description: List of packages for which an update is available
+          returned: always
+          type: complex
+          contains:
+            available_version: 
+              description: Available version of the package
+              returned: always
+              type: str
+              sample: 7.2.4
+            current_version:
+              description: Current version of the package
+              returned: always
+              type: str
+              sample: 7.2.3
+            package: 
+              description: Name of the package
+              returned: always
+              type: str
+              sample: vscodepowershell-core",
+            pinned:
+              description: Is the version of the package pinned to suppress upgrades
+              returned: always
+              type: bool
+              sample: false
 '''
