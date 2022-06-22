@@ -1,0 +1,74 @@
+- name: "install old version of {{ test_choco_package1 }} package"
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: present
+    version: 0.0.1
+    force: yes
+
+- block:
+  - name: Gather facts from chocolatey
+    win_chocolatey_facts:
+
+  # Example output
+  #  "outdated": [
+  #       {
+  #           "available_version": "0.1.0",
+  #           "current_version": "0.0.1",
+  #           "package": "ansible",
+  #           "pinned": false
+  #       },
+
+  # When using selectattr in Ansible 2.9 we need to convert to a list with '| list' to prevent the error below:
+  #'TASK [win_chocolatey : Debug selected_package] *****************************************************************************************************************************************************************************************
+  # ok: [win10] => {
+  #     "selected_package": "<generator object select_or_reject at 0x7fda04eaeea0> "
+  # }
+  # See: https://www.0xf8.org/2021/03/filtering-with-ansibles-selectattr-rejectattr-when-the-tested-attribute-can-be-absent/
+  # This can be removed if we no longer support Ansible 2.9
+  - name: set_fact selected_package
+    set_fact:
+      selected_package: "{{ ansible_chocolatey.outdated | selectattr('package', 'eq', test_choco_package1) | list}} "
+
+  - name: Debug selected_package
+    debug:
+      var: selected_package
+
+  - name: assert 'chocolatey outdated' facts
+    assert:
+      that:
+      - ansible_chocolatey is not changed
+      - ansible_chocolatey.outdated is defined
+      - selected_package[0] is defined
+      - selected_package[1] is not defined
+      - selected_package[0].current_version == '0.0.1'
+      - selected_package[0].available_version == '0.1.0'
+      - selected_package[0].pinned == false
+
+- block:
+  - name: "Update {{ test_choco_package1 }} package"
+    win_chocolatey:
+      name: '{{ test_choco_package1 }}'
+      state: latest
+
+  - name: Gather facts from chocolatey
+    win_chocolatey_facts:
+
+  - name: set_fact selected_package
+    set_fact:
+      selected_package: "{{ ansible_chocolatey.outdated | selectattr('package', 'eq', test_choco_package1) | list}} "
+
+  - name: Debug selected_package
+    debug:
+      var: selected_package
+
+  - name: assert 'chocolatey outdated' facts
+    assert:
+      that:
+      - ansible_chocolatey.outdated is defined
+      - selected_package[0] is not defined
+
+  always:
+  - name: "Clean up after 'chocolatey outdated' tests. Remove {{ test_choco_package1 }} package"
+    win_chocolatey:
+      name: '{{ test_choco_package1 }}'
+      state: absent
