@@ -146,12 +146,12 @@ ansible_facts:
               returned: always
               type: str
               sample: '1.27.2'
-        outdated:  
+        outdated:
           description: List of packages for which an update is available
           returned: always
           type: complex
           contains:
-            available_version: 
+            available_version:
               description: Available version of the package
               returned: always
               type: str
@@ -161,7 +161,7 @@ ansible_facts:
               returned: always
               type: str
               sample: 7.2.3
-            package: 
+            package:
               description: Name of the package
               returned: always
               type: str
