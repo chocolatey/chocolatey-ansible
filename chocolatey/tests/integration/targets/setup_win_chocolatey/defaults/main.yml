@@ -1,5 +1,6 @@
 ---
 test_choco_path: '{{ win_output_dir }}\win_chocolatey'
+test_choco_bootstrap_script: '{{ win_output_dir }}\test-bootstrap.ps1'
 test_choco_source: '{{ test_choco_path }}\packages'
 test_choco_source2: '{{ test_choco_path }}\packages2'  # used to verify source works with the source name and not just the path
 test_choco_package1: ansible
