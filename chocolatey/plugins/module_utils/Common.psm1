@@ -136,7 +136,7 @@ function Assert-TaskFailed {
     }
 }
 
-function Get-StdoutLines {
+function ConvertFrom-Stdout {
     <#
         .SYNOPSIS
         Trims and splits the stdout from the given result so that individual
@@ -153,8 +153,9 @@ function Get-StdoutLines {
         [hashtable]
         $CommandResult
     )
-
-    $CommandResult.stdout.Trim() -split "\r?\n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    process {
+        $CommandResult.stdout.Trim() -split "\r?\n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    }
 }
 
 function Set-TaskResultChanged {
@@ -177,7 +178,7 @@ function Set-TaskResultChanged {
 Export-ModuleMember -Function @(
     'Get-ChocolateyCommand'
     'Get-AnsibleModule'
-    'Get-StdoutLines'
+    'ConvertFrom-Stdout'
     'Set-ActiveModule'
     'Set-TaskResultChanged'
     'Assert-TaskFailed'

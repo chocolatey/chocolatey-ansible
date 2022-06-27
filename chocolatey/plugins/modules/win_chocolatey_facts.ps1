@@ -17,14 +17,27 @@
 #AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Features
 #AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Packages
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSUseConsistentWhitespace',
+    '',
+    Justification = 'Relax whitespace rule for better readability in module spec',
+    Scope = 'function',
+    # Apply suppression specifically to module spec
+    Target = 'Get-ModuleSpec')]
+param()
+
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
 
 # Documentation: https://docs.ansible.com/ansible/2.10/dev_guide/developing_modules_general_windows.html#windows-new-module-development
-$spec = @{
-    options = @{}
-    supports_check_mode = $true
+function Get-ModuleSpec {
+    @{
+        options             = @{}
+        supports_check_mode = $true
+    }
 }
+
+$spec = Get-ModuleSpec
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 Set-ActiveModule $module
@@ -33,9 +46,9 @@ $chocoCommand = Get-ChocolateyCommand
 
 $module.Result.ansible_facts = @{
     ansible_chocolatey = @{
-        config   = @{}
-        feature  = @{}
-        sources  = @()
+        config = @{}
+        feature = @{}
+        sources = @()
         packages = @()
         outdated = @()
     }

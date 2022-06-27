@@ -34,7 +34,7 @@ function Get-ChocolateyOutdated {
     }
 
     $result |
-        Get-StdoutLines |
+        ConvertFrom-Stdout |
         ForEach-Object {
             # Sanity check in case additional output is added in the future.
             if ($_.Contains('|')) {
@@ -90,7 +90,7 @@ function Get-ChocolateyPackage {
     }
 
     $result |
-        Get-StdoutLines |
+        ConvertFrom-Stdout |
         ForEach-Object {
             # Sanity check in case additional output is added in the future.
             if ($_.Contains('|')) {
@@ -158,7 +158,7 @@ function Get-ChocolateyPackageVersion {
     }
 }
 
-function Get-CommonChocolateyArguments {
+function Get-CommonChocolateyArgument {
     <#
         .SYNOPSIS
         Retrieves a set of common Chocolatey arguments.
@@ -199,7 +199,7 @@ function Get-CommonChocolateyArguments {
     }
 }
 
-function Get-InstallChocolateyArguments {
+function ConvertTo-ChocolateyArgument {
     <#
         .SYNOPSIS
         Translates parameters into commonly used Chocolatey command line arguments.
@@ -322,7 +322,7 @@ function Get-InstallChocolateyArguments {
     "--fail-on-unfound"
 
     # Include common arguments for installing/updating a Chocolatey package
-    Get-CommonChocolateyArguments
+    Get-CommonChocolateyArgument
 
     if ($AllowDowngrade) { "--allow-downgrade" }
     if ($AllowEmptyChecksums) { "--allow-empty-checksums" }
@@ -383,7 +383,7 @@ function Get-ChocolateyPin {
     $pins = @{}
 
     $result |
-        Get-StdoutLines |
+        ConvertFrom-Stdout |
         ForEach-Object {
             $package, $version, $null = $_.Split('|')
 
@@ -445,7 +445,7 @@ function Set-ChocolateyPin {
             "--version", $Version
         }
 
-        Get-CommonChocolateyArguments
+        Get-CommonChocolateyArgument
     )
 
     $command = Argv-ToString -Arguments $arguments
@@ -601,7 +601,7 @@ function Update-ChocolateyPackage {
         $ChocoCommand.Path
         "upgrade"
         $Package
-        Get-InstallChocolateyArguments @commonParams
+        ConvertTo-ChocolateyArgument @commonParams
     )
 
     $command = Argv-ToString -Arguments $arguments
@@ -771,7 +771,7 @@ function Install-ChocolateyPackage {
         $ChocoCommand.Path
         "install"
         $Package
-        Get-InstallChocolateyArguments @commonParams
+        ConvertTo-ChocolateyArgument @commonParams
     )
 
     $command = Argv-ToString -Arguments $arguments
@@ -859,7 +859,7 @@ function Uninstall-ChocolateyPackage {
         $ChocoCommand.Path
         "uninstall"
         $Package
-        Get-CommonChocolateyArguments
+        Get-CommonChocolateyArgument
 
         if ($Version) {
             "--version", $Version
@@ -1083,25 +1083,32 @@ function Install-Chocolatey {
         $actualVersion = [Version]$actualVersion
     }
     catch {
-        $Module.Warn("Failed to parse Chocolatey version '$actualVersion' for checking module requirements, module may not work correctly: $($_.Exception.Message)")
+        $warning = @(
+            "Failed to parse Chocolatey version '$actualVersion' for checking module requirements."
+            "Module may not work correctly: $($_.Exception.Message)"
+        ) -join ' '
+        $Module.Warn($warning)
         $actualVersion = $null
     }
 
     if ($null -ne $actualVersion -and $actualVersion -lt [Version]"0.10.5") {
         if ($Module.CheckMode) {
             $Module.Result.skipped = $true
-            $Module.Result.msg = "Skipped check mode run on win_chocolatey as choco.exe is too old, a real run would have upgraded the executable. Actual: '$actualVersion', Minimum Version: '0.10.5'"
+            $Module.Result.msg = @(
+                "Skipped check mode run on win_chocolatey as choco.exe is too old, a real run would have upgraded the executable."
+                "Actual: '$actualVersion', Minimum Version: '0.10.5'"
+            ) -join ' '
             $Module.ExitJson()
         }
 
         $Module.Warn("Chocolatey was older than v0.10.5 so it will be upgraded during this task run.")
         $params = @{
-            ChocoCommand   = $chocoCommand
-            Packages       = @("chocolatey")
-            ProxyUrl       = $ProxyUrl
-            ProxyUsername  = $ProxyUsername
-            ProxyPassword  = $ProxyPassword
-            Source         = $Source
+            ChocoCommand = $chocoCommand
+            Packages = @("chocolatey")
+            ProxyUrl = $ProxyUrl
+            ProxyUsername = $ProxyUsername
+            ProxyPassword = $ProxyPassword
+            Source = $Source
             SourceUsername = $SourceUsername
             SourcePassword = $SourcePassword
         }
@@ -1112,12 +1119,12 @@ function Install-Chocolatey {
 }
 
 Export-ModuleMember -Function @(
+    'ConvertTo-ChocolateyArgument'
     'Get-ChocolateyOutdated'
     'Get-ChocolateyPackage'
     'Get-ChocolateyPackageVersion'
     'Get-ChocolateyPin'
-    'Get-CommonChocolateyArguments'
-    'Get-InstallChocolateyArguments'
+    'Get-CommonChocolateyArgument'
     'Set-ChocolateyPin'
     'Install-Chocolatey'
     'Install-ChocolateyPackage'

@@ -44,8 +44,8 @@ function Get-ChocolateySource {
 
     foreach ($sourceNode in $configXml.chocolatey.sources.GetEnumerator()) {
         $sourceInfo = @{
-            name     = $sourceNode.id
-            source   = $sourceNode.value
+            name = $sourceNode.id
+            source = $sourceNode.value
             disabled = [System.Convert]::ToBoolean($sourceNode.disabled)
         }
 
@@ -210,15 +210,15 @@ function New-ChocolateySource {
     }
 
     @{
-        name               = $Name
-        source             = $Source
-        disabled           = $false
-        source_username    = $Username
-        priority           = $Priority
-        certificate        = $Certificate
-        bypass_proxy       = $BypassProxy.IsPresent
+        name = $Name
+        source = $Source
+        disabled = $false
+        source_username = $Username
+        priority = $Priority
+        certificate = $Certificate
+        bypass_proxy = $BypassProxy.IsPresent
         allow_self_service = $AllowSelfService.IsPresent
-        admin_only         = $AdminOnly.IsPresent
+        admin_only = $AdminOnly.IsPresent
     }
 }
 

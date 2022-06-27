@@ -12,32 +12,45 @@
 #AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Common
 #AnsibleRequires -PowerShell ansible_collections.chocolatey.chocolatey.plugins.module_utils.Sources
 
-# Documentation: https://docs.ansible.com/ansible/2.10/dev_guide/developing_modules_general_windows.html#windows-new-module-development
-$spec = @{
-    options             = @{
-        name                 = @{ type = "str"; required = $true }
-        state                = @{ type = "str"; default = "present"; choices = "absent", "disabled", "present" }
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSUseConsistentWhitespace',
+    '',
+    Justification = 'Relax whitespace rule for better readability in module spec',
+    Scope = 'function',
+    # Apply suppression specifically to module spec
+    Target = 'Get-ModuleSpec')]
+param()
 
-        admin_only           = @{ type = "bool" }
-        allow_self_service   = @{ type = "bool" }
-        bypass_proxy         = @{ type = "bool" }
-        certificate          = @{ type = "str" }
-        certificate_password = @{ type = "str"; no_log = $true }
-        priority             = @{ type = "int" }
-        source               = @{ type = "str" }
-        source_username      = @{ type = "str" }
-        source_password      = @{ type = "str"; no_log = $true }
-        update_password      = @{ type = "str"; default = "always"; choices = "always", "on_create" }
-    }
-    supports_check_mode = $true
-    required_together   = @(
-        # Explicit `,` prefix required to prevent the array unrolling, Ansible requires nested arrays here.
-        , @( 'source_username', 'source_password' )
-    )
-    required_by         = @{
-        'certificate_password' = 'certificate'
+# Documentation: https://docs.ansible.com/ansible/2.10/dev_guide/developing_modules_general_windows.html#windows-new-module-development
+function Get-ModuleSpec {
+    @{
+        options             = @{
+            name                 = @{ type = "str"; required = $true }
+            state                = @{ type = "str"; default = "present"; choices = "absent", "disabled", "present" }
+
+            admin_only           = @{ type = "bool" }
+            allow_self_service   = @{ type = "bool" }
+            bypass_proxy         = @{ type = "bool" }
+            certificate          = @{ type = "str" }
+            certificate_password = @{ type = "str"; no_log = $true }
+            priority             = @{ type = "int" }
+            source               = @{ type = "str" }
+            source_username      = @{ type = "str" }
+            source_password      = @{ type = "str"; no_log = $true }
+            update_password      = @{ type = "str"; default = "always"; choices = "always", "on_create" }
+        }
+        supports_check_mode = $true
+        required_together   = @(
+            # Explicit `,` prefix required to prevent the array unrolling, Ansible requires nested arrays here.
+            , @( 'source_username', 'source_password' )
+        )
+        required_by         = @{
+            'certificate_password' = 'certificate'
+        }
     }
 }
+
+$spec = Get-ModuleSpec
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 Set-ActiveModule $module

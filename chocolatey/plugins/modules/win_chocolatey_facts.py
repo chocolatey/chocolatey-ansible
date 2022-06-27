@@ -19,12 +19,12 @@ short_description: Create a facts collection for Chocolatey
 description:
 - This module shows information from Chocolatey, such as installed packages, outdated packages, configuration, feature and sources.
 notes:
-- Chocolatey must be installed beforehand, use M(win_chocolatey) to do this.
+- Chocolatey must be installed beforehand, use M(chocolatey.chocolatey.win_chocolatey) to do this.
 seealso:
-- module: win_chocolatey
-- module: win_chocolatey_config
-- module: win_chocolatey_feature
-- module: win_chocolatey_source
+- module: chocolatey.chocolatey.win_chocolatey
+- module: chocolatey.chocolatey.win_chocolatey_config
+- module: chocolatey.chocolatey.win_chocolatey_feature
+- module: chocolatey.chocolatey.win_chocolatey_source
 author:
 - Simon Bärlocher (@sbaerlocher)
 - ITIGO AG (@itigoag)

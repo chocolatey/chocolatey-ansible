@@ -28,7 +28,7 @@ options:
     description:
     - Allow empty checksums to be used for downloaded resource from non-secure
       locations.
-    - Use M(win_chocolatey_feature) with the name C(allowEmptyChecksums) to
+    - Use M(chocolatey.chocolatey.win_chocolatey_feature) with the name C(allowEmptyChecksums) to
       control this option globally.
     type: bool
     default: no
@@ -73,7 +73,7 @@ options:
   ignore_checksums:
     description:
     - Ignore the checksums provided by the package.
-    - Use M(win_chocolatey_feature) with the name C(checksumFiles) to control
+    - Use M(chocolatey.chocolatey.win_chocolatey_feature) with the name C(checksumFiles) to control
       this option globally.
     type: bool
     default: no
@@ -150,7 +150,7 @@ options:
   proxy_url:
     description:
     - Proxy URL used to install chocolatey and the package.
-    - Use M(win_chocolatey_config) with the name C(proxy) to control this
+    - Use M(chocolatey.chocolatey.win_chocolatey_config) with the name C(proxy) to control this
       option globally.
     type: str
     version_added: '0.2.4'
@@ -159,7 +159,7 @@ options:
     - Proxy username used to install Chocolatey and the package.
     - Before Ansible 2.7, users with double quote characters C(") would need to
       be escaped with C(\) beforehand. This is no longer necessary.
-    - Use M(win_chocolatey_config) with the name C(proxyUser) to control this
+    - Use M(chocolatey.chocolatey.win_chocolatey_config) with the name C(proxyUser) to control this
       option globally.
     type: str
     version_added: '0.2.4'
@@ -168,7 +168,7 @@ options:
     - Proxy password used to install Chocolatey and the package.
     - This value is exposed as a command argument and any privileged account
       can see this value when the module is running Chocolatey, define the
-      password on the global config level with M(win_chocolatey_config) with
+      password on the global config level with M(chocolatey.chocolatey.win_chocolatey_config) with
       name C(proxyPassword) to avoid this.
     type: str
     version_added: '0.2.4'
@@ -182,10 +182,10 @@ options:
   source:
     description:
     - Specify the source to retrieve the package from.
-    - Use M(win_chocolatey_source) to manage global sources.
+    - Use M(chocolatey.chocolatey.win_chocolatey_source) to manage global sources.
     - This value can either be the URL to a Chocolatey feed, a path to a folder
       containing C(.nupkg) packages or the name of a source defined by
-      M(win_chocolatey_source).
+      M(chocolatey.chocolatey.win_chocolatey_source).
     - This value is also used when Chocolatey is not installed as the location
       of the install.ps1 script and only supports URLs for this case.
     type: str
@@ -194,7 +194,7 @@ options:
     - A username to use with I(source) when accessing a feed that requires
       authentication.
     - It is recommended you define the credentials on a source with
-      M(win_chocolatey_source) instead of passing it per task.
+      M(chocolatey.chocolatey.win_chocolatey_source) instead of passing it per task.
     type: str
     version_added: '0.2.7'
   source_password:
@@ -202,7 +202,7 @@ options:
     - The password for I(source_username).
     - This value is exposed as a command argument and any privileged account
       can see this value when the module is running Chocolatey, define the
-      credentials with a source with M(win_chocolatey_source) to avoid this.
+      credentials with a source with M(chocolatey.chocolatey.win_chocolatey_source) to avoid this.
     type: str
     version_added: '0.2.7'
   state:
@@ -264,19 +264,19 @@ notes:
   Even if you are connecting as local Administrator, using C(become) to
   become Administrator will give you an interactive user logon, see examples
   below.
-- If C(become) is unavailable, use M(win_hotfix) to install hotfixes instead
-  of M(win_chocolatey) as M(win_hotfix) avoids using C(wusa.exe) which cannot
+- If C(become) is unavailable, use M(community.windows.win_hotfix) to install hotfixes instead
+  of M(chocolatey.chocolatey.win_chocolatey) as M(community.windows.win_hotfix) avoids using C(wusa.exe) which cannot
   be run without C(become).
 seealso:
-- module: win_chocolatey_config
-- module: win_chocolatey_facts
-- module: win_chocolatey_feature
-- module: win_chocolatey_source
-- module: win_feature
-- module: win_hotfix
+- module: chocolatey.chocolatey.win_chocolatey_config
+- module: chocolatey.chocolatey.win_chocolatey_facts
+- module: chocolatey.chocolatey.win_chocolatey_feature
+- module: chocolatey.chocolatey.win_chocolatey_source
+- module: community.windows.win_feature
+- module: community.windows.win_hotfix
   description: Use when C(become) is unavailable, to avoid using C(wusa.exe).
-- module: win_package
-- module: win_updates
+- module: community.windows.win_package
+- module: community.windows.win_updates
 - name: Chocolatey website
   description: More information about the Chocolatey tool.
   link: http://chocolatey.org/

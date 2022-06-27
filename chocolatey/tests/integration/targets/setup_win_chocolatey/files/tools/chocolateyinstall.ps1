@@ -7,34 +7,45 @@ $source = "--- SOURCE ---"  # used by the test to determine which source it was 
 
 if ($env:ChocolateyAllowEmptyChecksums) {
     $allow_empty_checksums = $true
-} else {
+}
+else {
     $allow_empty_checksums = $false
 }
+
 if ($env:ChocolateyIgnoreChecksums) {
     $ignore_checksums = $true
-} else {
+}
+else {
     $ignore_checksums = $false
 }
+
 if ($env:ChocolateyForce) {
     $force = $true
-} else {
+}
+else {
     $force = $false
 }
+
 if ($env:ChocolateyForceX86) {
     $force_x86 = $true
-} else {
+}
+else {
     $force_x86 = $false
 }
+
 if ($env:ChocolateyInstallOverride) {
     $override_args = $true
-} else {
+}
+else {
     $override_args = $false
 }
+
 #$process_env = Get-EnvironmentVariableNames -Scope Process
 #$env_vars = @{}
 #foreach ($name in $process_env) {
 #  $env_vars.$name = Get-EnvironmentVariable -Name $name -Scope Process
 #}
+
 $timeout = $env:chocolateyResponseTimeout
 
 $package_info = @{
