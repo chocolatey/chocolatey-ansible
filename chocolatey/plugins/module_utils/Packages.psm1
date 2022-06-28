@@ -946,7 +946,11 @@ function Install-Chocolatey {
         # Set to skip writing the warning message when Chocolatey is not yet present.
         [Parameter()]
         [switch]
-        $SkipWarning
+        $SkipWarning,
+
+        [Parameter()]
+        [string]
+        $BootstrapScript
     )
 
     $chocoCommand = Get-ChocolateyCommand -IgnoreMissing
@@ -993,7 +997,10 @@ function Install-Chocolatey {
             $environment.chocolateyVersion = $Version
         }
 
-        $scriptUrl = if ($Source) {
+        $scriptUrl = if ($BootstrapScript) {
+            $BootstrapScript
+        }
+        elseif ($Source) {
             $uriInfo = [System.Uri]$Source
 
             # check if the URL already contains the path to PS script

@@ -694,3 +694,21 @@
     that:
     - not remove_nonexistent_version is changed
     - '"{{ test_choco_package1 }}|0.1.0" in remove_nonexistent_version_result.stdout_lines'
+
+- name: remove existing Chocolatey installation
+  win_shell: Remove-Item -Path "C:/ProgramData/chocolatey" -Recurse -Force
+
+- name: install Chocolatey using the test bootstrap script
+  win_chocolatey:
+    name: chocolatey
+    state: present
+    bootstrap_script: "{{ test_choco_bootstrap_script }}"
+
+- name: checking if the bootstrap file has been created
+  win_shell: Get-Content -Path "C:/temp/confirm-bootstrap.txt" -Raw
+  register: bootstrap_file_check
+
+- name: assert bootstrap file has been created
+  assert:
+    that:
+      - (bootstrap_file_check.stdout|from_json).bootstrap

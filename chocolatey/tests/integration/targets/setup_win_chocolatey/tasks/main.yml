@@ -14,8 +14,13 @@
 
 - name: copy template package files
   win_copy:
-    src: files/
+    src: files/test-package/
     dest: '{{ test_choco_path }}'
+
+- name: copy test bootstrap script
+  win_copy:
+    src: files/bootstrap.ps1
+    dest: '{{ test_choco_bootstrap_script }}'
 
 # run the setup in 1 shell script to save on test time
 - name: set up packages

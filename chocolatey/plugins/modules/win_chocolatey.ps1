@@ -32,6 +32,7 @@ function Get-ModuleSpec {
             allow_empty_checksums = @{ type = "bool"; default = $false }
             allow_multiple        = @{ type = "bool"; default = $false }
             allow_prerelease      = @{ type = "bool"; default = $false }
+            bootstrap_script      = @{ type = "str"; aliases = "install_ps1", "bootstrap_ps1" }
             architecture          = @{ type = "str"; default = "default"; choices = "default", "x86" }
             choco_args            = @{ type = "list"; elements = "str"; aliases = "licensed_args" }
             force                 = @{ type = "bool"; default = $false }
@@ -68,6 +69,7 @@ $allow_empty_checksums = $module.Params.allow_empty_checksums
 $allow_multiple = $module.Params.allow_multiple
 $allow_prerelease = $module.Params.allow_prerelease
 $architecture = $module.Params.architecture
+$bootstrap_script = $module.Params.bootstrap_script
 $choco_args = $module.Params.choco_args
 $force = $module.Params.force
 $ignore_checksums = $module.Params.ignore_checksums
@@ -111,6 +113,10 @@ if ($version -and "chocolatey" -in $name) {
     # process.
     $installParams.Version = $version
     $installParams.SkipWarning = $true
+}
+
+if ($bootstrap_script) {
+    $installParams.BootstrapScript = $bootstrap_script
 }
 
 $chocoCommand = Install-Chocolatey @installParams
