@@ -150,6 +150,7 @@ ansible_facts:
           description: List of packages for which an update is available
           returned: always
           type: complex
+          version_added: '1.3.0'
           contains:
             available_version:
               description: Available version of the package
