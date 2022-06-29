@@ -91,6 +91,10 @@ Continue on to the [Running `ansible-test`](#running-ansible-test) section.
     cd ~/.ansible/collections/ansible_collections/chocolatey/chocolatey
     ansible-test windows-integration --inventory /home/vagrant/.ansible/collections/ansible_collections/chocolatey/chocolatey/tests/integration/vagrant-inventory.winrm --requirements --continue-on-error
     ```
+    or to start a specific test:
+    ```
+    ansible-test windows-integration --inventory /home/vagrant/.ansible/collections/ansible_collections/chocolatey/chocolatey/tests/integration/vagrant-inventory.winrm --requirements --continue-on-error --start-at win_chocolatey_facts
+    ```
 
 1. To retrieve the test files from the Ansible server VM when using Vagrant, copy the test result files to the `/vagrant/results` shared folder to retrieve them from the Linux VM:
 
