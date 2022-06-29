@@ -6,6 +6,7 @@
     - [Vagrant](#vagrant)
     - [Generic](#generic)
   - [Running `ansible-test`](#running-ansible-test)
+    - [Open issues](#open-issues)
 
 ## Prerequisites
 
@@ -115,3 +116,8 @@ npm install xunit-viewer -g
 xunit-viewer -r ./results -o ./results/report.html
 Invoke-Item ./results/report.html
 ```
+
+### Open issues
+
+* [Vagrant environment does not load ansible.windows modules correctly](https://github.com/chocolatey/chocolatey-ansible/issues/71)
+
