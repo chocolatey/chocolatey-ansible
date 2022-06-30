@@ -12,7 +12,7 @@ Vagrant.require_version ">= 1.6.0"
 Vagrant.configure("2") do |config|
 
   config.vm.define :choco_ansible_server do |server|
-    server.vm.box = "roboxes/ubuntu2010"
+    server.vm.box = "roboxes/ubuntu2204"
 
     server.vm.hostname = "ansible-server"
     server.vm.network :private_network, ip: "10.0.0.10"
@@ -28,8 +28,17 @@ Vagrant.configure("2") do |config|
 
     server.vm.provision "shell" do |sh|
       sh.inline = <<-SH
+        # Install python venv
         sudo apt-get update
         sudo apt-get install python3-venv -y
+
+        # Install PowerShell
+        sudo apt-get update
+        sudo apt-get install -y wget apt-transport-https software-properties-common
+        wget -q "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
+        sudo dpkg -i packages-microsoft-prod.deb
+        sudo apt-get update
+        sudo apt-get install -y powershell
 
         python3 -m venv ~/ansible
         source ~/ansible/bin/activate
