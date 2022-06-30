@@ -1,6 +1,9 @@
 ---
 
 - block:
+  - name: run bootstrap tests
+    include_tasks: bootstrap_tests.yml
+
   - name: run tests
     include_tasks: tests.yml
 

@@ -1,0 +1,54 @@
+---
+- name: copy test bootstrap script
+  win_copy:
+    src: files/bootstrap.ps1
+    dest: '{{ test_choco_bootstrap_script }}'
+
+- name: backup Chocolatey installation
+  win_copy:
+    src: '{{ choco_install_dir }}'
+    dest: '{{ test_choco_backup }}'
+    remote_src: yes
+
+- name: ensure Chocolatey is not installed
+  win_file:
+    path: '{{ choco_install_dir }}'
+    state: absent
+
+- name: install Chocolatey using the test bootstrap script
+  win_chocolatey:
+    name: chocolatey
+    state: present
+    bootstrap_script: "{{ test_choco_bootstrap_script }}"
+
+- name: checking if the bootstrap file has been created
+  win_shell: Get-Content -Path "C:/temp/confirm-bootstrap.txt" -Raw
+  register: bootstrap_file_check
+
+- name: assert bootstrap file has been created
+  assert:
+    that:
+      - (bootstrap_file_check.stdout|from_json).bootstrap
+
+- name: ensure Chocolatey is not installed
+  win_file:
+    path: '{{ choco_install_dir }}'
+    state: absent
+
+- name: installing Chocolatey from Community Repository with TLS 1.1 only should fail
+  win_chocolatey:
+    name: chocolatey
+    bootstrap_tls_version: [ tls11 ]
+  register: test_tls_version
+  failed_when: not test_tls_version.failed
+
+- name: ensure no leftover files from failed install
+  win_file:
+    path: '{{ choco_install_dir }}'
+    state: absent
+
+- name: restore Chocolatey installation from backup
+  win_copy:
+    src: '{{ test_choco_backup }}'
+    dest: '{{ choco_install_dir }}'
+    remote_src: yes
