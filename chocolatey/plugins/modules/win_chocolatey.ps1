@@ -191,7 +191,7 @@ if ($state -in @("downgrade", "latest", "upgrade", "present", "reinstalled")) {
     # allow_multiple, throw error. Ignore this if force is set.
     if ($state -eq "present" -and $null -ne $version -and -not $force) {
         foreach ($package in $name) {
-            $packageVersions = @($packageInfo.$package)
+            $packageVersions = @($packageInfo.$package | Where-Object { $_ })
 
             if ($packageVersions.Count -gt 0) {
                 if (-not $packageVersions.Contains($version) -and -not $allow_multiple) {
