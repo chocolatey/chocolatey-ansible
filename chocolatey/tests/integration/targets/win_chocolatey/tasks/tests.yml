@@ -219,6 +219,37 @@
     that:
     - not remove_multiple_again is changed
 
+- name: install package with explicit version and state=present
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: present
+    version: 0.1.0
+  register: install_with_version_and_state_present
+
+- name: get result of install package with explicit version and state=present
+  win_command: choco.exe list --local-only --exact --limit-output {{ test_choco_package1|quote }}
+  register: install_with_version_and_state_present_actual
+
+- name: get package info of install package with explicit version and state=present
+  win_shell: Get-Content -Path '{{ test_choco_path }}\{{ test_choco_package1 }}-0.1.0.txt' -Raw
+  register: install_with_version_and_state_present_actual_info
+
+- name: assert install package with explicit version and state=present
+  assert:
+    that:
+    - install_with_version_and_state_present is changed
+    - install_with_version_and_state_present_actual.stdout_lines == [test_choco_package1 + "|0.1.0"]
+    - (install_with_version_and_state_present_actual_info.stdout|from_json).allow_empty_checksums == False
+    - (install_with_version_and_state_present_actual_info.stdout|from_json).force == False
+    - (install_with_version_and_state_present_actual_info.stdout|from_json).force_x86 == False
+    - (install_with_version_and_state_present_actual_info.stdout|from_json).ignore_checksums == False
+    - (install_with_version_and_state_present_actual_info.stdout|from_json).install_args == None
+    - (install_with_version_and_state_present_actual_info.stdout|from_json).override_args == False
+    - (install_with_version_and_state_present_actual_info.stdout|from_json).package_params == {}
+    - (install_with_version_and_state_present_actual_info.stdout|from_json).proxy_url == None
+    - (install_with_version_and_state_present_actual_info.stdout|from_json).source == "normal"
+    - (install_with_version_and_state_present_actual_info.stdout|from_json).timeout == "2700000"
+
 - name: install package with params
   win_chocolatey:
     name: '{{ test_choco_package1 }}'
