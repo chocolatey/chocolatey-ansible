@@ -174,7 +174,7 @@ if ($state -in "absent", "reinstalled") {
 if ($state -in @("downgrade", "latest", "upgrade", "present", "reinstalled")) {
     # When state=present and force=true, we just run the install step with the packages specified,
     # otherwise only install the packages that are not installed
-    $missingPackages = [System.Collections.Generic.List[string]]::new()
+    $missingPackages = [System.Collections.Generic.List[string]]@()
 
     if ($state -eq "present" -and $force) {
         $missingPackages.Add($name)
