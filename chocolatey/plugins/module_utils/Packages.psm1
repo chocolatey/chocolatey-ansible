@@ -1083,16 +1083,31 @@ function Install-Chocolatey {
         }
     }
 
-    $actualVersion = (Get-ChocolateyPackageVersion -ChocoCommand $chocoCommand -Name 'chocolatey').chocolatey[0]
-    try {
-        # The Chocolatey version may not be in the strict form of major.minor.build and will fail to cast to
-        # System.Version. We want to warn if this is the case saying module behaviour may be incorrect.
-        $actualVersion = [Version]$actualVersion
+    $chocolateyPackageVersion = (Get-ChocolateyPackageVersion -ChocoCommand $chocoCommand -Name 'chocolatey').chocolatey |
+        Select-Object -First 1
+
+    if ($chocolateyPackageVersion) {
+        try {
+            # The Chocolatey version may not be in the strict form of major.minor.build and will fail to cast to
+            # System.Version. We want to warn if this is the case saying module behaviour may be incorrect.
+            $actualVersion = [Version]$chocolateyPackageVersion
+        }
+        catch {
+            $warning = @(
+                "Failed to parse Chocolatey version '$actualVersion' for checking module requirements."
+                "Module may not work correctly: $($_.Exception.Message)"
+            ) -join ' '
+            $Module.Warn($warning)
+            $actualVersion = $null
+        }
     }
-    catch {
+    else {
+        # Couldn't find the Chocolatey package information
         $warning = @(
-            "Failed to parse Chocolatey version '$actualVersion' for checking module requirements."
-            "Module may not work correctly: $($_.Exception.Message)"
+            "Did not find version information for package ID 'chocolatey'."
+            "Unable to determine the client's installed Chocolatey version."
+            "Module may not work correctly."
+            "You may be able to rectify this by upgrading / reinstalling 'chocolatey'."
         ) -join ' '
         $Module.Warn($warning)
         $actualVersion = $null
