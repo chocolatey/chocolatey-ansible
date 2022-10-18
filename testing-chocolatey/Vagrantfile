@@ -64,8 +64,8 @@ Vagrant.configure("2") do |config|
   config.winrm.basic_auth_only = true
 
   config.vm.define :choco_win_client do |client|
-    # client.vm.box = "StefanScherer/windows_10"                  # Starts 'Windows Update' when Vagrant is still running resulting in connection errors. 
-    client.vm.box = "gusztavvargadr/windows-server"               # Windows 2022
+    # client.vm.box = "StefanScherer/windows_10"                  # Starts 'Windows Update' when Vagrant is still running resulting in connection errors.
+    client.vm.box = "StefanScherer/windows_2022"               # Windows 2022
     client.vm.communicator = "winrm"
     client.vm.guest = :windows
     client.vm.hostname = "win-client"
@@ -97,7 +97,7 @@ Vagrant.configure("2") do |config|
         & ([scriptblock]::Create($installScript))
         # Enable CredSSP/https in WinRM
         Enable-WSManCredSSP -Role Server -Force
-        
+
         # Install Chocolatey
         $installScript = Invoke-WebRequest -Uri "https://community.chocolatey.org/install.ps1" -UseBasicParsing
         & ([scriptblock]::Create($installScript))
