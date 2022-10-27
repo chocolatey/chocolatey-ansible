@@ -743,3 +743,12 @@
   assert:
     that:
       - (bootstrap_file_check.stdout|from_json).bootstrap
+
+- name: remove chocolatey package directory
+  win_file:
+    path: 'C:/ProgramData/chocolatey/lib/chocolatey'
+    state: absent
+
+- name: ensure we can still upgrade packages with chocolatey package files missing
+  name: chocolatey
+  state: upgrade
