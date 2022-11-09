@@ -66,6 +66,17 @@ Vagrant.configure("2") do |config|
       # linked clones for speed and size
       vbox.linked_clone = true if Vagrant::VERSION >= '1.8.0'
     end
+
+    client.vm.provision "shell" do |ps|
+      ps.inline = <<-PS1
+        # Configure WinRM for Ansible
+        $installScript = Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1" -UseBasicParsing
+        & ([scriptblock]::Create($installScript))
+        # Enable CredSSP/https in WinRM
+        Enable-WSManCredSSP -Role Server -Force
+      PS1
+      ps.privileged = true
+    end
   end
 
   # Disable automatic box update checking. If you disable this, then
