@@ -1,10 +1,12 @@
 # Beta-Testing Chocolatey with the Ansible Collection
 
-- [Prerequisites](#prerequisites)
-- [Getting Started](#getting-started)
-  - [Vagrant](#vagrant)
-  - [Generic](#generic)
-- [Running `ansible-test`](#running-ansible-test)
+- [Beta-Testing Chocolatey with the Ansible Collection](#beta-testing-chocolatey-with-the-ansible-collection)
+  - [Prerequisites](#prerequisites)
+  - [Getting Started](#getting-started)
+    - [Vagrant](#vagrant)
+    - [Generic](#generic)
+  - [Running `ansible-test`](#running-ansible-test)
+    - [Open issues](#open-issues)
 
 ## Prerequisites
 
@@ -88,7 +90,11 @@ Continue on to the [Running `ansible-test`](#running-ansible-test) section.
     ```sh
     source ~/ansible/bin/activate
     cd ~/.ansible/collections/ansible_collections/chocolatey/chocolatey
-    ansible-test windows-integration -vvvv --inventory vagrant-inventory.winrm --requirements --continue-on-error
+    ansible-test windows-integration --inventory /home/vagrant/.ansible/collections/ansible_collections/chocolatey/chocolatey/tests/integration/vagrant-inventory.winrm --requirements --continue-on-error
+    ```
+    or to start a specific test:
+    ```
+    ansible-test windows-integration --inventory /home/vagrant/.ansible/collections/ansible_collections/chocolatey/chocolatey/tests/integration/vagrant-inventory.winrm --requirements --continue-on-error --start-at win_chocolatey_facts
     ```
 
 1. To retrieve the test files from the Ansible server VM when using Vagrant, copy the test result files to the `/vagrant/results` shared folder to retrieve them from the Linux VM:
@@ -110,3 +116,8 @@ npm install xunit-viewer -g
 xunit-viewer -r ./results -o ./results/report.html
 Invoke-Item ./results/report.html
 ```
+
+### Open issues
+
+* [Vagrant environment does not load ansible.windows modules correctly](https://github.com/chocolatey/chocolatey-ansible/issues/71)
+
