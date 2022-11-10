@@ -32,6 +32,13 @@ options:
     type: str
     choices: [ disabled, enabled ]
     default: enabled
+  features:
+    description:
+    - A dictionary of multiple features to enable or disable at once.
+    - Not valid when I(name) is set.
+    - Features will be set to C(enabled) or C(disabled), as in I(state).
+    type: dict
+    version_added: ''
 seealso:
 - module: win_chocolatey
 - module: win_chocolatey_config
@@ -51,6 +58,12 @@ EXAMPLES = r'''
   win_chocolatey_feature:
     name: stopOnFirstPackageFailure
     state: enabled
+
+- name: Set Multiple Chocolatey Features
+  win_chocolatey_feature:
+    features:
+      checksumFiles: disabled
+      stopOnFirstPackageFailure: enabled
 '''
 
 RETURN = r'''
