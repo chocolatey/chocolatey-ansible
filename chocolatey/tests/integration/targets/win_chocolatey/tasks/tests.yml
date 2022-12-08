@@ -750,5 +750,6 @@
     state: absent
 
 - name: ensure we can still upgrade packages with chocolatey package files missing
-  name: chocolatey
-  state: upgrade
+  win_chocolatey:
+    name: chocolatey
+    state: upgrade
