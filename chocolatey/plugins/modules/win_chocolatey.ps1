@@ -30,7 +30,7 @@ function Get-ModuleSpec {
     @{
         options             = @{
             allow_empty_checksums = @{ type = "bool"; default = $false }
-            allow_multiple        = @{ type = "bool"; default = $false }
+            allow_multiple        = @{ type = "bool"; default = $false; removed_in_version = '2.0.0'; removed_from_collection = 'chocolatey.chocolatey' }
             allow_prerelease      = @{ type = "bool"; default = $false }
             bootstrap_script      = @{ type = "str"; aliases = "install_ps1", "bootstrap_ps1" }
             architecture          = @{ type = "str"; default = "default"; choices = "default", "x86" }

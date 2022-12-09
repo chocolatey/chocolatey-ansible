@@ -35,6 +35,9 @@ options:
     version_added: '0.2.2'
   allow_multiple:
     description:
+    - This option is deprecated and will be removed in v2.0.0 of this collection.
+      Chocolatey CLI has L(deprecated side-by-side installations, https://github.com/chocolatey/choco/issues/2787)
+      as of its v1.2.0 release and plans to remove them in its v2.0.0 release.
     - Allow the installation of multiple packages when I(version) is specified.
     - Having multiple packages at different versions can cause issues if the
       package doesn't support this. Use at your own risk.
