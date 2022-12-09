@@ -16,7 +16,13 @@ param(
     [Parameter(ParameterSetName = 'CI')]
     [Alias('Password')]
     [string]
-    $Secret
+    $Secret,
+
+    # Select only a single target for integration tests to run only a portion of the tests.
+    [Parameter(ParameterSetName = 'Vagrant')]
+    [ValidateSet('win_chocolatey', 'win_chocolatey_config', 'win_chocolatey_facts', 'win_chocolatey_feature', 'win_chocolatey_source')]
+    [string]
+    $TestTarget
 )
 begin {
     Push-Location
@@ -47,6 +53,12 @@ begin {
         }
 
         'ansible-galaxy collection install *.tar.gz'
+
+        if (-not $IsCIBuild) {
+            # CI works fine doing this in the dependencies.sh, but Vagrant has issues doing that for
+            # some reason.
+            'ansible-galaxy collection install ansible.windows'
+        }
     )
     $TestCommands = @(
         $SetCollectionLocation
@@ -60,9 +72,14 @@ begin {
             "mv -f tests/integration/$InventoryFile tests/integration/inventory.winrm"
         }
 
-        "${Sudo}ansible-test windows-integration -vvv --requirements --continue-on-error"
-        "${Sudo}ansible-test sanity -vvvvv --requirements"
-        "${Sudo}ansible-test coverage xml -vvvvv --requirements"
+        if (-not $TestTarget) {
+            "${Sudo}ansible-test windows-integration -vvv --requirements --continue-on-error"
+            "${Sudo}ansible-test sanity -vvvvv --requirements"
+            "${Sudo}ansible-test coverage xml -vvvvv --requirements"
+        }
+        else {
+            "${Sudo}ansible-test windows-integration $TestTarget -vvv --requirements --continue-on-error"
+        }
     )
     $CleanupCommands = @(
         "cp -r ./tests/output/ $OutputPath"

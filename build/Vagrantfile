@@ -37,6 +37,7 @@ Vagrant.configure("2") do |config|
     end
 
     server.vm.synced_folder ".testresults/", "/home/vagrant/.testresults/", create: true
+    server.vm.synced_folder "vagrant-files/", "/home/vagrant/files", create: true
   end
 
   config.vm.define :choco_win_client do |client|
