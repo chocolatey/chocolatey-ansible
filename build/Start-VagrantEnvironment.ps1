@@ -42,7 +42,7 @@ process {
         }
 
         if (-not $env:PACKAGE_VERSION) {
-            $env:PACKAGE_VERSION = '24.6.26'
+            $env:PACKAGE_VERSION = '1.0.0'
         }
 
         vagrant ssh choco_ansible_server --command "sed -i 's/{{ REPLACE_VERSION }}/$env:PACKAGE_VERSION/g' ./chocolatey/galaxy.yml"

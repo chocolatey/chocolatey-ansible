@@ -10,7 +10,7 @@ variables:
   ChocoCIClient.ansibleUser: 'ansible-test'
 # ChocoCIClient.ansiblePassword: <secret>
   CollectionArtifactName: 'chocolatey.collection'
-  Package.Version: 24.6.26
+  Package.Version: 1.0.0
 
 trigger:
   batch: true
