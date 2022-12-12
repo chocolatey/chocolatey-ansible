@@ -61,9 +61,18 @@ $CertificateScript -f $Username, $Secret | Set-Content -Path $Script.FullName
 
 $params = @{
     ResourceGroupName = 'choco-ci'
-    VMName            = $labVMName
+    VMName            = $labVmName
     CommandId         = 'RunPowerShellScript'
     ScriptPath        = $Script.FullName
+}
+
+Invoke-AzVMRunCommand @params -Verbose
+
+$params = @{
+    ResourceGroupName = 'choco-ci'
+    VMName            = $labVmName
+    CommandId         = 'RunPowerShellScript'
+    ScriptString      = 'Enable-WSManCredSSP -Role Server -Force'
 }
 
 Invoke-AzVMRunCommand @params -Verbose

@@ -113,7 +113,7 @@ process {
                 "ansible_password=$Secret"
                 "ansible_connection=winrm"
                 "ansible_port=5986"
-                "ansible_winrm_transport=ntlm"
+                "ansible_winrm_transport=credssp"
                 "ansible_winrm_server_cert_validation=ignore"
                 "ansible_become_method=runas"
             ) -join "`n"
