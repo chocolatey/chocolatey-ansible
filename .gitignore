@@ -6,3 +6,5 @@
 !/testing-chocolatey/provision-files/.gitkeep
 /testing-chocolatey/results/*
 !/testing-chocolatey/results/.gitkeep
+/build/vagrant-files/*
+!/build/vagrant-files/.gitkeep

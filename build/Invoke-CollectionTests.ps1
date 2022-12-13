@@ -16,7 +16,13 @@ param(
     [Parameter(ParameterSetName = 'CI')]
     [Alias('Password')]
     [string]
-    $Secret
+    $Secret,
+
+    # Select only a single target for integration tests to run only a portion of the tests.
+    [Parameter(ParameterSetName = 'Vagrant')]
+    [ValidateSet('win_chocolatey', 'win_chocolatey_config', 'win_chocolatey_facts', 'win_chocolatey_feature', 'win_chocolatey_source')]
+    [string]
+    $TestTarget
 )
 begin {
     Push-Location
@@ -47,6 +53,12 @@ begin {
         }
 
         'ansible-galaxy collection install *.tar.gz'
+
+        if (-not $IsCIBuild) {
+            # CI works fine doing this in the dependencies.sh, but Vagrant has issues doing that for
+            # some reason.
+            'ansible-galaxy collection install ansible.windows'
+        }
     )
     $TestCommands = @(
         $SetCollectionLocation
@@ -60,9 +72,14 @@ begin {
             "mv -f tests/integration/$InventoryFile tests/integration/inventory.winrm"
         }
 
-        "${Sudo}ansible-test windows-integration -vvv --requirements --continue-on-error"
-        "${Sudo}ansible-test sanity -vvvvv --requirements"
-        "${Sudo}ansible-test coverage xml -vvvvv --requirements"
+        if (-not $TestTarget) {
+            "${Sudo}ansible-test windows-integration -vvv --requirements --continue-on-error"
+            "${Sudo}ansible-test sanity -vvvvv --requirements"
+            "${Sudo}ansible-test coverage xml -vvvvv --requirements"
+        }
+        else {
+            "${Sudo}ansible-test windows-integration $TestTarget -vvv --requirements --continue-on-error"
+        }
     )
     $CleanupCommands = @(
         "cp -r ./tests/output/ $OutputPath"
@@ -96,7 +113,7 @@ process {
                 "ansible_password=$Secret"
                 "ansible_connection=winrm"
                 "ansible_port=5986"
-                "ansible_winrm_transport=ntlm"
+                "ansible_winrm_transport=credssp"
                 "ansible_winrm_server_cert_validation=ignore"
                 "ansible_become_method=runas"
             ) -join "`n"
@@ -130,18 +147,8 @@ process {
 
             vagrant ssh choco_ansible_server --command "sed -i 's/{{ REPLACE_VERSION }}/$env:PACKAGE_VERSION/g' ./chocolatey/galaxy.yml"
             vagrant ssh choco_ansible_server --command $Commands
-            $Result = [PSCustomObject]@{
-                Success  = $?
-                ExitCode = $LASTEXITCODE
-            }
 
             vagrant destroy --force
-
-            $Result | Out-String | Write-Host
-
-            if (-not $Result.Success) {
-                throw "Test failures occurred. Refer to the Vagrant log."
-            }
         }
     }
     finally {

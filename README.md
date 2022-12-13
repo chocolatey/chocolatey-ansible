@@ -9,7 +9,7 @@ The `chocolatey.chocolatey` Ansible Collection includes the modules required to 
 ## Ansible version compatibility
 
 This collection has been tested against the following Ansible versions:
-**>=2.9, 2.10, 2.11, 2.12**
+**>= 2.12, 2.13, 2.14**
 
 ## Installation and Usage
 
