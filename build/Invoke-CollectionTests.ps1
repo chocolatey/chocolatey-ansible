@@ -147,18 +147,8 @@ process {
 
             vagrant ssh choco_ansible_server --command "sed -i 's/{{ REPLACE_VERSION }}/$env:PACKAGE_VERSION/g' ./chocolatey/galaxy.yml"
             vagrant ssh choco_ansible_server --command $Commands
-            $Result = [PSCustomObject]@{
-                Success  = $?
-                ExitCode = $LASTEXITCODE
-            }
 
             vagrant destroy --force
-
-            $Result | Out-String | Write-Host
-
-            if (-not $Result.Success) {
-                throw "Test failures occurred. Refer to the Vagrant log."
-            }
         }
     }
     finally {
