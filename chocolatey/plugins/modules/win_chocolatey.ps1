@@ -33,6 +33,13 @@ function Get-ModuleSpec {
             allow_multiple        = @{ type = "bool"; default = $false; removed_in_version = '2.0.0'; removed_from_collection = 'chocolatey.chocolatey' }
             allow_prerelease      = @{ type = "bool"; default = $false }
             bootstrap_script      = @{ type = "str"; aliases = "install_ps1", "bootstrap_ps1" }
+            bootstrap_tls_version = @{
+                type = "list"
+                elements = "str"
+                choices = "tls11", "tls12", "tls13"
+                default = "tls12", "tls13"
+                aliases = "tls_version", "tls_versions", "bootstrap_tls_versions"
+            }
             architecture          = @{ type = "str"; default = "default"; choices = "default", "x86" }
             choco_args            = @{ type = "list"; elements = "str"; aliases = "licensed_args" }
             force                 = @{ type = "bool"; default = $false }
@@ -89,6 +96,7 @@ $source_username = $module.Params.source_username
 $source_password = $module.Params.source_password
 $state = $module.Params.state
 $timeout = $module.Params.timeout
+$bootstrap_tls_version = $module.Params.bootstrap_tls_version
 $validate_certs = $module.Params.validate_certs
 $version = $module.Params.version
 
@@ -100,6 +108,7 @@ if (-not $validate_certs) {
 
 # get the full path to choco.exe, otherwise install/upgrade to at least 0.10.5
 $installParams = @{
+    BootstrapTlsVersion = $bootstrap_tls_version
     ProxyUrl = $proxy_url
     ProxyUsername = $proxy_username
     ProxyPassword = $proxy_password

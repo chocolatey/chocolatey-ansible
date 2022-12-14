@@ -1,0 +1,4 @@
+---
+test_choco_bootstrap_script: '{{ win_output_dir }}/test-bootstrap.ps1'
+test_choco_backup: '{{ win_output_dir }}/backup/'
+choco_install_dir: 'C:/ProgramData/chocolatey/'

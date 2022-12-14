@@ -950,21 +950,26 @@ function Install-Chocolatey {
 
         [Parameter()]
         [string]
-        $BootstrapScript
+        $BootstrapScript,
+
+        [Parameter()]
+        [string[]]
+        $BootstrapTlsVersion
     )
 
     $chocoCommand = Get-ChocolateyCommand -IgnoreMissing
     if ($null -eq $chocoCommand) {
         # We need to install chocolatey
-        # Enable TLS1.1/TLS1.2 if they're available but disabled (eg. .NET 4.5)
+        # Enable necessary TLS versions if they're available but disabled.
+        # Default for win_chocolatey is to allow TLS 1.1, 1.2, and 1.3 (if available)
         $protocols = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::SystemDefault
 
-        if ([System.Net.SecurityProtocolType].GetMember("Tls11").Count -gt 0) {
-            $protocols = $protocols -bor [System.Net.SecurityProtocolType]::Tls11
-        }
-
-        if ([System.Net.SecurityProtocolType].GetMember("Tls12").Count -gt 0) {
-            $protocols = $protocols -bor [System.Net.SecurityProtocolType]::Tls12
+        foreach ($tlsVersion in $BootstrapTlsVersion) {
+            # If the TLS version isn't available on the system, this will evaluate to $null and be skipped
+            $value = $tlsVersion -as [System.Net.SecurityProtocolType]
+            if ($value) {
+                $protocols = $protocols -bor $value
+            }
         }
 
         [System.Net.ServicePointManager]::SecurityProtocol = $protocols
@@ -1040,7 +1045,7 @@ function Install-Chocolatey {
         }
         catch {
             $message = "Failed to download Chocolatey script from '$scriptUrl'; $($_.Exception.Message)"
-            Assert-TaskFailed -Message $message -Exception $_
+            Assert-TaskFailed -Message $message -Exception $_.Exception
         }
 
         if (-not $Module.CheckMode) {

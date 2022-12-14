@@ -84,6 +84,19 @@ options:
     type: str
     version_added: '1.3.0'
     aliases: [ install_ps1, bootstrap_ps1 ]
+  bootstrap_tls_version:
+    description:
+    - Specify the TLS versions used when retrieving and invoking the I(bootstrap_script) to install
+      Chocolatey if it is not already installed on the system.
+    - Does not change the TLS versions used by Chocolatey itself after it has already been installed.
+    - Specified TLS versions may be ignored or unused if the target TLS version is not available on
+      the client.
+    type: list
+    elements: str
+    choices: [ tls11, tls12, tls13 ]
+    default: [ tls12, tls13 ]
+    version_added: '1.4.0'
+    aliases: [ bootstrap_tls_versions, tls_version, tls_versions ]
   force:
     description:
     - Forces the install of a package, even if it already is installed.
