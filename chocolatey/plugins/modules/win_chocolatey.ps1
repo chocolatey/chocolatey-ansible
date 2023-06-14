@@ -137,6 +137,15 @@ if ('all' -in $name -and $state -in @('present', 'reinstalled')) {
 
 # Get the installed versions of all specified packages
 $packageInfo = $name | Get-ChocolateyPackageVersion -ChocoCommand $chocoCommand
+$chocolateyVersion = Get-ChocolateyVersion -ChocoCommand $chocoCommand
+
+# Ensure module output contains the choco CLI version in case folks need it for
+# debugging purposes.
+$module.Result.choco_cli_version = "$chocolateyVersion"
+
+if ($chocolateyVersion -ge [version]'2.0.0' -and $allow_multiple) {
+    Assert-TaskFailed -Message "Option 'allow_multiple' is not supported on the installed version of Chocolatey CLI"
+}
 
 if ($state -in "absent", "reinstalled") {
     $installedPackages = $packageInfo.Keys | Where-Object { $null -ne $packageInfo.$_ }

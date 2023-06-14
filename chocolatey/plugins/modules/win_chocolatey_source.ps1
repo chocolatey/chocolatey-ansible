@@ -91,7 +91,7 @@ if ($module.DiffMode) {
 
 if ($state -eq "absent" -and $null -ne $targetSource) {
     Remove-ChocolateySource -ChocoCommand $chocoCommand -Name $name
-    $module.Result.changed = $true
+    Set-TaskResultChanged
 }
 elseif ($state -in ("disabled", "present")) {
     $change = $false
@@ -117,7 +117,7 @@ elseif ($state -in ("disabled", "present")) {
 
         if ($change) {
             Remove-ChocolateySource -ChocoCommand $chocoCommand -Name $Name
-            $module.Result.changed = $true
+            Set-TaskResultChanged
         }
     }
 
@@ -149,7 +149,7 @@ elseif ($state -in ("disabled", "present")) {
         }
 
         $targetSource = New-ChocolateySource @sourceParams
-        $module.Result.changed = $true
+        Set-TaskResultChanged
     }
 
     # enable/disable the source if necessary
@@ -183,7 +183,7 @@ elseif ($state -in ("disabled", "present")) {
         }
 
         $targetSource.disabled = ($action -eq "disable")
-        $module.Result.changed = $true
+        Set-TaskResultChanged
     }
 
     if ($module.DiffMode) {

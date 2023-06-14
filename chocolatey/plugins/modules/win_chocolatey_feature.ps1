@@ -58,7 +58,7 @@ if ($isEnabled -ne $shouldBeEnabled) {
         Set-ChocolateyFeature -ChocoCommand $chocoCommand -Name $name -Enabled:$shouldBeEnabled
     }
 
-    $module.Result.changed = $true
+    Set-TaskResultChanged
 }
 
 $module.ExitJson()

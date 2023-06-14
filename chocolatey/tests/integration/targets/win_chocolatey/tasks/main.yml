@@ -7,6 +7,9 @@
   - name: run tests
     include_tasks: tests.yml
 
+  - name: run choco v1 tests
+    include_tasks: choco_v1_tests.yml
+
   always:
   - name: ensure test package is uninstalled after tests
     win_chocolatey:
@@ -25,3 +28,8 @@
     win_file:
       path: '{{ test_choco_path }}'
       state: absent
+
+  - name: ensure latest choco is installed after tests run
+    win_chocolatey:
+      name: chocolatey
+      state: upgrade

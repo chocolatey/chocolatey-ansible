@@ -25,11 +25,11 @@
     $packages_path = '{{ test_choco_source }}'
     $packages_path_override = '{{ test_choco_source2 }}'
     $packages = @(
-        @{ name = "ansible"; version = "0.0.1"; override = $false },
-        @{ name = "ansible"; version = "0.1.0"; override = $false },
-        @{ name = "ansible"; version = "0.1.0"; override = $true },
-        @{ name = "ansible-test"; version = "1.0.0"; override = $false },
-        @{ name = "ansible-test"; version = "1.0.1-beta1"; override = $false }
+        @{ name = "{{ test_choco_package1 }}"; version = "0.0.1"; override = $false },
+        @{ name = "{{ test_choco_package1 }}"; version = "0.1.0"; override = $false },
+        @{ name = "{{ test_choco_package1 }}"; version = "0.1.0"; override = $true },
+        @{ name = "{{ test_choco_package2 }}"; version = "1.0.0"; override = $false },
+        @{ name = "{{ test_choco_package2 }}"; version = "1.0.1-beta1"; override = $false }
     )
     $nuspec_src = "$root_path\package.nuspec"
     $install_src = "$root_path\tools\chocolateyinstall.ps1"
