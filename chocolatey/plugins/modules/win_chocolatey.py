@@ -126,9 +126,11 @@ options:
     version_added: '1.1.0'
   install_args:
     description:
-    - Arguments to pass to the native installer.
-    - These are arguments that are passed directly to the installer the
-      Chocolatey package runs, this is generally an advanced option.
+    - These are arguments that are passed directly to the installer run by
+      the Chocolatey package, for example MSI properties or command-line
+      arguments for the specific native installer used by the package.
+    - For parameters that need to be passed to the chocolateyInstall script
+      for the Chocolatey package itself, use I(package_params).
     type: str
     version_added: '0.2.1'
   name:
@@ -148,10 +150,12 @@ options:
     version_added: '0.2.10'
   package_params:
     description:
-    - Parameters to pass to the package.
+    - Parameters to pass to the package's chocolateyInstall script.
     - These are parameters specific to the Chocolatey package and are generally
       documented by the package itself.
-    - Before Ansible 2.7, this option was just I(params).
+    - For parameters that should be passed directly to the underlying installer
+      (for example, MSI installer properties and arguments), use I(install_args)
+      instead.
     type: str
     version_added: '0.2.1'
     aliases: [ params ]
