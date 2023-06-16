@@ -98,10 +98,10 @@ options:
     default: always
     type: str
 seealso:
-- module: win_chocolatey
-- module: win_chocolatey_config
-- module: win_chocolatey_facts
-- module: win_chocolatey_feature
+- module: chocolatey.chocolatey.win_chocolatey
+- module: chocolatey.chocolatey.win_chocolatey_config
+- module: chocolatey.chocolatey.win_chocolatey_facts
+- module: chocolatey.chocolatey.win_chocolatey_feature
 author:
 - Jordan Borean (@jborean93)
 '''

@@ -33,10 +33,10 @@ options:
     choices: [ disabled, enabled ]
     default: enabled
 seealso:
-- module: win_chocolatey
-- module: win_chocolatey_config
-- module: win_chocolatey_facts
-- module: win_chocolatey_source
+- module: chocolatey.chocolatey.win_chocolatey
+- module: chocolatey.chocolatey.win_chocolatey_config
+- module: chocolatey.chocolatey.win_chocolatey_facts
+- module: chocolatey.chocolatey.win_chocolatey_source
 author:
 - Jordan Borean (@jborean93)
 '''

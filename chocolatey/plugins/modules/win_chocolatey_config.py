@@ -42,10 +42,10 @@ options:
       value instead.
     type: str
 seealso:
-- module: win_chocolatey
-- module: win_chocolatey_facts
-- module: win_chocolatey_feature
-- module: win_chocolatey_source
+- module: chocolatey.chocolatey.win_chocolatey
+- module: chocolatey.chocolatey.win_chocolatey_facts
+- module: chocolatey.chocolatey.win_chocolatey_feature
+- module: chocolatey.chocolatey.win_chocolatey_source
 author:
 - Jordan Borean (@jborean93)
 '''

@@ -306,19 +306,19 @@ notes:
   Even if you are connecting as local Administrator, using C(become) to
   become Administrator will give you an interactive user logon, see examples
   below.
-- If C(become) is unavailable, use M(community.windows.win_hotfix) to install hotfixes instead
-  of M(chocolatey.chocolatey.win_chocolatey) as M(community.windows.win_hotfix) avoids using C(wusa.exe) which cannot
+- If C(become) is unavailable, use M(ansible.windows.win_hotfix) to install hotfixes instead
+  of M(chocolatey.chocolatey.win_chocolatey) as M(ansible.windows.win_hotfix) avoids using C(wusa.exe) which cannot
   be run without C(become).
 seealso:
 - module: chocolatey.chocolatey.win_chocolatey_config
 - module: chocolatey.chocolatey.win_chocolatey_facts
 - module: chocolatey.chocolatey.win_chocolatey_feature
 - module: chocolatey.chocolatey.win_chocolatey_source
-- module: community.windows.win_feature
-- module: community.windows.win_hotfix
+- module: ansible.windows.win_feature
+- module: ansible.windows.win_hotfix
   description: Use when C(become) is unavailable, to avoid using C(wusa.exe).
-- module: community.windows.win_package
-- module: community.windows.win_updates
+- module: ansible.windows.win_package
+- module: ansible.windows.win_updates
 - name: Chocolatey website
   description: More information about the Chocolatey tool.
   link: http://chocolatey.org/
