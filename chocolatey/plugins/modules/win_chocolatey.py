@@ -335,6 +335,8 @@ author:
 - Adam Keech (@smadam813)
 - Pierre Templier (@ptemplier)
 - Jordan Borean (@jborean93)
+- Rain Sallow (@vexx32)
+- Josh King (@windos)
 '''
 
 # TODO:

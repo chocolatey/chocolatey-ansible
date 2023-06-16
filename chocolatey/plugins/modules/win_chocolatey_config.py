@@ -48,6 +48,8 @@ seealso:
 - module: chocolatey.chocolatey.win_chocolatey_source
 author:
 - Jordan Borean (@jborean93)
+- Rain Sallow (@vexx32)
+- Josh King (@windos)
 '''
 
 EXAMPLES = r'''
