@@ -25,7 +25,7 @@ options:
     - Any config values that contain encrypted values like a password are not
       idempotent as the plaintext value cannot be read.
     type: str
-    required: yes
+    required: true
   state:
     description:
     - When C(absent), it will ensure the setting is unset or blank.

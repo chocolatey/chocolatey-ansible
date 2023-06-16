@@ -24,7 +24,7 @@ options:
       managed.
     - For a list of options see L(Chocolatey feature docs,https://chocolatey.org/docs/chocolatey-configuration#features)
     type: str
-    required: yes
+    required: true
   state:
     description:
     - When C(disabled) then the feature will be disabled.

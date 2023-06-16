@@ -31,7 +31,7 @@ options:
     - Use M(chocolatey.chocolatey.win_chocolatey_feature) with the name C(allowEmptyChecksums) to
       control this option globally.
     type: bool
-    default: no
+    default: false
     version_added: '0.2.2'
   allow_multiple:
     description:
@@ -46,7 +46,7 @@ options:
       I(version) is not specified, and the specific version only if I(version)
       is specified.
     type: bool
-    default: no
+    default: false
     version_added: '0.2.8'
   allow_prerelease:
     description:
@@ -54,7 +54,7 @@ options:
     - If I(state) is C(latest), the latest pre-release package will be
       installed.
     type: bool
-    default: no
+    default: false
     version_added: '0.2.6'
   architecture:
     description:
@@ -103,26 +103,26 @@ options:
     - Using I(force) will cause Ansible to always report that a change was
       made.
     type: bool
-    default: no
+    default: false
   ignore_checksums:
     description:
     - Ignore the checksums provided by the package.
     - Use M(chocolatey.chocolatey.win_chocolatey_feature) with the name C(checksumFiles) to control
       this option globally.
     type: bool
-    default: no
+    default: false
     version_added: '0.2.2'
   ignore_dependencies:
     description:
     - Ignore dependencies, only install/upgrade the package itself.
     type: bool
-    default: no
+    default: false
     version_added: '0.2.1'
   remove_dependencies:
     description:
     - Remove a package's dependencies on uninstall.
     type: bool
-    default: no
+    default: false
     version_added: '1.1.0'
   install_args:
     description:
@@ -137,14 +137,14 @@ options:
     - Set to C(all) to run the action on all the installed packages.
     type: list
     elements: str
-    required: yes
+    required: true
   override_args:
     description:
     - Override arguments of native installer with arguments provided by user.
     - Should install arguments be used exclusively without appending
       to current package passed arguments.
     type: bool
-    default: no
+    default: false
     version_added: '0.2.10'
   package_params:
     description:
@@ -175,7 +175,7 @@ options:
     - Whether to pin the Chocolatey package or not.
     - If omitted then no checks on package pins are done.
     - Will pin/unpin the specific version if I(version) is set.
-    - Will pin the latest version of a package if C(yes), I(version) is not set
+    - Will pin the latest version of a package if C(true), I(version) is not set
       and and no pin already exists.
     - Will unpin all versions of a package if C(no) and I(version) is not set.
     - This is ignored when C(state=absent).
@@ -211,7 +211,7 @@ options:
     - Do not run I(chocolateyInstall.ps1) or I(chocolateyUninstall.ps1) scripts
       when installing a package.
     type: bool
-    default: no
+    default: false
     version_added: '0.2.4'
   source:
     description:
@@ -276,7 +276,7 @@ options:
     - This should only be used on personally controlled sites using self-signed
       certificate.
     type: bool
-    default: yes
+    default: true
     version_added: '0.2.7'
   version:
     description:
@@ -286,7 +286,7 @@ options:
     - When I(state) is set to C(present) and the package is already installed
       at a version that does not match, this task fails.
     - If a different version of package is already installed, I(state) must be
-      C(latest), C(upgrade), or C(downgrade), or I(force) must be set to C(yes) to install
+      C(latest), C(upgrade), or C(downgrade), or I(force) must be set to C(true) to install
       the desired version.
     - Provide as a string (e.g. C('6.1')), otherwise it is considered to be
       a floating-point number and depending on the locale could become C(6,1),
@@ -434,7 +434,7 @@ EXAMPLES = r'''
 - name: Uninstall a package and dependencies
   win_chocolatey:
     name: audacity-lame
-    remove_dependencies: yes
+    remove_dependencies: true
     state: absent
 
 - name: Install curl using proxy
@@ -447,7 +447,7 @@ EXAMPLES = r'''
 - name: Install a package that requires 'become'
   win_chocolatey:
     name: officepro2013
-  become: yes
+  become: true
   become_user: Administrator
   become_method: runas
 
@@ -455,13 +455,13 @@ EXAMPLES = r'''
   win_chocolatey:
     name: notepadplusplus
     version: 7.6.3
-    pinned: yes
+    pinned: true
     state: present
 
 - name: remove all pins for Notepad++ on all versions
   win_chocolatey:
     name: notepadplusplus
-    pinned: no
+    pinned: false
     state: present
 
 - name: install a package with options that require licensed edition
