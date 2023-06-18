@@ -24,12 +24,19 @@ param()
 $ErrorActionPreference = "Stop"
 
 # Documentation: https://docs.ansible.com/ansible/2.10/dev_guide/developing_modules_general_windows.html#windows-new-module-development
+$validStates = @("disabled", "enabled")
 function Get-ModuleSpec {
     @{
         options             = @{
             name  = @{ type = "str"; required = $true }
-            state = @{ type = "str"; default = "enabled"; choices = "disabled", "enabled" }
+            state = @{ type = "str"; default = "enabled"; choices = $validStates }
+            features = @{ type = "dict" }
         }
+        mutually_exclusive = @(
+            , @("features", "name")
+            , @("feature", "state")
+        )
+        required_one_of = @(, "name", "features")
         supports_check_mode = $true
     }
 }
@@ -39,26 +46,46 @@ $spec = Get-ModuleSpec
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 Set-ActiveModule $module
 
-$name = $module.Params.name
-$state = $module.Params.state
+$featuresToSet = if ($module.Params.features) {
+    $module.Params.features
+} else {
+    @{
+        $module.Params.name = $module.Params.state
+    }
+}
 
 $chocoCommand = Get-ChocolateyCommand
 $featureStates = Get-ChocolateyFeature -ChocoCommand $chocoCommand
 
-if ($name -notin $featureStates.Keys) {
-    $message = "Invalid feature name '$name' specified, valid features are: $($featureStates.Keys -join ', ')"
-    Assert-TaskFailed -Message $message
+if ($invalidFeatures = ($featuresToSet.GetEnumerator() | Where-Object Key -notin $featureStates.Keys).Key) {
+    $errorMessage = "Invalid feature name(s) '$($invalidFeatures.Key -join "', '")' specified, valid features are: $($featureStates.Keys -join ', ')"
 }
 
-$shouldBeEnabled = $state -eq "enabled"
-$isEnabled = $featureStates.$name
-
-if ($isEnabled -ne $shouldBeEnabled) {
-    if (-not $module.CheckMode) {
-        Set-ChocolateyFeature -ChocoCommand $chocoCommand -Name $name -Enabled:$shouldBeEnabled
+if (($invalidStates = $featuresToSet.GetEnumerator() | Where-Object Value -notin $validStates).Key) {
+    if ($errorMessage) {
+        $errorMessage += "`n"
     }
+    $errorMessage += "Invalid state specified for feature(s) '$($invalidStates -join "', '")', valid states are: $($validStates -join ', ')"
+}
 
-    $module.Result.changed = $true
+if ($errorMessage) {
+    Assert-TaskFailed -Message $errorMessage
+}
+
+foreach ($feature in $featuresToSet.GetEnumerator()) {
+    $name = $feature.Key
+    $state = $feature.Value
+
+    $shouldBeEnabled = $state -eq "enabled"
+    $isEnabled = $featureStates.$name
+
+    if ($isEnabled -ne $shouldBeEnabled) {
+        if (-not $module.CheckMode) {
+            Set-ChocolateyFeature -ChocoCommand $chocoCommand -Name $name -Enabled:$shouldBeEnabled
+        }
+
+        $module.Result.changed = $true
+    }
 }
 
 $module.ExitJson()
