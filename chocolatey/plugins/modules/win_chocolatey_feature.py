@@ -24,7 +24,7 @@ options:
       managed.
     - For a list of options see L(Chocolatey feature docs,https://chocolatey.org/docs/chocolatey-configuration#features)
     type: str
-    required: yes
+    required: true
   state:
     description:
     - When C(disabled) then the feature will be disabled.
@@ -33,12 +33,14 @@ options:
     choices: [ disabled, enabled ]
     default: enabled
 seealso:
-- module: win_chocolatey
-- module: win_chocolatey_config
-- module: win_chocolatey_facts
-- module: win_chocolatey_source
+- module: chocolatey.chocolatey.win_chocolatey
+- module: chocolatey.chocolatey.win_chocolatey_config
+- module: chocolatey.chocolatey.win_chocolatey_facts
+- module: chocolatey.chocolatey.win_chocolatey_source
 author:
 - Jordan Borean (@jborean93)
+- Rain Sallow (@vexx32)
+- Josh King (@windos)
 '''
 
 EXAMPLES = r'''

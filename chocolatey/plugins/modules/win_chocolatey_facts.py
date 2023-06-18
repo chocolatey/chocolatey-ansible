@@ -28,6 +28,8 @@ seealso:
 author:
 - Simon Bärlocher (@sbaerlocher)
 - ITIGO AG (@itigoag)
+- Rain Sallow (@vexx32)
+- Josh King (@windos)
 '''
 
 EXAMPLES = r'''

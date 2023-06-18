@@ -22,19 +22,19 @@ options:
     description:
     - Makes the source visible to Administrators only.
     - Requires Chocolatey >= 0.10.8.
-    - When creating a new source, this defaults to C(no).
+    - When creating a new source, this defaults to C(false).
     type: bool
   allow_self_service:
     description:
     - Allow the source to be used with self-service
     - Requires Chocolatey >= 0.10.4.
-    - When creating a new source, this defaults to C(no).
+    - When creating a new source, this defaults to C(false).
     type: bool
   bypass_proxy:
     description:
     - Bypass the proxy when using this source.
     - Requires Chocolatey >= 0.10.4.
-    - When creating a new source, this defaults to C(no).
+    - When creating a new source, this defaults to C(false).
     type: bool
   certificate:
     description:
@@ -49,7 +49,7 @@ options:
   name:
     description:
     - The name of the source to configure.
-    required: yes
+    required: true
     type: str
   priority:
     description:
@@ -98,12 +98,14 @@ options:
     default: always
     type: str
 seealso:
-- module: win_chocolatey
-- module: win_chocolatey_config
-- module: win_chocolatey_facts
-- module: win_chocolatey_feature
+- module: chocolatey.chocolatey.win_chocolatey
+- module: chocolatey.chocolatey.win_chocolatey_config
+- module: chocolatey.chocolatey.win_chocolatey_facts
+- module: chocolatey.chocolatey.win_chocolatey_feature
 author:
 - Jordan Borean (@jborean93)
+- Rain Sallow (@vexx32)
+- Josh King (@windos)
 '''
 
 EXAMPLES = r'''
