@@ -5,26 +5,6 @@
     version: '1.4.0'
     state: downgrade
 
-- name: set up Chocolatey sources
-  win_chocolatey_source:
-    name: '{{ item.name }}'
-    priority: '{{ item.priority }}'
-    source: '{{ item.src }}'
-    state: present
-  with_items:
-  - name: ansible-test
-    priority: 1
-    src: '{{ test_choco_source }}'
-  - name: ansible-test-override
-    priority: 2
-    src: '{{ test_choco_source2 }}'
-
-- name: ensure latest package installed
-  win_chocolatey:
-    name: '{{ test_choco_package1 }}'
-    state: latest
-  register: install
-
 - name: install older package with allow_multiple
   win_chocolatey:
     name: '{{ test_choco_package1 }}'
