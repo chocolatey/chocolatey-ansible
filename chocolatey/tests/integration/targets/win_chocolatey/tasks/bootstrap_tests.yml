@@ -30,6 +30,16 @@
     that:
       - (bootstrap_file_check.stdout|from_json).bootstrap
 
+- name: remove chocolatey package directory
+  win_file:
+    path: 'C:/ProgramData/chocolatey/lib/chocolatey'
+    state: absent
+
+- name: ensure we can still upgrade packages with chocolatey package files missing
+  win_chocolatey:
+    name: chocolatey
+    state: upgrade
+
 - name: ensure Chocolatey is not installed
   win_file:
     path: '{{ choco_install_dir }}'

@@ -38,6 +38,9 @@ options:
     - This option is deprecated and will be removed in v2.0.0 of this collection.
       Chocolatey CLI has L(deprecated side-by-side installations, https://github.com/chocolatey/choco/issues/2787)
       as of its v1.2.0 release and plans to remove them in its v2.0.0 release.
+    - Chocolatey CLI (choco) v2.0.0 and higher do not support this option.
+      This module will return an error if this option is enabled and the
+      installed version of Chocolatey CLI on the client is v2.0.0 or higher.
     - Allow the installation of multiple packages when I(version) is specified.
     - Having multiple packages at different versions can cause issues if the
       package doesn't support this. Use at your own risk.

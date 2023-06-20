@@ -5,7 +5,9 @@
 
 # As of chocolatey 0.9.10, non-zero success exit codes can be returned
 # See https://github.com/chocolatey/choco/issues/512#issuecomment-214284461
-$script:successExitCodes = (0, 1605, 1614, 1641, 3010)
+$script:SuccessExitCodes = (0, 1605, 1614, 1641, 3010)
+
+$script:ChocolateyVersion = $null
 
 function Get-ChocolateyOutdated {
     <#
@@ -71,7 +73,9 @@ function Get-ChocolateyPackage {
     $command = Argv-ToString -Arguments @(
         $ChocoCommand.Path
         "list"
-        "--local-only"
+        if ((Get-ChocolateyVersion -ChocoCommand $ChocoCommand) -lt [version]'2.0.0') {
+            "--local-only"
+        }
         "--limit-output"
 
         if ($Version) {
@@ -156,6 +160,37 @@ function Get-ChocolateyPackageVersion {
     end {
         $results
     }
+}
+
+function Get-ChocolateyVersion {
+    <#
+        .SYNOPSIS
+        Gets the version of Chocolatey that is currently installed and being used to execute instructions.
+    #>
+    [CmdletBinding()]
+    param(
+        # A CommandInfo object containing the path to choco.exe.
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.CommandInfo]
+        $ChocoCommand
+    )
+
+    # If we've already found the choco version, just return the known version.
+    if ($script:ChocolateyVersion) {
+        $script:ChocolateyVersion
+        return
+    }
+
+    # Query choco.exe for the version and cache it in the module-scope variable.
+    $command = Argv-ToString -Arguments @(
+        $ChocoCommand.Path
+        "--version"
+    )
+    $result = Run-Command -Command $command
+
+    # Prerelease versions are not relevant for our purposes.
+    # Stripping off any prerelease tag here gets us enough for what we need.
+    ($script:ChocolateyVersion = [version]($result.stdout -replace '-.+$'))
 }
 
 function Get-CommonChocolateyArgument {
@@ -608,7 +643,7 @@ function Update-ChocolateyPackage {
     $result = Run-Command -Command $command
     $Module.Result.rc = $result.rc
 
-    if ($result.rc -notin $script:successExitCodes) {
+    if ($result.rc -notin $script:SuccessExitCodes) {
         $message = "Error updating package(s) '$($Package -join ", ")'"
         Assert-TaskFailed -Message $message -Command $command -CommandResult $result
     }
@@ -778,7 +813,7 @@ function Install-ChocolateyPackage {
     $result = Run-Command -Command $command
     $Module.Result.rc = $result.rc
 
-    if ($result.rc -notin $script:successExitCodes) {
+    if ($result.rc -notin $script:SuccessExitCodes) {
         $message = "Error installing package(s) '$($Package -join ", ")'"
         Assert-TaskFailed -Message $message -Command $command -CommandResult $result
     }
@@ -883,7 +918,7 @@ function Uninstall-ChocolateyPackage {
     $result = Run-Command -Command $command
     $Module.Result.rc = $result.rc
 
-    if ($result.rc -notin $script:successExitCodes) {
+    if ($result.rc -notin $script:SuccessExitCodes) {
         $message = "Error uninstalling package(s) '$($Package -join ", ")'"
         Assert-TaskFailed -Message $message -Command $command -CommandResult $result
     }
@@ -1151,6 +1186,7 @@ Export-ModuleMember -Function @(
     'Get-ChocolateyPackage'
     'Get-ChocolateyPackageVersion'
     'Get-ChocolateyPin'
+    'Get-ChocolateyVersion'
     'Get-CommonChocolateyArgument'
     'Set-ChocolateyPin'
     'Install-Chocolatey'

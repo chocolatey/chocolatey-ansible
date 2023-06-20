@@ -1,0 +1,79 @@
+---
+- name: install choco v1.4.0
+  win_chocolatey:
+    name: chocolatey
+    version: '1.4.0'
+    state: downgrade
+
+- name: install older package with allow_multiple
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: present
+    allow_multiple: yes
+    version: '0.0.1'
+  register: allow_multiple
+
+- name: get result of install older package with allow_multiple
+  win_command: choco.exe list --local-only --limit-output --all-versions
+  register: allow_multiple_actual
+
+- name: assert install older package with allow_multiple
+  assert:
+    that:
+    - allow_multiple is changed
+    - '"{{ test_choco_package1 }}|0.1.0" in allow_multiple_actual.stdout_lines'
+    - '"{{ test_choco_package1 }}|0.0.1" in allow_multiple_actual.stdout_lines'
+
+- name: pin specific older version
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: present
+    pinned: yes
+    version: '0.0.1'
+  register: pin_older
+
+- name: get result of pin specific older version
+  win_command: choco.exe pin list --limit-output
+  register: pin_older_actual
+
+- name: assert pin specific older version
+  assert:
+    that:
+    - pin_older is changed
+    - '"{{ test_choco_package1 }}|0.0.1" in pin_older_actual.stdout_lines'
+
+- name: unpin package at version
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: present
+    pinned: no
+    version: '0.0.1'
+  register: unpin_version
+
+- name: get result of unpin package at version
+  win_command: choco.exe pin list --limit-output
+  register: unpin_version_actual
+
+- name: assert unpin package at version
+  assert:
+    that:
+    - unpin_version is changed
+    - '"{{ test_choco_package1 }}|0.0.1" not in unpin_version_actual.stdout_lines'
+
+- name: uninstall specific version installed with allow_multiple
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: absent
+    version: '0.0.1'
+  register: remove_multiple
+
+- name: get result of uninstall specific version installed with allow_multiple
+  win_command: choco.exe list --local-only --limit-output --all-versions
+  register: remove_multiple_actual
+
+- name: assert uninstall specific version installed with allow_multiple
+  assert:
+    that:
+    - remove_multiple is changed
+    - '"{{ test_choco_package1 }}|0.0.1" not in remove_multiple_actual.stdout_lines'
+    - '"{{ test_choco_package1 }}|0.1.0" in remove_multiple_actual.stdout_lines'

@@ -88,7 +88,7 @@ if ($state -eq "absent" -and -not [string]::IsNullOrEmpty($config.$name)) {
         Remove-ChocolateyConfig -ChocoCommand $chocoCommand -Name $name
     }
 
-    $module.Result.changed = $true
+    Set-TaskResultChanged
 }
 elseif ($state -eq "present" -and $value -ne $config.$name) {
     # choco.exe config set is not case sensitive, it won't make a change if the
@@ -99,7 +99,7 @@ elseif ($state -eq "present" -and $value -ne $config.$name) {
         Set-ChocolateyConfig -ChocoCommand $chocoCommand -Name $name -Value $value
     }
 
-    $module.Result.changed = $true
+    Set-TaskResultChanged
     if ($module.DiffMode) {
         $module.Diff.after = $value
     }

@@ -21,7 +21,7 @@
   register: install_check
 
 - name: get result of install package (check mode)
-  win_command: choco.exe list --local-only --exact --limit-output {{ test_choco_package1|quote }}
+  win_command: choco.exe list --exact --limit-output {{ test_choco_package1|quote }}
   register: install_actual_check
   failed_when: not install_actual_check.rc in [0, 2]  # v0.10.12+ returns 2 for no package
 
@@ -38,7 +38,7 @@
   register: install
 
 - name: get result of install package
-  win_command: choco.exe list --local-only --exact --limit-output {{ test_choco_package1|quote }}
+  win_command: choco.exe list --exact --limit-output {{ test_choco_package1|quote }}
   register: install_actual
 
 - name: get package info of install package
@@ -80,7 +80,7 @@
   register: remove_check
 
 - name: get result of remove package (check mode)
-  win_command: choco.exe list --local-only --exact --limit-output {{ test_choco_package1|quote }}
+  win_command: choco.exe list --exact --limit-output {{ test_choco_package1|quote }}
   register: remove_actual_check
 
 - name: assert remove package (check mode)
@@ -96,7 +96,7 @@
   register: remove
 
 - name: get result of remove package
-  win_command: choco.exe list --local-only --exact --limit-output {{ test_choco_package1|quote }}
+  win_command: choco.exe list --exact --limit-output {{ test_choco_package1|quote }}
   register: remove_actual
   failed_when: not remove_actual.rc in [0, 2]
 
@@ -131,7 +131,7 @@
   register: install_multiple
 
 - name: get list of installed packages with timeout
-  win_command: choco.exe list --local-only --limit-output ansible
+  win_command: choco.exe list --limit-output ansible
   register: install_multiple_actual
 
 - name: get info on package 1
@@ -186,7 +186,7 @@
   register: remove_multiple
 
 - name: get list of installed packages after removal
-  win_command: choco.exe list --local-only --limit-output ansible
+  win_command: choco.exe list --limit-output ansible
   register: remove_multiple_actual
   failed_when: not remove_multiple_actual.rc in [0, 2]
 
@@ -227,7 +227,7 @@
   register: install_with_version_and_state_present
 
 - name: get result of install package with explicit version and state=present
-  win_command: choco.exe list --local-only --exact --limit-output {{ test_choco_package1|quote }}
+  win_command: choco.exe list --exact --limit-output {{ test_choco_package1|quote }}
   register: install_with_version_and_state_present_actual
 
 - name: get package info of install package with explicit version and state=present
@@ -262,11 +262,11 @@
     force: yes
     ignore_checksums: yes
     proxy_url: http://proxyhost
-    version: 0.0.1
+    version: '0.0.1'
   register: install_params
 
 - name: get result of install package with params
-  win_command: choco.exe list --local-only --limit-output --exact {{ test_choco_package1|quote }}
+  win_command: choco.exe list --limit-output --exact {{ test_choco_package1|quote }}
   register: install_params_actual
 
 - name: get info of install package with params
@@ -313,7 +313,7 @@
   register: install_manual_params
 
 - name: get result of install package with manually specified params
-  win_command: choco.exe list --local-only --limit-output --exact {{ test_choco_package1|quote }}
+  win_command: choco.exe list --limit-output --exact {{ test_choco_package1|quote }}
   register: install_manual_params_actual
 
 - name: get info of install package with manually specified params
@@ -342,7 +342,7 @@
   win_chocolatey:
     name: '{{ test_choco_package1 }}'
     state: present
-    version: 0.0.1
+    version: '0.0.1'
   register: install_with_version
 
 - name: assert install package with version (idempotent)
@@ -354,7 +354,7 @@
   win_chocolatey:
     name: '{{ test_choco_package1 }}'
     state: present
-    version: 0.1.0
+    version: '0.1.0'
   register: fail_multiple_versions
   failed_when: fail_multiple_versions.msg != "Chocolatey package '" + test_choco_package1 + "' is already installed with version(s) '0.0.1' but was expecting '0.1.0'. Either change the expected version, set state=latest or state=upgrade, set allow_multiple=yes, or set force=yes to continue"
 
@@ -362,12 +362,12 @@
   win_chocolatey:
     name: '{{ test_choco_package1 }}'
     state: present
-    version: 0.1.0
+    version: '0.1.0'
     force: yes
   register: force_different_version
 
 - name: get result of force the upgrade of an existing version
-  win_command: choco.exe list --local-only --limit-output --exact {{ test_choco_package1|quote }}
+  win_command: choco.exe list --limit-output --exact {{ test_choco_package1|quote }}
   register: force_different_version_actual
 
 - name: get result of forced package install file
@@ -396,7 +396,7 @@
   register: install_source_name
 
 - name: get result of install package with reference to source name
-  win_command: choco.exe list --local-only --limit-output --exact {{ test_choco_package1|quote }}
+  win_command: choco.exe list --limit-output --exact {{ test_choco_package1|quote }}
   register: install_source_name_actual
 
 - name: get result fo installed package with reference to source name info
@@ -434,7 +434,7 @@
   register: downgraded_package
 
 - name: get result of downgrade package
-  win_command: choco.exe list --local-only --limit-output --exact {{ test_choco_package1|quote }}
+  win_command: choco.exe list --limit-output --exact {{ test_choco_package1|quote }}
   register: downgraded_package_actual
 
 - name: assert downgrade package
@@ -462,7 +462,7 @@
   register: downgrade_without_version
 
 - name: get result of downgrade without version
-  win_command: choco.exe list --local-only --limit-output --exact {{ test_choco_package1|quote }}
+  win_command: choco.exe list --limit-output --exact {{ test_choco_package1|quote }}
   register: downgrade_without_version_actual
 
 - name: assert downgrade package without version specified
@@ -478,7 +478,7 @@
   register: upgrade_package
 
 - name: get result of upgrade package
-  win_command: choco.exe list --local-only --limit-output --exact {{ test_choco_package1|quote }}
+  win_command: choco.exe list --limit-output --exact {{ test_choco_package1|quote }}
   register: upgrade_package_actual
 
 - name: assert upgrade package
@@ -500,7 +500,7 @@
   register: upgrade_package_with_state_upgrade
 
 - name: get result of upgrade package with state=upgrade
-  win_command: choco.exe list --local-only --limit-output --exact {{ test_choco_package1|quote }}
+  win_command: choco.exe list --limit-output --exact {{ test_choco_package1|quote }}
   register: actual_after_upgrade_with_state_upgrade
 
 - name: assert upgrade package with state=upgrade
@@ -528,7 +528,7 @@
   register: install_prerelease
 
 - name: get result of install prerelease package
-  win_command: choco.exe list --local-only --limit-output --exact {{ test_choco_package2|quote }}
+  win_command: choco.exe list --limit-output --exact {{ test_choco_package2|quote }}
   register: install_prerelease_actual
 
 - name: assert install prerelease package
@@ -541,7 +541,7 @@
   win_chocolatey:
     name: '{{ test_choco_package1 }}'
     state: downgrade
-    version: 0.0.1
+    version: '0.0.1'
 
 - name: upgrade all packages
   win_chocolatey:
@@ -550,7 +550,7 @@
   register: all_latest
 
 - name: get result of upgrade all packages
-  win_command: choco.exe list --local-only --limit-output --exact {{ test_choco_package1|quote }}
+  win_command: choco.exe list --limit-output --exact {{ test_choco_package1|quote }}
   register: all_latest_actual
 
 - name: assert upgrade all packages
@@ -564,24 +564,20 @@
     name: '{{ test_choco_package1 }}'
     state: present
 
-- name: install older package with allow_multiple
+- name: installing older package with allow_multiple fails on CLI v2.0+
   win_chocolatey:
     name: '{{ test_choco_package1 }}'
     state: present
-    allow_multiple: True
+    allow_multiple: yes
     version: '0.0.1'
-  register: allow_multiple
+  register: allow_multiple_cli_v2
+  ignore_errors: true
 
-- name: get result of install older package with allow_multiple
-  win_command: choco.exe list --local-only --limit-output --all-versions
-  register: allow_multiple_actual
-
-- name: assert install older package with allow_multiple
+- name: assert installing older package with allow_multiple fails on CLI v2.0+
   assert:
     that:
-    - allow_multiple is changed
-    - '"{{ test_choco_package1 }}|0.1.0" in allow_multiple_actual.stdout_lines'
-    - '"{{ test_choco_package1 }}|0.0.1" in allow_multiple_actual.stdout_lines'
+      - allow_multiple_cli_v2.failed
+      - allow_multiple_cli_v2.msg == "Option 'allow_multiple' is not supported on the installed version of Chocolatey CLI"
 
 - name: pin 2 packages (check mode)
   win_chocolatey:
@@ -636,24 +632,6 @@
     that:
     - not pin_multiple_again is changed
 
-- name: pin specific older version
-  win_chocolatey:
-    name: '{{ test_choco_package1 }}'
-    state: present
-    pinned: yes
-    version: '0.0.1'
-  register: pin_older
-
-- name: get result of pin specific older version
-  win_command: choco.exe pin list --limit-output
-  register: pin_older_actual
-
-- name: assert pin specific older version
-  assert:
-    that:
-    - pin_older is changed
-    - pin_older_actual.stdout_lines == ["ansible|0.1.0", "ansible|0.0.1", "ansible-test|1.0.1-beta1"]
-
 - name: unpin package at version
   win_chocolatey:
     name: '{{ test_choco_package1 }}'
@@ -670,7 +648,7 @@
   assert:
     that:
     - unpin_version is changed
-    - unpin_version_actual.stdout_lines == ["ansible|0.0.1", "ansible-test|1.0.1-beta1"]
+    - unpin_version_actual.stdout_lines == ["ansible-test|1.0.1-beta1"]
 
 - name: unpin multiple packages without a version
   win_chocolatey:
@@ -691,24 +669,6 @@
     - unpin_multiple is changed
     - unpin_multiple_actual.stdout == ""
 
-- name: uninstall specific version installed with allow_multiple
-  win_chocolatey:
-    name: '{{ test_choco_package1 }}'
-    state: absent
-    version: '0.0.1'
-  register: remove_multiple
-
-- name: get result of uninstall specific version installed with allow_multiple
-  win_command: choco.exe list --local-only --limit-output --all-versions
-  register: remove_multiple_actual
-
-- name: assert uninstall specific version installed with allow_multiple
-  assert:
-    that:
-    - remove_multiple is changed
-    - '"{{ test_choco_package1 }}|0.0.1" not in remove_multiple_actual.stdout_lines'
-    - '"{{ test_choco_package1 }}|0.1.0" in remove_multiple_actual.stdout_lines'
-
 - name: attempt to uninstall a nonexistent version of an installed package
   win_chocolatey:
     name: '{{ test_choco_package1 }}'
@@ -717,7 +677,7 @@
   register: remove_nonexistent_version
 
 - name: get result of uninstall a nonexistent version of an installed package
-  win_command: choco.exe list --local-only --limit-output --all-versions
+  win_command: choco.exe list --limit-output --all-versions
   register: remove_nonexistent_version_result
 
 - name: assert uninstall of nonexistent version of an installed package
@@ -725,31 +685,3 @@
     that:
     - not remove_nonexistent_version is changed
     - '"{{ test_choco_package1 }}|0.1.0" in remove_nonexistent_version_result.stdout_lines'
-
-- name: remove existing Chocolatey installation
-  win_shell: Remove-Item -Path "C:/ProgramData/chocolatey" -Recurse -Force
-
-- name: install Chocolatey using the test bootstrap script
-  win_chocolatey:
-    name: chocolatey
-    state: present
-    bootstrap_script: "{{ test_choco_bootstrap_script }}"
-
-- name: checking if the bootstrap file has been created
-  win_shell: Get-Content -Path "C:/temp/confirm-bootstrap.txt" -Raw
-  register: bootstrap_file_check
-
-- name: assert bootstrap file has been created
-  assert:
-    that:
-      - (bootstrap_file_check.stdout|from_json).bootstrap
-
-- name: remove chocolatey package directory
-  win_file:
-    path: 'C:/ProgramData/chocolatey/lib/chocolatey'
-    state: absent
-
-- name: ensure we can still upgrade packages with chocolatey package files missing
-  win_chocolatey:
-    name: chocolatey
-    state: upgrade
