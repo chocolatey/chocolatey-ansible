@@ -270,6 +270,28 @@ function ConvertTo-ChocolateyArgument {
         [string]
         $Architecture,
 
+        # Specify to override package checksum.
+        [Parameter()]
+        [string]
+        $Checksum,
+
+        # Specify to override package checksum for x64 installers.
+        [Parameter()]
+        [string]
+        $Checksum64,
+
+        # Specify to override package checksum type.
+        [Parameter()]
+        [ValidateSet('md5', 'sha1', 'sha256', 'sha512')]
+        [string]
+        $ChecksumType,
+
+        # Specify to override package checksum type for x64 installers.
+        [Parameter()]
+        [ValidateSet('md5', 'sha1', 'sha256', 'sha512')]
+        [string]
+        $ChecksumType64,
+
         # Any additional arguments to be passed directly to `choco.exe`
         [Parameter()]
         [string[]]
@@ -364,6 +386,10 @@ function ConvertTo-ChocolateyArgument {
     if ($AllowMultiple) { "--allow-multiple" }
     if ($AllowPrerelease) { "--prerelease" }
     if ($Architecture -eq "x86") { "--x86" }
+    if ($Checksum) { '--checksum', $Checksum }
+    if ($Checksum64) { '--checksum64', $Checksum64 }
+    if ($ChecksumType) { '--checksumtype', $ChecksumType }
+    if ($ChecksumType64) { '--checksumtype64', $ChecksumType64 }
     if ($Force) { "--force" }
     if ($IgnoreChecksums) { "--ignore-checksums" }
     if ($IgnoreDependencies) { "--ignore-dependencies" }
@@ -541,6 +567,28 @@ function Update-ChocolateyPackage {
         [string]
         $Architecture,
 
+        # Specify to override package checksum.
+        [Parameter()]
+        [string]
+        $Checksum,
+
+        # Specify to override package checksum for x64 installers.
+        [Parameter()]
+        [string]
+        $Checksum64,
+
+        # Specify to override package checksum type.
+        [Parameter()]
+        [ValidateSet('md5', 'sha1', 'sha256', 'sha512')]
+        [string]
+        $ChecksumType,
+
+        # Specify to override package checksum type for x64 installers.
+        [Parameter()]
+        [ValidateSet('md5', 'sha1', 'sha256', 'sha512')]
+        [string]
+        $ChecksumType64,
+
         # Any additional arguments to be passed directly to `choco.exe`
         [Parameter()]
         [string[]]
@@ -710,6 +758,28 @@ function Install-ChocolateyPackage {
         [Parameter()]
         [string]
         $Architecture,
+
+        # Specify to override package checksum.
+        [Parameter()]
+        [string]
+        $Checksum,
+
+        # Specify to override package checksum for x64 installers.
+        [Parameter()]
+        [string]
+        $Checksum64,
+
+        # Specify to override package checksum type.
+        [Parameter()]
+        [ValidateSet('md5', 'sha1', 'sha256', 'sha512')]
+        [string]
+        $ChecksumType,
+
+        # Specify to override package checksum type for x64 installers.
+        [Parameter()]
+        [ValidateSet('md5', 'sha1', 'sha256', 'sha512')]
+        [string]
+        $ChecksumType64,
 
         # Any additional arguments to be passed directly to `choco.exe`
         [Parameter()]

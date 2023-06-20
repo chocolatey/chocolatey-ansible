@@ -100,6 +100,28 @@ options:
     default: [ tls12, tls13 ]
     version_added: '1.4.0'
     aliases: [ bootstrap_tls_versions, tls_version, tls_versions ]
+  checksum:
+    description:
+    - Override a package's checksums for files downloaded during installation.
+    - If the checksum is not MD5, you will need to specify the I(checksum_type) as well.
+    type: str
+    version_added: '1.5.0'
+  checksum_type:
+    description:
+    - Override a package's checksum type for files downloaded during install. Use in conjunction with I(checksum).
+    choices: [ md5, sha1, sha256, sha512 ]
+    version_added: '1.5.0'
+  checksum64:
+    description:
+    - Override a package's checksums for 64-bit files downloaded during installation.
+    - If the checksum is not MD5, you will need to specify the I(checksum_type64) as well.
+    type: str
+    version_added: '1.5.0'
+  checksum_type64:
+    description:
+    - Override a package's checksum type for files downloaded during install. Use in conjunction with I(checksum64).
+    choices: [ md5, sha1, sha256, sha512 ]
+    version_added: '1.5.0'
   force:
     description:
     - Forces the install of a package, even if it already is installed.
