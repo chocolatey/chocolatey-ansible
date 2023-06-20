@@ -1065,6 +1065,27 @@ function Install-Chocolatey {
     $chocoCommand = Get-ChocolateyCommand -IgnoreMissing
     if ($null -eq $chocoCommand) {
         # We need to install chocolatey
+
+        # Chocolatey CLI v2.0.0 and above requires .NET Framework 4.8 to be installed.
+        # If the user has specified a 1.x version of Chocolatey to install, or the .NET requirement is met, we'll install Chocolatey.
+        $dotNetRegistryPath = "HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"
+        $installedDotNetVersion = [version]((Get-ItemProperty -Path $dotNetRegistryPath -Name Version).Version)
+
+        $chocolateyLegacyVersion = if ($Version) {
+            [version]$Version -lt [version]"2.0.0"
+        } else {
+            $false
+        }
+
+        if ((-not $chocolateyLegacyVersion) -and ($installedDotNetVersion -lt [version]"4.8")) {
+            $message = @(
+                "Chocolatey 2.0.0 requires .NET Framework 4.8 or higher to be installed."
+                "Please install .NET Framework 4.8 or higher and try again,"
+                "or specify a 1.x version of Chocolatey to install."
+            ) -join ' '
+            Assert-TaskFailed -Message $message
+        }
+
         # Enable necessary TLS versions if they're available but disabled.
         # Default for win_chocolatey is to allow TLS 1.1, 1.2, and 1.3 (if available)
         $protocols = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::SystemDefault
