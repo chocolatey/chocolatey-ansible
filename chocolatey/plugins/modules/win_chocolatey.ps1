@@ -245,8 +245,6 @@ if ($state -in @("downgrade", "latest", "upgrade", "present", "reinstalled")) {
         Architecture = $architecture
         Checksum = $checksum
         Checksum64 = $checksum64
-        ChecksumType = $checksum_type
-        ChecksumType64 = $checksum_type64
         ChocoArgs = $choco_args
         Force = $force
         IgnoreChecksums = $ignore_checksums
@@ -263,6 +261,14 @@ if ($state -in @("downgrade", "latest", "upgrade", "present", "reinstalled")) {
         SourcePassword = $source_password
         Timeout = $timeout
         Version = $version
+    }
+
+    if ($checksum_type -and $checksum_type -ne '') {
+        $commonParams.Add('ChecksumType', $checksum_type)
+    }
+
+    if ($checksum_type64 -and $checksum_type64 -ne '') {
+        $commonParams.Add('ChecksumType64', $checksum_type64)
     }
 
     if ($missingPackages.Count -gt 0) {
