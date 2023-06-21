@@ -50,6 +50,10 @@ $timeout = $env:chocolateyResponseTimeout
 
 $package_info = @{
     allow_empty_checksums = $allow_empty_checksums
+    checksum = $env:ChocolateyChecksum32
+    checksum_type = $env:ChocolateyChecksumType32
+    checksum64 = $env:ChocolateyChecksum64
+    checksum_type64 = $env:ChocolateyChecksumType64
     #env_vars = $env_vars
     force = $force
     force_x86 = $force_x86
