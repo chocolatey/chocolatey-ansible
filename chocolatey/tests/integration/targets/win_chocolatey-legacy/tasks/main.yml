@@ -1,0 +1,58 @@
+---
+- name: Check for current Microsoft .NET Framework 4 version
+  win_reg_stat:
+    path: HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full
+    name: Version
+  register: dotnet_version
+
+- block:
+  - name: install Chocolatey CLI v2.0+ when .NET Framework 4.8 dependency is not met
+    win_chocolatey:
+      name: 'chocolatey'
+      state: latest
+    register: install_choco_cli_v2
+    ignore_errors: true
+
+  - name: assert installing Chocolatey CLI v2.0+ fails when .NET Framework 4.8 dependency is not met
+    assert:
+      that:
+        - install_choco_cli_v2.failed
+        - install_choco_cli_v2.msg == "Chocolatey 2.0.0 requires .NET Framework 4.8 or higher to be installed. Please install .NET Framework 4.8 or higher and try again, or specify a 1.x version of Chocolatey to install."
+
+  - name: install Chocolatey CLI v1.4.0
+    win_chocolatey:
+      name: 'chocolatey'
+      state: present
+      version: '1.4.0'
+    register: install_choco_cli_v14
+
+  - name: assert installing Chocolatey CLI v1.4 succeeds
+    assert:
+      that:
+        - install_choco_cli_v14 is changed
+
+  - name: install Microsoft .NET Framework 4.8
+    win_chocolatey:
+      name: 'netfx-4.8'
+      state: present
+
+  - name: Reboot the host to complete .NET Framework 4.8 install
+    ansible.windows.win_reboot:
+
+  - name: ensure Chocolatey is not installed
+    win_file:
+      path: '{{ choco_install_dir }}'
+      state: absent
+
+  - name: install Chocolatey CLI v2.0+ when .NET Framework 4.8 dependency is met
+    win_chocolatey:
+      name: 'chocolatey'
+      state: latest
+    register: install_choco_cli_v2
+
+  - name: assert installing Chocolatey CLI v2.0+ succeeds when .NET Framework 4.8 dependency is met
+    assert:
+      that:
+        - install_choco_cli_v2 is changed
+
+  when: "dotnet_version.value is version('4.8', '<')"

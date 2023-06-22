@@ -18,9 +18,13 @@ param(
     [string]
     $Secret,
 
+    [Parameter(ParameterSetName = 'CI')]
+    [switch]
+    $TestLegacyOs,
+
     # Select only a single target for integration tests to run only a portion of the tests.
     [Parameter(ParameterSetName = 'Vagrant')]
-    [ValidateSet('win_chocolatey', 'win_chocolatey_config', 'win_chocolatey_facts', 'win_chocolatey_feature', 'win_chocolatey_source')]
+    [ValidateSet('win_chocolatey', 'win_chocolatey_config', 'win_chocolatey_facts', 'win_chocolatey_feature', 'win_chocolatey_source', 'win_chocolatey-legacy')]
     [string]
     $TestTarget
 )
@@ -72,8 +76,12 @@ begin {
             "mv -f tests/integration/$InventoryFile tests/integration/inventory.winrm"
         }
 
+        if ($TestLegacyOs) {
+            $TestTarget = 'win_chocolatey-legacy'
+        }
+
         if (-not $TestTarget) {
-            "${Sudo}ansible-test windows-integration -vvv --requirements --continue-on-error"
+            "${Sudo}ansible-test windows-integration -vvv --requirements --continue-on-error --exclude win_chocolatey-legacy"
             "${Sudo}ansible-test sanity -vvvvv --requirements"
             "${Sudo}ansible-test coverage xml -vvvvv --requirements"
         }
