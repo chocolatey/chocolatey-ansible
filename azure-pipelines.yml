@@ -345,6 +345,7 @@ stages:
         pwsh: true
         targetType: filePath
         filePath: ./build/Publish-Collection.ps1
+        arguments: -Server release_galaxy,automation_hub
       env:
         ANSIBLE_CONFIG: '$(System.DefaultWorkingDirectory)/build/ansible.cfg'
         ANSIBLE_GALAXY_SERVER_RELEASE_GALAXY_TOKEN: '$(GalaxyApiKey)'
