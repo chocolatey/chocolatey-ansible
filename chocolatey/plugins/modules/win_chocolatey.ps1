@@ -32,6 +32,7 @@ function Get-ModuleSpec {
             allow_empty_checksums = @{ type = "bool"; default = $false }
             allow_multiple        = @{ type = "bool"; default = $false; removed_in_version = '2.0.0'; removed_from_collection = 'chocolatey.chocolatey' }
             allow_prerelease      = @{ type = "bool"; default = $false }
+            architecture          = @{ type = "str"; default = "default"; choices = "default", "x86" }
             bootstrap_script      = @{ type = "str"; aliases = "install_ps1", "bootstrap_ps1" }
             bootstrap_tls_version = @{
                 type = "list"
@@ -40,7 +41,10 @@ function Get-ModuleSpec {
                 default = "tls12", "tls13"
                 aliases = "tls_version", "tls_versions", "bootstrap_tls_versions"
             }
-            architecture          = @{ type = "str"; default = "default"; choices = "default", "x86" }
+            checksum              = @{ type = "str" }
+            checksum64            = @{ type = "str" }
+            checksum_type         = @{ type = "str"; choices = "md5", "sha1", "sha256", "sha512" }
+            checksum_type64       = @{ type = "str"; choices = "md5", "sha1", "sha256", "sha512" }
             choco_args            = @{ type = "list"; elements = "str"; aliases = "licensed_args" }
             force                 = @{ type = "bool"; default = $false }
             ignore_checksums      = @{ type = "bool"; default = $false }
@@ -77,6 +81,10 @@ $allow_multiple = $module.Params.allow_multiple
 $allow_prerelease = $module.Params.allow_prerelease
 $architecture = $module.Params.architecture
 $bootstrap_script = $module.Params.bootstrap_script
+$checksum = $module.Params.checksum
+$checksum64 = $module.Params.checksum64
+$checksum_type = $module.Params.checksum_type
+$checksum_type64 = $module.Params.checksum_type64
 $choco_args = $module.Params.choco_args
 $force = $module.Params.force
 $ignore_checksums = $module.Params.ignore_checksums
@@ -235,6 +243,8 @@ if ($state -in @("downgrade", "latest", "upgrade", "present", "reinstalled")) {
         AllowMultiple = $allow_multiple
         AllowPrerelease = $allow_prerelease
         Architecture = $architecture
+        Checksum = $checksum
+        Checksum64 = $checksum64
         ChocoArgs = $choco_args
         Force = $force
         IgnoreChecksums = $ignore_checksums
@@ -251,6 +261,14 @@ if ($state -in @("downgrade", "latest", "upgrade", "present", "reinstalled")) {
         SourcePassword = $source_password
         Timeout = $timeout
         Version = $version
+    }
+
+    if ($checksum_type -and $checksum_type -ne '') {
+        $commonParams.Add('ChecksumType', $checksum_type)
+    }
+
+    if ($checksum_type64 -and $checksum_type64 -ne '') {
+        $commonParams.Add('ChecksumType64', $checksum_type64)
     }
 
     if ($missingPackages.Count -gt 0) {

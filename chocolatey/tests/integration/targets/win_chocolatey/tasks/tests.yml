@@ -685,3 +685,32 @@
     that:
     - not remove_nonexistent_version is changed
     - '"{{ test_choco_package1 }}|0.1.0" in remove_nonexistent_version_result.stdout_lines'
+
+- name: install package with checksum overrides
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: present
+    checksum: 96e27a3dbef8b4a9f890162c475b9192fee6c9b9
+    checksum_type: sha1
+    checksum64: a3a1f075f5b0e9ee7cd2ba33afbb5f67b9e335117ef3ea352fc361b098aecad4
+    checksum_type64: sha256
+    force: true
+  register: checksum
+
+- name: get result of install package with checksum overrides
+  win_command: choco.exe list --exact --limit-output {{ test_choco_package1|quote }}
+  register: checksum_actual
+
+- name: get package info of install package with checksum overrides
+  win_shell: Get-Content -Path '{{ test_choco_path }}\{{ test_choco_package1 }}-0.1.0.txt' -Raw
+  register: checksum_actual_info
+
+- name: assert install package with checksum overrides
+  assert:
+    that:
+    - checksum is changed
+    - checksum_actual.stdout_lines == [test_choco_package1 + "|0.1.0"]
+    - (checksum_actual_info.stdout|from_json).checksum == "96e27a3dbef8b4a9f890162c475b9192fee6c9b9"
+    - (checksum_actual_info.stdout|from_json).checksum_type == "sha1"
+    - (checksum_actual_info.stdout|from_json).checksum64 == "a3a1f075f5b0e9ee7cd2ba33afbb5f67b9e335117ef3ea352fc361b098aecad4"
+    - (checksum_actual_info.stdout|from_json).checksum_type64 == "sha256"
