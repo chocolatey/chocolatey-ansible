@@ -84,14 +84,14 @@ stages:
 - stage: Test
   displayName: '[Test]'
   jobs:
-  - job: CreateVM
-    displayName: 'Create Windows VM'
+  - job: CreateVMClient
+    displayName: 'Create Windows Client VM'
     pool:
       vmImage: ubuntu-latest
 
     steps:
     - task: PowerShell@2
-      displayName: 'Set VM Name'
+      displayName: 'Set Client VM Name'
 
       inputs:
         targetType: 'inline'
@@ -103,8 +103,8 @@ stages:
         pwsh: true
 
     - task: AzureDevTestLabsCreateVM@3
-      name: AzureVM
-      displayName: 'Create Azure Labs VM'
+      name: AzureClientVM
+      displayName: 'Create Azure Labs Client VM'
       inputs:
         azureSubscription: 'Microsoft Azure Sponsorship - choco-ci'
         LabId: '/subscriptions/b0c8980f-7aed-4e8c-9e21-421d0cfbef9f/resourceGroups/choco-ci/providers/Microsoft.DevTestLab/labs/ChocoAnsibleLab'
@@ -113,21 +113,21 @@ stages:
         ParameterOverrides: '-newVMName ''$(ChocoCIClient.labVMName)'' -userName ''$(ChocoCIClient.labVMUserName)'' -password ''$(ChocoCIClient.labVMPassword)'' -Configure_WinRM_hostName ''$(ChocoCIClient.labVMFqdn)'''
 
     - task: AzurePowerShell@4
-      displayName: 'VM Setup'
-      name: AzVmConfig
+      displayName: 'Client VM Setup'
+      name: AzVmClientConfig
       inputs:
         azureSubscription: 'Microsoft Azure Sponsorship - choco-ci'
         ScriptPath: 'build/azure/Set-AzLabVMParams.ps1'
-        ScriptArguments: '-LabVMId $(AzureVM.labVmId) -Username $(ChocoCIClient.ansibleUser) -Secret $(ChocoCIClient.ansiblePassword)'
+        ScriptArguments: '-LabVMId $(AzureClientVM.labVmId) -Username $(ChocoCIClient.ansibleUser) -Secret $(ChocoCIClient.ansiblePassword)'
         azurePowerShellVersion: LatestVersion
 
   - job: Tests
     displayName: 'Test Collection'
-    dependsOn: CreateVM
+    dependsOn: CreateVMClient
     pool:
       vmImage: ubuntu-latest
     variables:
-      labVmFqdn: $[ dependencies.CreateVM.outputs['AzVmConfig.Fqdn'] ]
+      labVmFqdn: $[ dependencies.CreateVMClient.outputs['AzVmClientConfig.Fqdn'] ]
     strategy:
       maxParallel: 1
       matrix:
@@ -183,20 +183,128 @@ stages:
         publishRunAttachments: true
         failTaskOnFailedTests: true
 
-  - job: DestroyVM
-    displayName: 'Destroy Azure Labs VM'
+  - job: DestroyVMClient
+    displayName: 'Destroy Azure Labs Client VM'
     pool:
       vmImage: ubuntu-latest
     dependsOn:
-      - CreateVM
+      - CreateVMClient
       - Tests
     condition: always()
     variables:
-      labVmId: $[ dependencies.CreateVM.outputs['AzureVM.labVmId'] ]
+      labVmId: $[ dependencies.CreateVMClient.outputs['AzureClientVM.labVmId'] ]
 
     steps:
     - task: AzureDevTestLabsDeleteVM@3
-      displayName: 'Destroy VM'
+      displayName: 'Destroy Client VM'
+      inputs:
+        azureSubscription: 'Microsoft Azure Sponsorship - choco-ci'
+        LabId: '/subscriptions/b0c8980f-7aed-4e8c-9e21-421d0cfbef9f/resourceGroups/choco-ci/providers/Microsoft.DevTestLab/labs/ChocoAnsibleLab'
+        LabVmId: '$(labVmId)'
+      continueOnError: true
+
+  - job: CreateVMServer
+    displayName: 'Create Windows Server VM'
+    pool:
+      vmImage: ubuntu-latest
+    dependsOn:
+      - DestroyVMClient
+
+    steps:
+    - task: PowerShell@2
+      displayName: 'Set Server VM Name'
+
+      inputs:
+        targetType: 'inline'
+        script: |
+          Write-Host "##vso[task.setvariable variable=ChocoCIClient.labVMName]$(Get-Date -AsUtc -Format "CyyyyMMddHHmmss")"
+
+        errorActionPreference: 'stop'
+        failOnStderr: true
+        pwsh: true
+
+    - task: AzureDevTestLabsCreateVM@3
+      name: AzureServerVM
+      displayName: 'Create Azure Labs Server VM'
+      inputs:
+        azureSubscription: 'Microsoft Azure Sponsorship - choco-ci'
+        LabId: '/subscriptions/b0c8980f-7aed-4e8c-9e21-421d0cfbef9f/resourceGroups/choco-ci/providers/Microsoft.DevTestLab/labs/ChocoAnsibleLab'
+        VirtualMachineName: '$(ChocoCIClient.labVMName)'
+        TemplateFile: 'build/azure/server-template.json'
+        ParameterOverrides: '-newVMName ''$(ChocoCIClient.labVMName)'' -userName ''$(ChocoCIClient.labVMUserName)'' -password ''$(ChocoCIClient.labVMPassword)'' -Configure_WinRM_hostName ''$(ChocoCIClient.labVMFqdn)'''
+
+    - task: AzurePowerShell@4
+      displayName: 'Server VM Setup'
+      name: AzVmServerConfig
+      inputs:
+        azureSubscription: 'Microsoft Azure Sponsorship - choco-ci'
+        ScriptPath: 'build/azure/Set-AzLabVMParams.ps1'
+        ScriptArguments: '-LabVMId $(AzureServerVM.labVmId) -Username $(ChocoCIClient.ansibleUser) -Secret $(ChocoCIClient.ansiblePassword)'
+        azurePowerShellVersion: LatestVersion
+
+  - job: TestChocoV2Dependency
+    displayName: 'Test Chocolatey CLI v2 Dependency'
+    dependsOn: CreateVMServer
+    pool:
+      vmImage: ubuntu-latest
+    variables:
+      labVmFqdn: $[ dependencies.CreateVMServer.outputs['AzVmServerConfig.Fqdn'] ]
+      Ansible.Package: "ansible-core"
+      Ansible.Version: "latest"
+
+    steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Collection'
+      inputs:
+        artifact: '$(CollectionArtifactName)'
+        targetPath: '$(System.DefaultWorkingDirectory)/chocolatey/'
+
+    - task: Bash@3
+      displayName: 'Install Dependencies'
+      inputs:
+        targetType: filePath
+        filePath: ./build/dependencies.sh
+
+    - task: AzureCLI@2
+      displayName: 'Run Ansible-Test for Chocolatey CLI v2 Dependency'
+      name: TestRun
+      inputs:
+        azureSubscription: 'Microsoft Azure Sponsorship - choco-ci'
+        scriptType: pscore
+        scriptPath: 'build/Invoke-CollectionTests.ps1'
+        arguments: '-IsCIBuild -Username $(ChocoCIClient.ansibleUser) -ComputerName $(labVMFqdn) -Secret $(ChocoCIClient.ansiblePassword) -TestLegacyOs'
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Ansible-Test Output Artifact'
+      condition: succeededOrFailed()
+      inputs:
+        path: '$(System.DefaultWorkingDirectory)/testresults'
+        artifact: 'Ansible-Test Output Files (Chocolatey CLI v2 Dependency)'
+
+    - task: PublishTestResults@2
+      displayName: 'Publish JUnit Results'
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: 'JUnit'
+        searchFolder: '$(System.DefaultWorkingDirectory)/testresults'
+        testResultsFiles: '**/*.xml'
+        publishRunAttachments: true
+        failTaskOnFailedTests: true
+
+  - job: DestroyVMServer
+    displayName: 'Destroy Azure Labs Server VM'
+    pool:
+      vmImage: ubuntu-latest
+    dependsOn:
+      - CreateVMServer
+      - TestChocoV2Dependency
+    condition: always()
+    variables:
+      labVmId: $[ dependencies.CreateVMServer.outputs['AzureServerVM.labVmId'] ]
+
+    steps:
+    - task: AzureDevTestLabsDeleteVM@3
+      displayName: 'Destroy Server VM'
       inputs:
         azureSubscription: 'Microsoft Azure Sponsorship - choco-ci'
         LabId: '/subscriptions/b0c8980f-7aed-4e8c-9e21-421d0cfbef9f/resourceGroups/choco-ci/providers/Microsoft.DevTestLab/labs/ChocoAnsibleLab'

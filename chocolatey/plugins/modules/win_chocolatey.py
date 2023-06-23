@@ -338,6 +338,13 @@ notes:
 - If C(become) is unavailable, use M(ansible.windows.win_hotfix) to install hotfixes instead
   of M(chocolatey.chocolatey.win_chocolatey) as M(ansible.windows.win_hotfix) avoids using C(wusa.exe) which cannot
   be run without C(become).
+- From Chocolatey CLI 2.0.0 and above, the minimum .NET Framework version required
+  was changed to .NET Framework 4.8.
+  If this requirement is not met, and a 1.x version of Chocolatey CLI is not specified,
+  then M(chocolatey.chocolatey.win_chocolatey) will not attempt to install Chocolatey CLI.
+  See the examples section below for one method of meeting the .NET Framework 4.8
+  requirement and also refer to the L(Chocolatey documentation,https://docs.chocolatey.org/en-us/guides/upgrading-to-chocolatey-v2-v6)
+  for more information about Chocolatey CLI 2.0.0.
 seealso:
 - module: chocolatey.chocolatey.win_chocolatey_config
 - module: chocolatey.chocolatey.win_chocolatey_facts
@@ -503,6 +510,27 @@ EXAMPLES = r'''
     - --skip-download-cache
     - --package-parameters-sensitive
     - '/Password=SecretPassword'
+
+- name: ensure .NET Framework 4.8 requirement is satisfied for Chocolatey CLI v2.0.0+
+  block:
+  - name: install Chocolatey CLI v1.4.0
+    win_chocolatey:
+      name: 'chocolatey'
+      state: present
+      version: '1.4.0'
+
+  - name: install Microsoft .NET Framework 4.8
+    win_chocolatey:
+      name: 'netfx-4.8'
+      state: present
+
+  - name: Reboot the host to complete .NET Framework 4.8 install
+    ansible.windows.win_reboot:
+
+  - name: install Chocolatey CLI v2.0.0+ when .NET Framework 4.8 dependency is met
+    win_chocolatey:
+      name: 'chocolatey'
+      state: latest
 '''
 
 RETURN = r'''
