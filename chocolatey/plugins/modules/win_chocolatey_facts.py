@@ -18,6 +18,18 @@ version_added: '0.2.8'
 short_description: Create a facts collection for Chocolatey
 description:
 - This module shows information from Chocolatey, such as installed packages, outdated packages, configuration, feature and sources.
+options:
+  filter:
+    version_added: "1.5.0"
+    description:
+    - "If supplied, restrict the facts collected to the given subset.
+      Possible values: C(all), C(config), C(feature), C(outdated),
+      C(packages), C(sources)."
+    - You can provide a list of values to specify a larger subset.
+    type: list
+    elements: str
+    default: "all"
+    aliases: [ gather_subset ]
 notes:
 - Chocolatey must be installed beforehand, use M(chocolatey.chocolatey.win_chocolatey) to do this.
 seealso:
@@ -55,6 +67,31 @@ EXAMPLES = r'''
 - name: Displays the Outdated packages
   debug:
     var: ansible_chocolatey.outdated
+
+- name: Gather all facts from chocolatey, except outdated packages
+  win_chocolatey_facts:
+    filter:
+    - 'config'
+    - 'feature'
+    - 'packages'
+    - 'sources'
+
+- name: Displays the collected facts from chocolatey without the outdated packages
+  debug:
+    var: ansible_chocolatey
+
+- name: Clear existing facts from chocolatey
+  ansible.builtin.meta: clear_facts
+
+- name: Gather config and feature facts only from chocolatey
+  win_chocolatey_facts:
+    filter:
+    - 'config'
+    - 'feature'
+
+- name: Displays the collected config and feature facts from chocolatey
+  debug:
+    var: ansible_chocolatey
 '''
 
 RETURN = r'''
@@ -70,14 +107,14 @@ ansible_facts:
       contains:
         config:
           description: Detailed information about stored the configurations
-          returned: always
+          returned: always (except when filter is set to exclude config)
           type: dict
           sample:
             commandExecutionTimeoutSeconds: 2700
             containsLegacyPackageInstalls: true
         feature:
           description: Detailed information about enabled and disabled features
-          returned: always
+          returned: always (except when filter is set to exclude feature)
           type: dict
           sample:
             allowEmptyCheckums: false
@@ -85,7 +122,7 @@ ansible_facts:
             failOnAutoUninstaller: false
         sources:
           description: List of Chocolatey sources
-          returned: always
+          returned: always (except when filter is set to exclude sources)
           type: complex
           contains:
             admin_only:
@@ -133,9 +170,16 @@ ansible_facts:
               returned: always
               type: str
               sample: username
+        filter:
+          description: The list of subsets that were gathered
+          returned: always
+          type: list
+          elements: str
+          sample: ['all']
+          version_added: '1.5.0'
         packages:
           description: List of installed Packages
-          returned: always
+          returned: always (except when filter is set to exclude packages)
           type: complex
           contains:
             package:
@@ -150,7 +194,7 @@ ansible_facts:
               sample: '1.27.2'
         outdated:
           description: List of packages for which an update is available
-          returned: always
+          returned: always (except when filter is set to exclude outdated)
           type: complex
           version_added: '1.3.0'
           contains:
