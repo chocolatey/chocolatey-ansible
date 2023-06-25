@@ -30,7 +30,7 @@ param(
     [string]
     $Path = "$env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifacts",
 
-    [Parameter()]
+    [Parameter(Mandatory)]
     # The target server to publish the collection to.
     # By default, collections will be published to ansible_galaxy and
     # automation_hub (as defined in the ansible.cfg file)
@@ -43,14 +43,8 @@ Write-Host "Found collection artifact(s) at:"
 Write-Host $($Tarballs.FullName -join [Environment]::NewLine)
 
 foreach ($file in $Tarballs) {
-    if ($PSBoundParameters.ContainsKey('Server')) {
-        foreach ($item in $Server) {
-            Write-Host "Publishing collection '$($file.Name)' to targeted server: [$item]"
-            ansible-galaxy collection publish --server $item $file.FullName
-        }
-    }
-    else {
-        Write-Host "Publishing collection '$($file.Name)' to all configured servers"
-        ansible-galaxy collection publish $file.FullName
+    foreach ($item in $Server) {
+        Write-Host "Publishing collection '$($file.Name)' to targeted server: [$item]"
+        ansible-galaxy collection publish --server $item $file.FullName
     }
 }
