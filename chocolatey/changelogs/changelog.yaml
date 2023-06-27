@@ -1,6 +1,21 @@
 # See: https://github.com/ansible-community/antsibull-changelog/blob/main/docs/changelog.yaml-format.md
 ancestor: null
 releases:
+  1.5.0:
+    release_date: '2023-06-27'
+    changes:
+      release_summary: |
+        1.5.0 - Chocolatey CLI v2 compatibility, add checksum and fact subset options, documentation fixes
+      major_changes:
+      - win_chocolatey - add options for specifying checksums
+      - win_chocolatey_facts - add filter / gather_subset option
+      minor-changes:
+      - All modules - Ensure modules are compatible with both Chocolatey CLI v2.x and v1.x
+      - win_chocolatey - Improve error messages when installation of Chocolatey CLI v2.x fails due to unmet .NET Framework 4.8 dependency on client
+      documentation:
+      - All modules - Use true/false for all booleans in module docs
+      - win_chocolatey - see_also contains references to wrong collection
+      - win_chocolatey - Improve docs around install_args and package_params
   1.4.0:
     release_date: '2022-12-15'
     changes:
