@@ -32,7 +32,15 @@ Set-StrictMode -Version 2.0
 # Documentation: https://docs.ansible.com/ansible/2.10/dev_guide/developing_modules_general_windows.html#windows-new-module-development
 function Get-ModuleSpec {
     @{
-        options             = @{}
+        options             = @{
+            filter = @{
+                type = "list"
+                elements = "str"
+                choices = "all", "config", "feature", "outdated", "packages", "sources"
+                default = "all"
+                aliases = "gather_subset"
+            }
+        }
         supports_check_mode = $true
     }
 }
@@ -42,24 +50,43 @@ $spec = Get-ModuleSpec
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 Set-ActiveModule $module
 
+$gather_filter = $module.Params.filter
+
 $chocoCommand = Get-ChocolateyCommand
 
 $module.Result.ansible_facts = @{
-    ansible_chocolatey = @{
-        config = @{}
-        feature = @{}
-        sources = @()
-        packages = @()
-        outdated = @()
-    }
+    ansible_chocolatey = @{}
 }
 
-$chocolateyFacts = $module.Result.ansible_facts.ansible_chocolatey
-$chocolateyFacts.config = Get-ChocolateyConfig -ChocoCommand $chocoCommand
-$chocolateyFacts.feature = Get-ChocolateyFeature -ChocoCommand $chocoCommand
-$chocolateyFacts.sources = @(Get-ChocolateySource -ChocoCommand $chocoCommand)
-$chocolateyFacts.packages = @(Get-ChocolateyPackage -ChocoCommand $chocoCommand)
-$chocolateyFacts.outdated = @(Get-ChocolateyOutdated -ChocoCommand $chocoCommand)
+if ($gather_filter -contains "all" -or $gather_filter -contains "config") {
+    $module.Result.ansible_facts.ansible_chocolatey.Add(
+        "config", (Get-ChocolateyConfig -ChocoCommand $chocoCommand)
+    )
+}
+if ($gather_filter -contains "all" -or $gather_filter -contains "feature") {
+    $module.Result.ansible_facts.ansible_chocolatey.Add(
+        "feature", (Get-ChocolateyFeature -ChocoCommand $chocoCommand)
+    )
+}
+if ($gather_filter -contains "all" -or $gather_filter -contains "sources") {
+    $module.Result.ansible_facts.ansible_chocolatey.Add(
+        "sources", @(Get-ChocolateySource -ChocoCommand $chocoCommand)
+    )
+}
+if ($gather_filter -contains "all" -or $gather_filter -contains "packages") {
+    $module.Result.ansible_facts.ansible_chocolatey.Add(
+        "packages", @(Get-ChocolateyPackage -ChocoCommand $chocoCommand)
+    )
+}
+if ($gather_filter -contains "all" -or $gather_filter -contains "outdated") {
+    $module.Result.ansible_facts.ansible_chocolatey.Add(
+        "outdated", @(Get-ChocolateyOutdated -ChocoCommand $chocoCommand)
+    )
+}
+
+$module.Result.ansible_facts.ansible_chocolatey.Add(
+    "filter", @($gather_filter)
+)
 
 # Return result
 $module.ExitJson()

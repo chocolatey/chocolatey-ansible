@@ -94,3 +94,7 @@
     - ansible_chocolatey.sources[1].priority == 9
     - ansible_chocolatey.sources[1].source == 'http://test-server/chocolatey'
     - ansible_chocolatey.sources[1].source_username == 'test-user'
+
+# Testing of the new gather_subset option has been isolated to its own file
+- name: win_chocolatey_fact gather_subset option tests
+  include_tasks: test_gather_facts.yml
