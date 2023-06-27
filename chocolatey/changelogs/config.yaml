@@ -11,20 +11,22 @@ prelude_section_name: release_summary
 prelude_section_title: Release Summary
 sanitize_changelog: true
 sections:
-- - major_changes
-  - Major Changes
-- - minor_changes
-  - Minor Changes
 - - breaking_changes
   - Breaking Changes / Porting Guide
 - - deprecated_features
   - Deprecated Features
 - - removed_features
   - Removed Features (previously deprecated)
+- - major_changes
+  - Major Changes
+- - minor_changes
+  - Minor Changes
 - - security_fixes
   - Security Fixes
 - - bugfixes
   - Bugfixes
+- - documentation
+  - Documentation
 - - known_issues
   - Known Issues
 title: Chocolatey.Chocolatey
