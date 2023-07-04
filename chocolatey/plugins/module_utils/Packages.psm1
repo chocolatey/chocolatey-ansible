@@ -190,7 +190,17 @@ function Get-ChocolateyVersion {
 
     # Prerelease versions are not relevant for our purposes.
     # Stripping off any prerelease tag here gets us enough for what we need.
-    ($script:ChocolateyVersion = [version]($result.stdout -replace '-.+$'))
+    # Also, if a license is installed, but the licensed extension is missing,
+    # choco.exe output will contain an error which we need to ignore for the
+    # purposes of determining the version of Chocolatey CLI.
+    $SemVerRegex = '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?'
+    if ($result.stdout -match $SemVerRegex) {
+        ($script:ChocolateyVersion = [version]($matches[0] -replace '-.+$'))
+    }
+    else {
+        $message = "Error getting version of Chocolatey CLI"
+        Assert-TaskFailed -Message $message -Command $command -CommandResult $result
+    }
 }
 
 function Get-CommonChocolateyArgument {
