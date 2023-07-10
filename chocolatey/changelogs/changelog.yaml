@@ -1,6 +1,13 @@
 # See: https://github.com/ansible-community/antsibull-changelog/blob/main/docs/changelog.yaml-format.md
 ancestor: null
 releases:
+  1.5.1:
+    release_date: '2023-07-10'
+    changes:
+      release_summary: |
+        1.5.1 - Bugfixes
+      bugfixes:
+        - win-chocolatey - unable to install packages if a license is already installed and chocolatey.extension is not installed
   1.5.0:
     release_date: '2023-06-27'
     changes:
@@ -9,7 +16,7 @@ releases:
       major_changes:
       - win_chocolatey - add options for specifying checksums
       - win_chocolatey_facts - add filter / gather_subset option
-      minor-changes:
+      minor_changes:
       - All modules - Ensure modules are compatible with both Chocolatey CLI v2.x and v1.x
       - win_chocolatey - Improve error messages when installation of Chocolatey CLI v2.x fails due to unmet .NET Framework 4.8 dependency on client
       documentation:
