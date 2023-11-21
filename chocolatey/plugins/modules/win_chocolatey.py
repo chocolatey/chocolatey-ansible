@@ -291,7 +291,7 @@ options:
     default: present
   timeout:
     description:
-    - The time to allow chocolatey to finish before timing out.
+    - The time (in seconds) to allow chocolatey to finish before timing out.
     type: int
     default: 2700
     version_added: '0.2.3'
