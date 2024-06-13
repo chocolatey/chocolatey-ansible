@@ -109,6 +109,7 @@ options:
   checksum_type:
     description:
     - Override a package's checksum type for files downloaded during install. Use in conjunction with I(checksum).
+    type: str
     choices: [ md5, sha1, sha256, sha512 ]
     version_added: '1.5.0'
   checksum64:
@@ -121,6 +122,7 @@ options:
     description:
     - Override a package's checksum type for files downloaded during install. Use in conjunction with I(checksum64).
     choices: [ md5, sha1, sha256, sha512 ]
+    type: str
     version_added: '1.5.0'
   force:
     description:
