@@ -28,6 +28,7 @@ options:
     - You can provide a list of values to specify a larger subset.
     type: list
     elements: str
+    choices: [ all, config, feature, outdated, packages, sources ]
     default: "all"
     aliases: [ gather_subset ]
 notes:
