@@ -54,7 +54,7 @@ function Get-ChocolateyCommand {
         $IgnoreMissing
     )
 
-    $command = Get-Command -Name choco.exe -CommandType Application -ErrorAction SilentlyContinue
+    $command = Get-Command -Name choco.exe -CommandType Application -ErrorAction SilentlyContinue -TotalCount 1
 
     if (-not $command) {
         $installDir = if ($env:ChocolateyInstall) {

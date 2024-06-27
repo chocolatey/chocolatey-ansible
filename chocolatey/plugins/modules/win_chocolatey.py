@@ -21,6 +21,7 @@ short_description: Manage packages using chocolatey
 description:
 - Manage packages using Chocolatey.
 - If Chocolatey is missing from the system, the module will install it.
+- If there are multiple installations of choco.exe in env:PATH, it will use the first found one
 requirements:
 - chocolatey >= 0.10.5 (will be upgraded if older)
 options:
