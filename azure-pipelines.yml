@@ -33,7 +33,7 @@ stages:
     pool:
       vmImage: ubuntu-latest
     variables:
-      Ansible.Package: "ansible-core==2.11"
+      Ansible.Package: "ansible-core==2.17"
 
     steps:
     - task: Bash@3
@@ -131,15 +131,15 @@ stages:
     strategy:
       maxParallel: 1
       matrix:
-        ansible213:
-          Ansible.Package: "ansible-core==2.13"
-          Ansible.Version: "2.13"
-        ansible214:
-          Ansible.Package: "ansible-core==2.14"
-          Ansible.Version: "2.14"
         ansible215:
           Ansible.Package: "ansible-core==2.15"
           Ansible.Version: "2.15"
+        ansible216:
+          Ansible.Package: "ansible-core==2.16"
+          Ansible.Version: "2.16"
+        ansible217:
+          Ansible.Package: "ansible-core==2.17"
+          Ansible.Version: "2.17"
         ansible-latest:
           Ansible.Package: "ansible-core"
           Ansible.Version: "latest"
