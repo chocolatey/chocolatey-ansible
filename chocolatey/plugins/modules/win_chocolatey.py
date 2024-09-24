@@ -422,7 +422,7 @@ EXAMPLES = r'''
   win_chocolatey:
     name: chocolatey
   environment:
-    - chocolateyDownloadUrl: "https://internal-web-server/files/chocolatey.1.1.0.nupkg"
+    chocolateyDownloadUrl: "https://internal-web-server/files/chocolatey.1.1.0.nupkg"
 
 - name: Ensure Chocolatey itself is installed and use internal repo as source for bootstrap script
   win_chocolatey:
@@ -439,7 +439,7 @@ EXAMPLES = r'''
     name: chocolatey
     bootstrap_script: https://internal-web-server/files/custom-chocolatey-install.ps1
   environment:
-    - chocolateyDownloadUrl: "https://internal-web-server/files/chocolatey.1.1.0.nupkg"
+    chocolateyDownloadUrl: "https://internal-web-server/files/chocolatey.1.1.0.nupkg"
 
 - name: Uninstall git
   win_chocolatey:
