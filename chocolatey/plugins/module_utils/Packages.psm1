@@ -1188,7 +1188,8 @@ function Install-Chocolatey {
 
         if (-not $Module.CheckMode) {
             $scriptFile = New-Item -Path (Join-Path $Module.TmpDir -ChildPath 'chocolateyInstall.ps1') -ItemType File
-            $installScript | Set-Content -Path $scriptFile
+            # Writing the file in this way avoids adding a trailing newline like Set-Content can do.
+            [System.IO.File]::WriteAllText($scriptFile, $installScript)
 
             # These commands will be sent over stdin for the PowerShell process, and will be read line by line,
             # so we must join them on \r\n line-feeds to have them read as separate commands.
