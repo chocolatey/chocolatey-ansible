@@ -1,6 +1,20 @@
 # See: https://github.com/ansible-community/antsibull-changelog/blob/main/docs/changelog.yaml-format.md
 ancestor: null
 releases:
+  1.5.2:
+    release_date: '2024-09-26'
+    changes:
+      release_summary: |
+        1.5.2 - Bugfixes and documentation updates
+      bugfixes:
+        - win_chocolatey - task crashes if PATH contains multiple choco.exe on the target machine
+      minor_changes:
+        - Remove support for End of Life ansible-core 2.13, 2.14
+      documentation:
+        - win_chocolatey - documentation example uses environment incorrectly
+        - win_chocolatey - Add unit to timeout parameter in docs
+        - Fix documentation errors in win_chocolatey and win_chocolatey_facts
+        - Update Collection README to match new Ansible Certified Collections README Template
   1.5.1:
     release_date: '2023-07-10'
     changes:
