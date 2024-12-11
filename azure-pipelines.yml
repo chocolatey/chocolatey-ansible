@@ -131,15 +131,15 @@ stages:
     strategy:
       maxParallel: 1
       matrix:
-        ansible215:
-          Ansible.Package: "ansible-core==2.15"
-          Ansible.Version: "2.15"
         ansible216:
           Ansible.Package: "ansible-core==2.16"
           Ansible.Version: "2.16"
         ansible217:
           Ansible.Package: "ansible-core==2.17"
           Ansible.Version: "2.17"
+        ansible218:
+          Ansible.Package: "ansible-core==2.18"
+          Ansible.Version: "2.18"
         ansible-latest:
           Ansible.Package: "ansible-core"
           Ansible.Version: "latest"
@@ -318,7 +318,7 @@ stages:
   - Test
   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
   variables:
-    Ansible.Package: 'ansible-core==2.14'
+    Ansible.Package: 'ansible-core==2.18'
 
   jobs:
   - job: Publish
