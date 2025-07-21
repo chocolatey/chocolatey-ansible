@@ -148,5 +148,5 @@ See [LICENSE](LICENSE) to see full text.
 
 <!-- Link Targets -->
 
-[pipeline-link]: https://dev.azure.com/ChocolateyCI/Chocolatey-Ansible/_build/latest?definitionId=2&branchName=master
+[pipeline-link]: https://dev.azure.com/ChocolateyCI/Chocolatey-Ansible/_build/latest?definitionId=3&branchName=master
 [pipeline-badge]: https://dev.azure.com/ChocolateyCI/Chocolatey-Ansible/_apis/build/status/Chocolatey%20Collection%20CI?branchName=master

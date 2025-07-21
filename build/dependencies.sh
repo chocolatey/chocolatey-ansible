@@ -23,7 +23,13 @@ pip3 install --upgrade pip
 pip3 install --upgrade wheel
 pip3 install packaging
 pip3 install "Jinja2~=3.1.3"
-pip3 install "$ANSIBLE_PACKAGE"
+
+# if pipeline calls for it, pull prerelease if available
+if [ $ANSIBLE_PRERELEASE == '1' ]; then
+    pip3 install --pre "$ANSIBLE_PACKAGE"
+else
+    pip3 install "$ANSIBLE_PACKAGE"
+fi
 
 ansible-galaxy collection install ansible.windows
 
