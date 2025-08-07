@@ -714,3 +714,40 @@
     - (checksum_actual_info.stdout|from_json).checksum_type == "sha1"
     - (checksum_actual_info.stdout|from_json).checksum64 == "a3a1f075f5b0e9ee7cd2ba33afbb5f67b9e335117ef3ea352fc361b098aecad4"
     - (checksum_actual_info.stdout|from_json).checksum_type64 == "sha256"
+
+- name: ensure test package is not installed
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: absent
+
+- name: install test package and pin it
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: present
+    version: '0.0.1'
+    pinned: yes
+
+- name: attempt upgrade of pinned package
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: latest
+  register: pinned_upgrade
+
+- name: assert upgrade of pinned package made no changes
+  assert:
+    that:
+    - pinned_upgrade is not changed
+    - pinned_upgrade is not failed
+
+- name: attempt upgrade of pinned package ignoring the pin
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: latest
+    ignore_pinned: true
+  register: ignore_pinned_upgrade
+
+- name: assert upgrade of pinned package succeeded
+  assert:
+    that:
+    - ignore_pinned_upgrade is changed
+    - ignore_pinned_upgrade is not failed
