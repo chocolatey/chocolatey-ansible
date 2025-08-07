@@ -49,6 +49,7 @@ function Get-ModuleSpec {
             force                 = @{ type = "bool"; default = $false }
             ignore_checksums      = @{ type = "bool"; default = $false }
             ignore_dependencies   = @{ type = "bool"; default = $false }
+            ignore_pinned         = @{ type = "bool"; default = $false }
             install_args          = @{ type = "str" }
             name                  = @{ type = "list"; elements = "str"; required = $true }
             override_args         = @{ type = "bool"; default = $false }
@@ -89,6 +90,7 @@ $choco_args = $module.Params.choco_args
 $force = $module.Params.force
 $ignore_checksums = $module.Params.ignore_checksums
 $ignore_dependencies = $module.Params.ignore_dependencies
+$ignore_pinned = $module.Params.ignore_pinned
 $install_args = $module.Params.install_args
 $name = $module.Params.name
 $override_args = $module.Params.override_args
@@ -153,6 +155,10 @@ $module.Result.choco_cli_version = "$chocolateyVersion"
 
 if ($chocolateyVersion -ge [version]'2.0.0' -and $allow_multiple) {
     Assert-TaskFailed -Message "Option 'allow_multiple' is not supported on the installed version of Chocolatey CLI"
+}
+
+if ($chocolateyVersion -lt [version]'2.3.0' -and $ignore_pinned) {
+    Assert-TaskFailed -Message "Option 'ignore_pinned' is not supported on the installed version of Chocolatey CLI"
 }
 
 if ($state -in "absent", "reinstalled") {
@@ -249,6 +255,7 @@ if ($state -in @("downgrade", "latest", "upgrade", "present", "reinstalled")) {
         Force = $force
         IgnoreChecksums = $ignore_checksums
         IgnoreDependencies = $ignore_dependencies
+        IgnorePinned = $ignore_pinned
         InstallArgs = $install_args
         OverrideArgs = $override_args
         PackageParams = $package_params

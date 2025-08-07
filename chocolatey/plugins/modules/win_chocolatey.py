@@ -146,6 +146,13 @@ options:
     type: bool
     default: false
     version_added: '0.2.1'
+  ignore_pinned:
+    description:
+    - Ignores any pins and upgrades the package(s) anyway.
+    - Chocolatey CLI (choco) v2.3.0 and higher is required to use this option.
+    type: bool
+    default: false
+    version_added: '1.6.0'
   remove_dependencies:
     description:
     - Remove a package's dependencies on uninstall.

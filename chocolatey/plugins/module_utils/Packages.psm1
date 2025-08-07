@@ -325,6 +325,11 @@ function ConvertTo-ChocolateyArgument {
         [switch]
         $IgnoreDependencies,
 
+        # Set to ignore any pins and upgrades the package(s) anyway.
+        [Parameter()]
+        [switch]
+        $IgnorePinned,
+
         # Installation args to be provided to installers in a given package.
         [Parameter()]
         [string]
@@ -405,6 +410,7 @@ function ConvertTo-ChocolateyArgument {
     if ($Force) { "--force" }
     if ($IgnoreChecksums) { "--ignore-checksums" }
     if ($IgnoreDependencies) { "--ignore-dependencies" }
+    if ($IgnorePinned) { "--ignore-pinned" }
     if ($InstallArgs) { "--install-arguments", $InstallArgs }
     if ($OverrideArgs) { "--override-arguments" }
     if ($PackageParams) { "--package-parameters", $PackageParams }
@@ -621,6 +627,11 @@ function Update-ChocolateyPackage {
         [Parameter()]
         [switch]
         $IgnoreDependencies,
+
+        # Set to ignore any pins and upgrades the package(s) anyway.
+        [Parameter()]
+        [switch]
+        $IgnorePinned,
 
         # Installation args to be provided to installers in a given package.
         [Parameter()]
