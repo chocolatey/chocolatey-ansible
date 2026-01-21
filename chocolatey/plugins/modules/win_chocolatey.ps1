@@ -209,7 +209,9 @@ if ($state -in @("downgrade", "latest", "upgrade", "present", "reinstalled")) {
     $missingPackages = [System.Collections.Generic.List[string]]@()
 
     if ($state -eq "present" -and $force) {
-        $missingPackages.Add($name)
+        foreach ($package in $name) {
+            $missingPackages.Add($package)
+        }
     }
     else {
         foreach ($package in $packageInfo.GetEnumerator()) {
