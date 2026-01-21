@@ -765,3 +765,27 @@
     that:
     - force_install_multiple is changed
     - force_install_multiple is not failed
+
+- name: clear the Chocolatey log file
+  ansible.windows.win_file:
+    path: "{{ ansible_env.ChocolateyInstall }}\\logs\\chocolatey.log"
+    state: absent
+
+- name: uninstall Chocolatey Package with additional choco_args
+  chocolatey.chocolatey.win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: absent
+    choco_args:
+        --skipautouninstaller
+
+- name: read Chocolatey log file
+  ansible.windows.slurp:
+    src: "{{ ansible_env.ChocolateyInstall }}\\logs\\chocolatey.log"
+  register: uninstall_with_args_log_content
+
+- name: assert generated choco command includes provided additional choco_args
+  ansible.builtin.assert:
+    that:
+      - log_text is search('(?i)command line.*uninstall\s+' ~ test_choco_package1 ~ '.*--skipautouninstaller')
+  vars:
+    log_text: "{{ uninstall_with_args_log_content['content'] | b64decode }}"

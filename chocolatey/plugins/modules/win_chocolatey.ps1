@@ -184,6 +184,7 @@ if ($state -in "absent", "reinstalled") {
             $uninstallParams = @{
                 ChocoCommand = $chocoCommand
                 Package = $package
+                ChocoArgs = $choco_args
                 Force = $force
                 PackageParams = $package_params
                 SkipScripts = $skip_scripts
