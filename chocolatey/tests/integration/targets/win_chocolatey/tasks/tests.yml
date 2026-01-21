@@ -751,3 +751,17 @@
     that:
     - ignore_pinned_upgrade is changed
     - ignore_pinned_upgrade is not failed
+
+- name: force install multiple packages
+  win_chocolatey:
+    name:
+    - '{{ test_choco_package1 }}'
+    - '{{ test_choco_package2 }}'
+    state: present
+  register: force_install_multiple
+
+- name: assert force install multiple packages
+  assert:
+    that:
+    - force_install_multiple is changed
+    - force_install_multiple is not failed
