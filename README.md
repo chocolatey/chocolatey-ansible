@@ -19,7 +19,7 @@ It contains the following modules:
 
 ## Requirements
 
-- `ansible-core` >= 2.16, 2.17, 2.18
+- `ansible-core` >= 2.18, 2.19, 2.20
 - `python` >= 3.8
 
 ### Python Dependencies
@@ -108,7 +108,7 @@ Remove the Community Package Repository (as you have an internal repository; rec
 
 ## Testing
 
-This collection is tested against `ansible-core` versions >= **2.16, 2.17, 2.18**.
+This collection is tested against `ansible-core` versions >= **2.18, 2.19, 2.20**.
 
 Testing is primarily conducted on Ubuntu runners in Azure Pipelines at the latest OS version, with the collection being targeted at a Windows 10 Enterprise 21H2 client machine, using `ansible-test` to run the tests included in the collection.
 

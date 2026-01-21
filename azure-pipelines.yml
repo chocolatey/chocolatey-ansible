@@ -33,7 +33,7 @@ stages:
     pool:
       vmImage: ubuntu-latest
     variables:
-      Ansible.Package: "ansible-core~=2.18.0"
+      Ansible.Package: "ansible-core~=2.20.0"
 
     steps:
     - task: Bash@3
@@ -131,15 +131,15 @@ stages:
     strategy:
       maxParallel: 1
       matrix:
-        ansible217:
-          Ansible.Package: "ansible-core~=2.17.0"
-          Ansible.Version: "2.17"
         ansible218:
           Ansible.Package: "ansible-core~=2.18.0"
           Ansible.Version: "2.18"
         ansible219:
           Ansible.Package: "ansible-core~=2.19.0"
           Ansible.Version: "2.19"
+        ansible220:
+          Ansible.Package: "ansible-core~=2.20.0"
+          Ansible.Version: "2.20"
         ansible-latest:
           Ansible.Package: "ansible-core"
           Ansible.Version: "latest"
@@ -322,7 +322,7 @@ stages:
   - Test
   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
   variables:
-    Ansible.Package: 'ansible-core~=2.18.0'
+    Ansible.Package: 'ansible-core~=2.20.0'
 
   jobs:
   - job: Publish
