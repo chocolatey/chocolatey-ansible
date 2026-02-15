@@ -184,6 +184,7 @@ if ($state -in "absent", "reinstalled") {
             $uninstallParams = @{
                 ChocoCommand = $chocoCommand
                 Package = $package
+                ChocoArgs = $choco_args
                 Force = $force
                 PackageParams = $package_params
                 SkipScripts = $skip_scripts
@@ -209,7 +210,9 @@ if ($state -in @("downgrade", "latest", "upgrade", "present", "reinstalled")) {
     $missingPackages = [System.Collections.Generic.List[string]]@()
 
     if ($state -eq "present" -and $force) {
-        $missingPackages.Add($name)
+        foreach ($package in $name) {
+            $missingPackages.Add($package)
+        }
     }
     else {
         foreach ($package in $packageInfo.GetEnumerator()) {
