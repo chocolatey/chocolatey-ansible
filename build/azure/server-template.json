@@ -1,5 +1,5 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "newVMName": {
@@ -35,17 +35,17 @@
     },
     "resources": [
         {
-            "apiVersion": "2018-10-15-preview",
+            "apiVersion": "2018-09-15",
             "type": "Microsoft.DevTestLab/labs/virtualmachines",
             "name": "[variables('vmName')]",
             "location": "[resourceGroup().location]",
             "properties": {
                 "labVirtualNetworkId": "[variables('labVirtualNetworkId')]",
-                "notes": "Windows Server 2019",
+                "notes": "Windows Server 2022",
                 "galleryImageReference": {
                     "offer": "WindowsServer",
                     "publisher": "MicrosoftWindowsServer",
-                    "sku": "2019-Datacenter",
+                    "sku": "2022-Datacenter",
                     "osType": "Windows",
                     "version": "latest"
                 },

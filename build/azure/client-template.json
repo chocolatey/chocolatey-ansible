@@ -1,5 +1,5 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "newVMName": {
@@ -35,17 +35,17 @@
     },
     "resources": [
         {
-            "apiVersion": "2018-10-15-preview",
+            "apiVersion": "2018-09-15",
             "type": "Microsoft.DevTestLab/labs/virtualmachines",
             "name": "[variables('vmName')]",
             "location": "[resourceGroup().location]",
             "properties": {
                 "labVirtualNetworkId": "[variables('labVirtualNetworkId')]",
-                "notes": "Windows 10 Enterprise, Version 21H2",
+                "notes": "Windows 11 Enterprise, Version 25H2",
                 "galleryImageReference": {
-                    "offer": "Windows-10",
+                    "offer": "Windows-11",
                     "publisher": "MicrosoftWindowsDesktop",
-                    "sku": "win10-21h2-ent",
+                    "sku": "win11-25h2-ent",
                     "osType": "Windows",
                     "version": "latest"
                 },
