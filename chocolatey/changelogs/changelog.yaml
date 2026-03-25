@@ -1,6 +1,13 @@
 # See: https://github.com/ansible-community/antsibull-changelog/blob/main/docs/changelog.yaml-format.md
 ancestor: null
 releases:
+  1.6.0:
+    release_date: '2026-03-25'
+    changes:
+      release-summary: |
+        1.6.0 - Add support for ignoring pinned status of packages during upgrade
+      major_changes:
+      - win_chocolatey - add option to ignore pinned status of pinned packages
   1.5.3:
     release_date: '2024-09-30'
     changes:
