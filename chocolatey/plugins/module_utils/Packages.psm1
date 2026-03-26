@@ -945,6 +945,11 @@ function Uninstall-ChocolateyPackage {
         [Ansible.Basic.AnsibleModule]
         $Module = (Get-AnsibleModule),
 
+        # Any additional arguments to be passed directly to `choco.exe`
+        [Parameter()]
+        [string[]]
+        $ChocoArgs,
+
         # Set to force choco to reinstall the package if the package (version)
         # is already installed.
         [Parameter()]
@@ -1005,6 +1010,8 @@ function Uninstall-ChocolateyPackage {
         if ($PSBoundParameters.ContainsKey('Timeout')) { "--timeout", $timeout }
         if ($SkipScripts) { "--skip-scripts" }
         if ($PackageParams) { "--package-parameters", $package_params }
+
+        if ($ChocoArgs) { $ChocoArgs }
     )
 
     $command = Argv-ToString -Arguments $arguments
