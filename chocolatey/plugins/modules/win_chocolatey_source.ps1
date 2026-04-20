@@ -31,7 +31,7 @@ function Get-ModuleSpec {
             admin_only           = @{ type = "bool" }
             allow_self_service   = @{ type = "bool" }
             bypass_proxy         = @{ type = "bool" }
-            certificate          = @{ type = "str" }
+            certificate          = @{ type = "str", default = $null }
             certificate_password = @{ type = "str"; no_log = $true }
             priority             = @{ type = "int" }
             source               = @{ type = "str" }
