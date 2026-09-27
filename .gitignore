@@ -8,3 +8,8 @@
 !/testing-chocolatey/results/.gitkeep
 /build/vagrant-files/*
 !/build/vagrant-files/.gitkeep
+
+# Working files produced by the CI workflow, and by running it locally with act
+/collection/
+/testresults/
+/.winrm-password
