@@ -1,0 +1,337 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  COLLECTION_ARTIFACT: chocolatey.collection
+  # Base version used for non-tag builds; tag builds take their version from the tag.
+  PACKAGE_VERSION: 1.0.0
+
+jobs:
+  build:
+    name: Build Collection
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install ansible-core
+        run: pip install "ansible-core~=2.20.0"
+
+      - name: Build collection
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF -match '^refs/tags/(?<Tag>.+)$') {
+              # Release tags usually begin with a 'v', but the version must not.
+              $Matches.Tag -replace '^v'
+          }
+          else {
+              "$env:PACKAGE_VERSION-$(Get-Date -Format 'yyyyMMdd')-$env:GITHUB_RUN_ID"
+          }
+
+          Write-Host "Building chocolatey.chocolatey with version '$version'"
+
+          Set-Location ./chocolatey
+
+          (Get-Content -Path galaxy.yml -Raw).Replace('{{ REPLACE_VERSION }}', $version) |
+              Set-Content -Path galaxy.yml
+
+          ansible-galaxy collection build
+
+      - name: Publish collection tarball
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.COLLECTION_ARTIFACT }}
+          path: chocolatey/*.tar.gz
+          if-no-files-found: error
+
+  sanity:
+    name: Sanity (ansible-core ${{ matrix.ansible.version }})
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        ansible:
+          - { version: '2.18', package: 'ansible-core~=2.18.0' }
+          - { version: '2.19', package: 'ansible-core~=2.19.0' }
+          - { version: '2.20', package: 'ansible-core~=2.20.0' }
+          - { version: 'latest', package: 'ansible-core' }
+          - { version: 'prerelease', package: 'ansible-core', prerelease: true }
+
+    steps:
+      - name: Download collection tarball
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ env.COLLECTION_ARTIFACT }}
+          path: collection
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install ansible-core
+        run: pip install ${{ matrix.ansible.prerelease && '--pre' || '' }} "${{ matrix.ansible.package }}"
+
+      - name: Install collection
+        run: ansible-galaxy collection install ./collection/*.tar.gz --force
+
+      # Sanity tests are static, so they don't need a Windows target. The PowerShell
+      # they rely on is preinstalled on ubuntu-latest.
+      - name: Run sanity tests
+        run: |
+          cd ~/.ansible/collections/ansible_collections/chocolatey/chocolatey
+          ansible-test sanity -vvvvv --requirements
+
+  integration:
+    name: Integration (ansible-core ${{ matrix.ansible.version }})
+    runs-on: windows-latest
+    needs: build
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: false
+      matrix:
+        ansible:
+          - { version: '2.18', package: 'ansible-core~=2.18.0' }
+          - { version: '2.19', package: 'ansible-core~=2.19.0' }
+          - { version: '2.20', package: 'ansible-core~=2.20.0' }
+          - { version: 'latest', package: 'ansible-core' }
+          - { version: 'prerelease', package: 'ansible-core', prerelease: true }
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Download collection tarball
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ env.COLLECTION_ARTIFACT }}
+          path: collection
+
+      # GitHub-hosted Windows runners ship with Chocolatey CLI and a number of packages
+      # already installed. The integration tests assert on the exact set of installed
+      # packages, pins, sources and config values, so the host has to be returned to a
+      # freshly-installed state first or those assertions are meaningless.
+      - name: Reset Chocolatey CLI to a clean state
+        shell: pwsh
+        run: ./build/Reset-ChocolateyState.ps1
+
+      - name: Set up WSL control node
+        uses: Vampire/setup-wsl@d1da7f2c0322a5ee4f24975344f67fc0f5baf364 # v7.0.0
+        with:
+          distribution: Ubuntu-24.04
+          additional-packages: python3-venv python3-pip
+
+      # Installs happen here rather than in the test step, so a PyPI or Galaxy outage
+      # fails this short step instead of an eighteen minute test run.
+      - name: Install ansible-core in the control node
+        shell: wsl-bash {0}
+        run: |
+          set -euo pipefail
+
+          # PyPI and Galaxy both fail transiently often enough to be worth retrying.
+          retry() {
+              local attempts=$1
+              shift
+
+              local n=1
+              until "$@"; do
+                  if [ "$n" -ge "$attempts" ]; then
+                      echo "failed after ${attempts} attempts: $*" >&2
+                      return 1
+                  fi
+                  echo "attempt ${n} of ${attempts} failed: $* -- retrying in $((n * 15))s" >&2
+                  sleep $((n * 15))
+                  n=$((n + 1))
+              done
+          }
+
+          python3 -m venv ~/ansible-venv
+          . ~/ansible-venv/bin/activate
+
+          retry 3 pip install --upgrade pip wheel
+
+          retry 3 pip install ${{ matrix.ansible.prerelease && '--pre' || '' }} "${{ matrix.ansible.package }}"
+          retry 3 pip install pywinrm
+
+          retry 3 ansible-galaxy collection install ansible.windows --force
+
+          ansible --version
+
+      - name: Configure the runner as an Ansible target
+        shell: pwsh
+        run: |
+          $charSet = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+          $password = -join (1..24 | ForEach-Object {
+              $charSet[[System.Security.Cryptography.RandomNumberGenerator]::GetInt32($charSet.Length)]
+          })
+
+          # Satisfy the local password complexity policy.
+          $password += 'aA1!'
+
+          Write-Host "::add-mask::$password"
+
+          # Handed to the control node via a file rather than through the workflow, so
+          # the password never passes through YAML interpolation or a command line.
+          $password | Set-Content -Path "$env:GITHUB_WORKSPACE/.winrm-password" -NoNewline
+
+          $env:ANSIBLE_TEST_PASSWORD = $password
+          ./build/Initialize-WinRmTarget.ps1
+
+      - name: Run integration tests
+        id: integration
+        shell: wsl-bash {0}
+        run: |
+          set -euo pipefail
+
+          . ~/ansible-venv/bin/activate
+
+          workspace=$(wslpath '${{ github.workspace }}')
+
+          # A local file, so no retry needed.
+          ansible-galaxy collection install "$workspace"/collection/*.tar.gz --force
+
+          # The WSL distribution reaches the Windows host it is running on via the
+          # default gateway of its NAT network.
+          win_host=$(ip route show default | awk '{print $3}')
+          echo "Ansible target: $win_host"
+
+          timeout 60 bash -c "until echo > /dev/tcp/$win_host/5985 2>/dev/null; do sleep 2; done"
+
+          cd ~/.ansible/collections/ansible_collections/chocolatey/chocolatey
+
+          {
+            echo "[windows]"
+            echo "win-target ansible_host=$win_host"
+            echo ""
+            echo "[windows:vars]"
+            echo "ansible_user=ansible"
+            echo "ansible_password=$(cat "$workspace/.winrm-password")"
+            echo "ansible_connection=winrm"
+            echo "ansible_port=5985"
+            echo "ansible_winrm_transport=basic"
+            echo "ansible_winrm_server_cert_validation=ignore"
+            echo "ansible_become_method=runas"
+          } > tests/integration/inventory.winrm
+
+          # Check WinRM actually works, not just that the port is open. From 2.20
+          # ansible-test hides the cause of connection errors, so this keeps it.
+          export ANSIBLE_DISPLAY_TRACEBACK=always
+
+          connected=no
+          for attempt in 1 2 3 4 5; do
+            if ansible -i tests/integration/inventory.winrm windows -m ansible.windows.win_ping; then
+              connected=yes
+              break
+            fi
+            echo "win_ping attempt ${attempt} failed; retrying in 10s"
+            sleep 10
+          done
+
+          unset ANSIBLE_DISPLAY_TRACEBACK
+
+          if [ "$connected" != yes ]; then
+            echo "WinRM did not become usable from the control node after 5 attempts."
+            exit 1
+          fi
+
+          # win_chocolatey-legacy needs a Windows host without .NET Framework 4.8; every
+          # GitHub-hosted Windows image ships 4.8 or newer. See build/README.md.
+          # --retry-on-error re-runs a failed target once, to ride out transient
+          # network and WinRM failures during the run.
+          rc=0
+          ansible-test windows-integration -vvv --requirements --continue-on-error \
+            --retry-on-error --exclude win_chocolatey-legacy || rc=$?
+
+          cp -r tests/output "$workspace/testresults"
+          rm -rf "$workspace/testresults/.tmp"
+
+          exit $rc
+
+      - name: Remove target credentials
+        if: always()
+        shell: pwsh
+        run: Remove-Item -Path "$env:GITHUB_WORKSPACE/.winrm-password" -Force -ErrorAction SilentlyContinue
+
+      - name: Summarise test results
+        if: always()
+        shell: pwsh
+        run: >-
+          ./build/Write-TestSummary.ps1
+          -Path ./testresults
+          -Title 'Integration (ansible-core ${{ matrix.ansible.version }})'
+          -TestOutcome '${{ steps.integration.outcome }}'
+
+      - name: Publish ansible-test output
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ansible-test-output-${{ matrix.ansible.version }}
+          path: testresults
+          if-no-files-found: warn
+
+  publish:
+    name: Publish Collection
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs:
+      - sanity
+      - integration
+    if: startsWith(github.ref, 'refs/tags/')
+
+    # Scope the Galaxy and Automation Hub tokens to this environment so they are not
+    # readable by any other job, and so the organisation can require an approval here.
+    environment: galaxy
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Download collection tarball
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ env.COLLECTION_ARTIFACT }}
+          path: artifacts
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install ansible-core
+        run: pip install "ansible-core~=2.20.0"
+
+      - name: Publish collection to Galaxy and Automation Hub
+        shell: pwsh
+        env:
+          ANSIBLE_CONFIG: ${{ github.workspace }}/build/ansible.cfg
+          ANSIBLE_GALAXY_SERVER_RELEASE_GALAXY_TOKEN: ${{ secrets.GALAXY_API_KEY }}
+          ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN: ${{ secrets.AH_API_KEY }}
+        run: ./build/Publish-Collection.ps1 -Path ./artifacts -Server release_galaxy,automation_hub

@@ -39,12 +39,27 @@ param(
 )
 
 $Tarballs = Get-ChildItem -Path $Path -Recurse -File -Filter '*.tar.gz'
+
+if (-not $Tarballs) {
+    throw "No collection tarball found under '$Path'."
+}
+
 Write-Host "Found collection artifact(s) at:"
 Write-Host $($Tarballs.FullName -join [Environment]::NewLine)
+
+$failures = [System.Collections.Generic.List[string]]::new()
 
 foreach ($file in $Tarballs) {
     foreach ($item in $Server) {
         Write-Host "Publishing collection '$($file.Name)' to targeted server: [$item]"
         ansible-galaxy collection publish --server $item $file.FullName
+
+        if ($LASTEXITCODE -ne 0) {
+            $failures.Add("'$($file.Name)' to [$item] (exit code $LASTEXITCODE)")
+        }
     }
+}
+
+if ($failures.Count -gt 0) {
+    throw "Publishing failed for: $($failures -join '; ')"
 }
