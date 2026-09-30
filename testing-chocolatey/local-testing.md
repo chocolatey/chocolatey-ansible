@@ -119,5 +119,5 @@ Invoke-Item ./results/report.html
 
 ### Open issues
 
-* [Vagrant environment does not load ansible.windows modules correctly](https://github.com/chocolatey/chocolatey-ansible/issues/71)
+* [Vagrant environment does not load ansible.windows modules correctly](https://github.com/chocolatey-community/chocolatey-ansible/issues/71)
 
