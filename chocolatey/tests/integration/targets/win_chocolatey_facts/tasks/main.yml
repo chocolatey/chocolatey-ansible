@@ -53,6 +53,7 @@
 - block:
   - name: Gather facts from chocolatey
     win_chocolatey_facts:
+    register: facts_result
 
   always:
   - name: remove test source
@@ -68,32 +69,40 @@
 - name: assert facts from chocolatey
   assert:
     that:
-    - ansible_chocolatey is not changed
-    - ansible_chocolatey.config.commandExecutionTimeoutSeconds == 2700
-    - ansible_chocolatey.config.proxyBypassOnLocal == True
-    - ansible_chocolatey.config.proxyUser == 'test-user'
-    - ansible_chocolatey.feature.checksumFiles == true
-    - ansible_chocolatey.packages[0].package == 'chocolatey'
-    - ansible_chocolatey.packages[0].version is defined
-    - ansible_chocolatey.outdated is defined
-    - ansible_chocolatey.sources[0].admin_only == False
-    - ansible_chocolatey.sources[0].allow_self_service == False
-    - ansible_chocolatey.sources[0].bypass_proxy == False
-    - ansible_chocolatey.sources[0].certificate == None
-    - ansible_chocolatey.sources[0].disabled == False
-    - ansible_chocolatey.sources[0].name == 'chocolatey'
-    - ansible_chocolatey.sources[0].priority == 0
-    - ansible_chocolatey.sources[0].source == 'https://community.chocolatey.org/api/v2/'
-    - ansible_chocolatey.sources[0].source_username == None
-    - ansible_chocolatey.sources[1].admin_only == True
-    - ansible_chocolatey.sources[1].allow_self_service == True
-    - ansible_chocolatey.sources[1].bypass_proxy == True
-    - ansible_chocolatey.sources[1].certificate == 'C:\\temp\\cert.pfx'
-    - ansible_chocolatey.sources[1].disabled == True
-    - ansible_chocolatey.sources[1].name == 'test|repo'
-    - ansible_chocolatey.sources[1].priority == 9
-    - ansible_chocolatey.sources[1].source == 'http://test-server/chocolatey'
-    - ansible_chocolatey.sources[1].source_username == 'test-user'
+    - ansible_facts.chocolatey is not changed
+    - ansible_facts.chocolatey.config.commandExecutionTimeoutSeconds == 2700
+    - ansible_facts.chocolatey.config.proxyBypassOnLocal == True
+    - ansible_facts.chocolatey.config.proxyUser == 'test-user'
+    - ansible_facts.chocolatey.feature.checksumFiles == true
+    - ansible_facts.chocolatey.packages[0].package == 'chocolatey'
+    - ansible_facts.chocolatey.packages[0].version is defined
+    - ansible_facts.chocolatey.outdated is defined
+    - ansible_facts.chocolatey.sources[0].admin_only == False
+    - ansible_facts.chocolatey.sources[0].allow_self_service == False
+    - ansible_facts.chocolatey.sources[0].bypass_proxy == False
+    - ansible_facts.chocolatey.sources[0].certificate == None
+    - ansible_facts.chocolatey.sources[0].disabled == False
+    - ansible_facts.chocolatey.sources[0].name == 'chocolatey'
+    - ansible_facts.chocolatey.sources[0].priority == 0
+    - ansible_facts.chocolatey.sources[0].source == 'https://community.chocolatey.org/api/v2/'
+    - ansible_facts.chocolatey.sources[0].source_username == None
+    - ansible_facts.chocolatey.sources[1].admin_only == True
+    - ansible_facts.chocolatey.sources[1].allow_self_service == True
+    - ansible_facts.chocolatey.sources[1].bypass_proxy == True
+    - ansible_facts.chocolatey.sources[1].certificate == 'C:\\temp\\cert.pfx'
+    - ansible_facts.chocolatey.sources[1].disabled == True
+    - ansible_facts.chocolatey.sources[1].name == 'test|repo'
+    - ansible_facts.chocolatey.sources[1].priority == 9
+    - ansible_facts.chocolatey.sources[1].source == 'http://test-server/chocolatey'
+    - ansible_facts.chocolatey.sources[1].source_username == 'test-user'
+
+- name: assert registered result keeps the ansible_ prefix on the fact name
+  assert:
+    that:
+    - facts_result is not changed
+    - facts_result.ansible_facts.ansible_chocolatey is defined
+    - facts_result.ansible_facts.chocolatey is not defined
+    - facts_result.ansible_facts.ansible_chocolatey == ansible_facts.chocolatey
 
 # Testing of the new gather_subset option has been isolated to its own file
 - name: win_chocolatey_fact gather_subset option tests
