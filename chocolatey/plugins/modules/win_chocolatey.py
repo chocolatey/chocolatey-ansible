@@ -205,6 +205,8 @@ options:
     - Passing licensed options may result in them being ignored or causing
       errors if the targeted node is unlicensed or missing the
       chocolatey.extension package.
+    - When I(state=reinstalled), these are only passed to the install step,
+      not the uninstall step.
     type: list
     elements: str
     version_added: '1.2.0'
