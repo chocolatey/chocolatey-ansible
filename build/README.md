@@ -44,6 +44,19 @@ The `win_chocolatey-legacy` target verifies that Chocolatey CLI v2.0+ refuses to
 
 Running it needs a Windows host without .NET Framework 4.8, such as a self-hosted runner. Nothing in this repository sets one up any more, but the target is kept so it can still be run by hand.
 
+### Code coverage
+
+The `ansible-core` latest integration leg runs with `--coverage`, which records which lines of the collection's PowerShell modules and module utils the tests execute on the Windows target. It's only collected on one leg because it slows the run down, and every leg would report near-identical figures. It's the latest leg so it doesn't need moving as the tested versions change.
+
+[`Write-CoverageSummary.ps1`](Write-CoverageSummary.ps1) adds the overall and per-file line coverage to that leg's job summary, and the full text report (including the missing line numbers) is in the step log. The Cobertura XML is in the `ansible-test-output-latest` artifact under `reports/`.
+
+A few things to know when reading the figures:
+
+- Only line coverage is available for PowerShell, not branch coverage.
+- Test helper modules under `tests/` are collected but left out of the figures.
+- A file the tests never load doesn't appear in the `ansible-test` report at all, rather than showing as 0%, so the summary lists any such module or module util separately.
+- Code only reached by `win_chocolatey-legacy` (see above) shows as uncovered.
+
 ### Secrets and settings the repository needs
 
 - A `galaxy` [environment](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment) holding the `GALAXY_API_KEY` and `AH_API_KEY` secrets. Scoping them to an environment keeps them out of every other job, and lets the organisation require a manual approval before a release is published.
