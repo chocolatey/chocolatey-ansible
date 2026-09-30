@@ -130,11 +130,11 @@ ansible-test windows-integration --docker -v --color
 
 Presently only the latest version of the collection is supported.
 
-If you need to report an issue with the collection, please [file an issue on Github](https://github.com/chocolatey/chocolatey-ansible/issues/new).
+If you need to report an issue with the collection, please [file an issue on Github](https://github.com/chocolatey-community/chocolatey-ansible/issues/new).
 
 ## Release Notes
 
-[Release Notes on Github](https://github.com/chocolatey/chocolatey-ansible/releases)
+[Release Notes on Github](https://github.com/chocolatey-community/chocolatey-ansible/releases)
 
 ## Related Information
 
@@ -148,5 +148,5 @@ See [LICENSE](LICENSE) to see full text.
 
 <!-- Link Targets -->
 
-[pipeline-link]: https://github.com/chocolatey/chocolatey-ansible/actions/workflows/ci.yml?query=branch%3Amaster
-[pipeline-badge]: https://github.com/chocolatey/chocolatey-ansible/actions/workflows/ci.yml/badge.svg?branch=master
+[pipeline-link]: https://github.com/chocolatey-community/chocolatey-ansible/actions/workflows/ci.yml?query=branch%3Amaster
+[pipeline-badge]: https://github.com/chocolatey-community/chocolatey-ansible/actions/workflows/ci.yml/badge.svg?branch=master
