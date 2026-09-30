@@ -758,6 +758,7 @@
     - '{{ test_choco_package1 }}'
     - '{{ test_choco_package2 }}'
     state: present
+    force: true
   register: force_install_multiple
 
 - name: assert force install multiple packages
