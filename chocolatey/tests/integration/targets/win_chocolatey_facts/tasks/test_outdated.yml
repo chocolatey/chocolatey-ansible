@@ -27,7 +27,7 @@
   # This can be removed if we no longer support Ansible 2.9
   - name: set_fact selected_package
     set_fact:
-      selected_package: "{{ ansible_chocolatey.outdated | selectattr('package', 'eq', test_choco_package1) | list }}"
+      selected_package: "{{ ansible_facts.chocolatey.outdated | selectattr('package', 'eq', test_choco_package1) | list }}"
 
   - name: Debug selected_package
     debug:
@@ -36,8 +36,8 @@
   - name: assert 'chocolatey outdated' facts
     assert:
       that:
-      - ansible_chocolatey is not changed
-      - ansible_chocolatey.outdated is defined
+      - ansible_facts.chocolatey is not changed
+      - ansible_facts.chocolatey.outdated is defined
       - selected_package[0] is defined
       - selected_package[1] is not defined
       - selected_package[0].current_version == '0.0.1'
@@ -55,7 +55,7 @@
 
   - name: set_fact selected_package
     set_fact:
-      selected_package: "{{ ansible_chocolatey.outdated | selectattr('package', 'eq', test_choco_package1) | list }}"
+      selected_package: "{{ ansible_facts.chocolatey.outdated | selectattr('package', 'eq', test_choco_package1) | list }}"
 
   - name: Debug selected_package
     debug:
@@ -64,7 +64,7 @@
   - name: assert 'chocolatey outdated' facts
     assert:
       that:
-      - ansible_chocolatey.outdated is defined
+      - ansible_facts.chocolatey.outdated is defined
       - selected_package[0] is not defined
 
   always:

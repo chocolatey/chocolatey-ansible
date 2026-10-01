@@ -51,23 +51,23 @@ EXAMPLES = r'''
 
 - name: Displays the Configuration
   debug:
-    var: ansible_chocolatey.config
+    var: ansible_facts.chocolatey.config
 
 - name: Displays the Feature
   debug:
-    var: ansible_chocolatey.feature
+    var: ansible_facts.chocolatey.feature
 
 - name: Displays the Sources
   debug:
-    var: ansible_chocolatey.sources
+    var: ansible_facts.chocolatey.sources
 
 - name: Displays the Packages
   debug:
-    var: ansible_chocolatey.packages
+    var: ansible_facts.chocolatey.packages
 
 - name: Displays the Outdated packages
   debug:
-    var: ansible_chocolatey.outdated
+    var: ansible_facts.chocolatey.outdated
 
 - name: Gather all facts from chocolatey, except outdated packages
   win_chocolatey_facts:
@@ -79,7 +79,7 @@ EXAMPLES = r'''
 
 - name: Displays the collected facts from chocolatey without the outdated packages
   debug:
-    var: ansible_chocolatey
+    var: ansible_facts.chocolatey
 
 - name: Clear existing facts from chocolatey
   ansible.builtin.meta: clear_facts
@@ -92,7 +92,7 @@ EXAMPLES = r'''
 
 - name: Displays the collected config and feature facts from chocolatey
   debug:
-    var: ansible_chocolatey
+    var: ansible_facts.chocolatey
 '''
 
 RETURN = r'''
@@ -102,7 +102,9 @@ ansible_facts:
   type: complex
   contains:
     ansible_chocolatey:
-      description: Detailed information about the Chocolatey installation
+      description:
+      - Detailed information about the Chocolatey installation
+      - Ansible removes the C(ansible_) prefix from fact names in the C(ansible_facts) variable, so access these facts as C(ansible_facts.chocolatey).
       returned: always
       type: complex
       contains:

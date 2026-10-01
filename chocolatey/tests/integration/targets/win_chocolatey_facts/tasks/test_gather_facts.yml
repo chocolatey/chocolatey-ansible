@@ -8,18 +8,18 @@
 - name: assert all chocolatey facts are gathered 
   assert:
     that:
-    - ansible_chocolatey is not changed
-    - ansible_chocolatey.outdated is defined
-    - ansible_chocolatey.config is defined
-    - ansible_chocolatey.feature is defined
-    - ansible_chocolatey.packages is defined
-    - ansible_chocolatey.sources is defined
-    - '"config" not in ansible_chocolatey.filter'
-    - '"feature" not in ansible_chocolatey.filter'
-    - '"packages" not in ansible_chocolatey.filter'
-    - '"sources" not in ansible_chocolatey.filter'
-    - '"outdated" not in ansible_chocolatey.filter'
-    - '"all" in ansible_chocolatey.filter'
+    - ansible_facts.chocolatey is not changed
+    - ansible_facts.chocolatey.outdated is defined
+    - ansible_facts.chocolatey.config is defined
+    - ansible_facts.chocolatey.feature is defined
+    - ansible_facts.chocolatey.packages is defined
+    - ansible_facts.chocolatey.sources is defined
+    - '"config" not in ansible_facts.chocolatey.filter'
+    - '"feature" not in ansible_facts.chocolatey.filter'
+    - '"packages" not in ansible_facts.chocolatey.filter'
+    - '"sources" not in ansible_facts.chocolatey.filter'
+    - '"outdated" not in ansible_facts.chocolatey.filter'
+    - '"all" in ansible_facts.chocolatey.filter'
 
 - name: Ensure there are no facts from previous tests
   ansible.builtin.meta: clear_facts
@@ -35,18 +35,18 @@
 - name: assert all chocolatey facts except for outdated packages are gathered
   assert:
     that:
-    - ansible_chocolatey is not changed
-    - ansible_chocolatey.outdated is not defined
-    - ansible_chocolatey.config is defined
-    - ansible_chocolatey.feature is defined
-    - ansible_chocolatey.packages is defined
-    - ansible_chocolatey.sources is defined
-    - '"config" in ansible_chocolatey.filter'
-    - '"feature" in ansible_chocolatey.filter'
-    - '"packages" in ansible_chocolatey.filter'
-    - '"sources" in ansible_chocolatey.filter'
-    - '"outdated" not in ansible_chocolatey.filter'
-    - '"all" not in ansible_chocolatey.filter'
+    - ansible_facts.chocolatey is not changed
+    - ansible_facts.chocolatey.outdated is not defined
+    - ansible_facts.chocolatey.config is defined
+    - ansible_facts.chocolatey.feature is defined
+    - ansible_facts.chocolatey.packages is defined
+    - ansible_facts.chocolatey.sources is defined
+    - '"config" in ansible_facts.chocolatey.filter'
+    - '"feature" in ansible_facts.chocolatey.filter'
+    - '"packages" in ansible_facts.chocolatey.filter'
+    - '"sources" in ansible_facts.chocolatey.filter'
+    - '"outdated" not in ansible_facts.chocolatey.filter'
+    - '"all" not in ansible_facts.chocolatey.filter'
 
 - name: Ensure there are no facts from previous tests
   ansible.builtin.meta: clear_facts
@@ -60,12 +60,12 @@
 - name: assert only config and feature chocolatey facts are gathered
   assert:
     that:
-    - ansible_chocolatey is not changed
-    - ansible_chocolatey.config is defined
-    - ansible_chocolatey.feature is defined
-    - ansible_chocolatey.outdated is not defined
-    - ansible_chocolatey.packages is not defined
-    - ansible_chocolatey.sources is not defined
-    - '"config" in ansible_chocolatey.filter'
-    - '"feature" in ansible_chocolatey.filter'
-    - '"all" not in ansible_chocolatey.filter'
+    - ansible_facts.chocolatey is not changed
+    - ansible_facts.chocolatey.config is defined
+    - ansible_facts.chocolatey.feature is defined
+    - ansible_facts.chocolatey.outdated is not defined
+    - ansible_facts.chocolatey.packages is not defined
+    - ansible_facts.chocolatey.sources is not defined
+    - '"config" in ansible_facts.chocolatey.filter'
+    - '"feature" in ansible_facts.chocolatey.filter'
+    - '"all" not in ansible_facts.chocolatey.filter'
