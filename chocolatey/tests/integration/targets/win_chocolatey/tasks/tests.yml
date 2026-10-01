@@ -471,6 +471,23 @@
     - not downgrade_without_version is changed
     - downgrade_without_version_actual.stdout_lines == [test_choco_package1 + "|0.0.1"]
 
+- name: upgrade package (check mode)
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: latest
+  check_mode: yes
+  register: upgrade_package_check
+
+- name: get result of upgrade package (check mode)
+  win_command: choco.exe list --limit-output --exact {{ test_choco_package1|quote }}
+  register: upgrade_package_actual_check
+
+- name: assert upgrade package (check mode)
+  assert:
+    that:
+    - upgrade_package_check is changed
+    - upgrade_package_actual_check.stdout_lines == [test_choco_package1 + "|0.0.1"]
+
 - name: upgrade package
   win_chocolatey:
     name: '{{ test_choco_package1 }}'
@@ -519,6 +536,18 @@
   assert:
     that:
     - not upgrade_package_again is changed
+
+- name: upgrade package (check mode) (idempotent)
+  win_chocolatey:
+    name: '{{ test_choco_package1 }}'
+    state: latest
+  check_mode: yes
+  register: upgrade_package_again_check
+
+- name: assert upgrade package (check mode) (idempotent)
+  assert:
+    that:
+    - not upgrade_package_again_check is changed
 
 - name: install prerelease package
   win_chocolatey:

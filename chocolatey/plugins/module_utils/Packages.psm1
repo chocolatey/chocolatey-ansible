@@ -729,7 +729,8 @@ function Update-ChocolateyPackage {
         $Module.Result.stdout = $result.stdout
     }
 
-    if ($result.stdout -match ' upgraded (\d+)/\d+ package') {
+    # Check mode (--what-if) reports "can upgrade X/Y packages" rather than "upgraded X/Y packages"
+    if ($result.stdout -match ' (?:can upgrade|upgraded) (\d+)/\d+ package') {
         if ($matches[1] -gt 0) {
             Set-TaskResultChanged
         }
