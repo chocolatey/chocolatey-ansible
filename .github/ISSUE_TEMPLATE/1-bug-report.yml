@@ -1,0 +1,197 @@
+name: Report a Bug
+description: Did you find unexpected behavior in one of the collection's modules?
+labels: ["Bug"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ensure you have read over [Submitting Issues](https://github.com/chocolatey/.github/blob/main/SUBMITTING-ISSUES.md) and you are opening this issue in the correct repository.
+
+        This repository is for the `chocolatey.chocolatey` Ansible collection. If the same problem happens when you run the equivalent `choco` command directly on the Windows host, the issue is with Chocolatey CLI and should be reported in the [Chocolatey CLI repository](https://github.com/chocolatey/choco/issues/new/choose) instead.
+
+        Please check to see if your problem already exists with a quick search of the issues. Start with one relevant term and then add others if you get too many results.
+
+        **NOTE: Keep in mind we have a [Code Of Conduct](https://github.com/chocolatey-community/.github/blob/main/CODE_OF_CONDUCT.md) that we expect folks to observe when they are looking for support in the Chocolatey community.**
+
+        Name your issue appropriately: give it a sentence that reads well enough for anyone seeing this in the release notes to know what it is.
+
+        When writing out the issue details, please ensure you are writing it as if you were explaining it to somebody else, even if you will be working on and resolving the issue yourself.
+        This helps others to understand the reasons for the issue and for it to be searchable in the future.
+  - type: checkboxes
+    attributes:
+      label: Checklist
+      description: Before continuing, make sure you have done the following.
+      options:
+        - label: I confirm there are no unresolved issues reported on the [Chocolatey Status page](https://status.chocolatey.org).
+          required: true
+        - label: I have verified this is the correct repository for opening this issue.
+          required: true
+        - label: I have verified no other issues exist related to my problem.
+          required: true
+        - label: I have verified this is not an issue for a specific package.
+          required: true
+        - label: I have verified this issue is not security related.
+          required: true
+        - label: I have reproduced this issue with the latest released version of the `chocolatey.chocolatey` collection.
+          required: true
+        - label: I confirm I am using the **official** `chocolatey.chocolatey` collection and Chocolatey products, and **not** unofficial, or modified, versions.
+          required: true
+  - type: dropdown
+    id: modules
+    attributes:
+      label: Affected Modules
+      description: Which of the collection's modules are affected? Select all that apply.
+      multiple: true
+      options:
+        - win_chocolatey
+        - win_chocolatey_config
+        - win_chocolatey_facts
+        - win_chocolatey_feature
+        - win_chocolatey_source
+        - Not specific to a module, or not sure
+    validations:
+      required: true
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: What You Are Seeing?
+      description: |
+        In your own words, please describe the problem that you are experiencing, including the error message Ansible reports for the task. Please include images if possible, as this can give a clearer indication of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: What is Expected?
+      description: |
+        Instead of the behavior that you were seeing, what did you expect would be happening instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repeatable-steps
+    attributes:
+      label: How Did You Get This To Happen?
+      description: |
+        Please include a complete set of _reproducible steps_ that another user or maintainer of the repository can follow to get the same behavior that you are seeing. _Reproducible steps_ should allow _anybody_ who is unfamiliar with your issue or environment to be able to reproduce your issue.
+
+        Include the state of the Windows host before the playbook runs (for example, whether Chocolatey CLI or the package is already installed, and at which version), the exact `ansible-playbook` command line, and whether you used `--check` or `--diff`.
+
+        **NOTE: We are unlikely to be able to troubleshoot or respond to issues without _reproducible steps_. If you do not complete this section with _reproducible steps_, the issue will be closed.**
+      placeholder: |
+        1. Chocolatey CLI 2.5.1 is installed on the Windows host, and `git` is not installed
+        2. I ran the playbook below with `ansible-playbook -i inventory.ini playbook.yml --check`
+        3. The task reported `ok` rather than `changed`
+    validations:
+      required: true
+  - type: textarea
+    id: playbook
+    attributes:
+      label: Playbook
+      description: |
+        The smallest playbook (or task) that reproduces the issue. Replace internal URLs, usernames, passwords and API keys with placeholders.
+      placeholder: |
+        - name: Reproduce the issue
+          hosts: windows
+          tasks:
+            - name: Install git
+              chocolatey.chocolatey.win_chocolatey:
+                name: git
+                state: present
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: ansible-version
+    attributes:
+      label: Ansible Version
+      description: |
+        The output of `ansible --version`, run where your playbooks actually run (inside the execution environment if you are using AWX, Ansible Automation Platform or `ansible-navigator`).
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: collection-version
+    attributes:
+      label: Collection Version
+      description: |
+        The output of `ansible-galaxy collection list chocolatey.chocolatey`, run in the same place as `ansible --version` above. The collection is also shipped as part of the `ansible` community package, so please include every version it lists.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: system-details
+    attributes:
+      label: System Details
+      description: |
+        Please include as many details about your system as possible. Sometimes, a problem may only happen on specific systems, and this information can be vital to resolving your issue.
+
+        For the Windows host, run the following commands in Windows PowerShell (`powershell.exe`):
+
+        * Operating System: Run `[System.Environment]::OSVersion.Version.ToString()`
+        * Windows PowerShell Version: Run `$PSVersionTable.PSVersion`
+        * PowerShell interpreter: The collection's modules run in Windows PowerShell by default. If you have set `ansible_pwsh_interpreter` (`ansible-core` 2.21 and newer) to run them in PowerShell 7 instead, give its value and the PowerShell 7 version, otherwise enter `Not set`.
+        * Chocolatey CLI Version: Run `choco --version` (if the task is installing Chocolatey CLI, enter `Not installed`)
+        * Chocolatey Licensed Extension version: Run `choco list chocolatey.extension --exact`
+        * Chocolatey License type (Open Source / Professional / Business / ?)
+      value: |
+        * Control node Operating System:
+        * How Ansible is run (e.g. `ansible-playbook`, AWX, Ansible Automation Platform, Semaphore):
+        * Connection plugin (e.g. `winrm`, `psrp`, `ssh`):
+        * Windows host Operating System:
+        * Windows host Windows PowerShell version:
+        * `ansible_pwsh_interpreter`:
+        * Chocolatey CLI Version:
+        * Chocolatey Licensed Extension version:
+        * Chocolatey License type:
+    validations:
+      required: true
+  - type: textarea
+    id: installed-packages
+    attributes:
+      label: Installed Packages
+      description: |
+        If the issue is with `win_chocolatey` or `win_chocolatey_facts`, please include the output of `choco list` on the Windows host. Otherwise, add `N/A`.
+      render: text
+    validations:
+      required: false
+  - type: textarea
+    id: output-log
+    attributes:
+      label: Ansible Output
+      description: |
+        Please include the output from running the playbook with `-vvv`.
+
+        Before including the output, make sure of the following:
+        - There is no sensitive data shared in the output (passwords, API keys, internal hostnames and URLs).
+        - We need ALL OUTPUT for the failing task, not just what you may believe is relevant.
+        - Preferably link to a gist instead of pasting long output in the issue. You can create a new gist here: https://gist.github.com/ (see https://docs.github.com/en/github/writing-on-github/editing-and-sharing-content-with-gists/creating-gists).
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: chocolatey-log
+    attributes:
+      label: Chocolatey CLI Log
+      description: |
+        If the module ran a `choco` command, please include the matching section of the Chocolatey CLI log from the Windows host. The default location is `C:\ProgramData\chocolatey\logs\chocolatey.log`. Make sure there is no sensitive data in the log, and preferably link to a gist.
+      render: text
+    validations:
+      required: false
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: |
+        Please include any other information here that you feel may be relevant to the problem you are seeing but is not covered in the previous sections.
+  - type: textarea
+    id: related-issues
+    attributes:
+      label: Related Issues
+      description: |
+        Include any links to other issues that are related to this problem.
+      placeholder: |
+        - Issue #
+        - Issue #
+    validations:
+      required: false

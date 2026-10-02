@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a Question
+    url: https://github.com/chocolatey-community/chocolatey-ansible/discussions/categories/q-a
+    about: Have a question about using the collection? Ask it in this repository's Q&A discussions.
+  - name: Ask Question In Chat
+    url: https://ch0.co/community-support
+    about: Chat with our community and ask your question.
+  - name: Report a Chocolatey CLI Issue
+    url: https://github.com/chocolatey/choco/issues/new/choose
+    about: If the same problem happens when you run the choco command directly on the Windows host, report it against Chocolatey CLI instead.
+  - name: Report a Package Issue
+    url: https://docs.chocolatey.org/en-us/community-repository/users/package-triage-process
+    about: Problems with a specific package need to go to that package's maintainers.
