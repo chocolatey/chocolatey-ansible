@@ -122,7 +122,10 @@ jobs:
           - { version: '2.18', package: 'ansible-core~=2.18.0' }
           - { version: '2.19', package: 'ansible-core~=2.19.0' }
           - { version: '2.20', package: 'ansible-core~=2.20.0' }
-          - { version: 'latest', package: 'ansible-core' }
+          # Coverage is collected on one leg only. It slows the run down, and the other
+          # legs would report near-identical figures. It's on latest so it doesn't need
+          # moving as the tested versions change.
+          - { version: 'latest', package: 'ansible-core', coverage: true }
           - { version: 'prerelease', package: 'ansible-core', prerelease: true }
 
     steps:
@@ -268,7 +271,17 @@ jobs:
           # network and WinRM failures during the run.
           rc=0
           ansible-test windows-integration -vvv --requirements --continue-on-error \
-            --retry-on-error --exclude win_chocolatey-legacy || rc=$?
+            --retry-on-error --exclude win_chocolatey-legacy \
+            ${{ matrix.ansible.coverage && '--coverage' || '' }} || rc=$?
+
+          # Reported even when tests failed, as long as some coverage was collected. The
+          # text report is for the log; Write-CoverageSummary.ps1 reads the XML.
+          if [ '${{ matrix.ansible.coverage }}' = 'true' ]; then
+            if ! { ansible-test coverage report --show-missing && ansible-test coverage xml; }; then
+              echo "::error::Generating the code coverage report failed."
+              [ "$rc" -ne 0 ] || rc=1
+            fi
+          fi
 
           cp -r tests/output "$workspace/testresults"
           rm -rf "$workspace/testresults/.tmp"
@@ -288,6 +301,15 @@ jobs:
           -Path ./testresults
           -Title 'Integration (ansible-core ${{ matrix.ansible.version }})'
           -TestOutcome '${{ steps.integration.outcome }}'
+
+      - name: Summarise code coverage
+        if: always() && matrix.ansible.coverage
+        shell: pwsh
+        run: >-
+          ./build/Write-CoverageSummary.ps1
+          -Path ./testresults/reports
+          -CollectionPath ./chocolatey
+          -Title 'Code Coverage (ansible-core ${{ matrix.ansible.version }})'
 
       - name: Publish ansible-test output
         if: always()
