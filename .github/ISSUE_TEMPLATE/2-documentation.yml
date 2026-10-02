@@ -1,0 +1,83 @@
+name: Report a Documentation Issue
+description: Is something in the module documentation, examples or README wrong or missing?
+labels: ["Documentation"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ensure you have read over [Submitting Issues](https://github.com/chocolatey/.github/blob/main/SUBMITTING-ISSUES.md) and you are opening this issue in the correct repository.
+
+        This repository is for the `chocolatey.chocolatey` Ansible collection, including the module documentation published on [docs.ansible.com](https://docs.ansible.com/projects/ansible/latest/collections/chocolatey/chocolatey/index.html) and Ansible Galaxy. Issues with the wider Chocolatey documentation at docs.chocolatey.org belong in the [docs repository](https://github.com/chocolatey/docs/issues/new/choose) instead.
+
+        Please check to see if your problem already exists with a quick search of the issues. Start with one relevant term and then add others if you get too many results.
+
+        **NOTE: Keep in mind we have a [Code Of Conduct](https://github.com/chocolatey-community/.github/blob/main/CODE_OF_CONDUCT.md) that we expect folks to observe when they are looking for support in the Chocolatey community.**
+
+        Name your issue appropriately: give it a sentence that reads well enough for anyone seeing this in the release notes to know what it is.
+  - type: checkboxes
+    attributes:
+      label: Checklist
+      description: Before continuing, make sure you have done the following.
+      options:
+        - label: I have verified this is the correct repository for opening this issue.
+          required: true
+        - label: I have verified no other issues exist related to this documentation.
+          required: true
+  - type: dropdown
+    id: documentation
+    attributes:
+      label: Affected Documentation
+      description: Which documentation is affected? Select all that apply.
+      multiple: true
+      options:
+        - win_chocolatey
+        - win_chocolatey_config
+        - win_chocolatey_facts
+        - win_chocolatey_feature
+        - win_chocolatey_source
+        - Collection README
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: documentation-link
+    attributes:
+      label: Documentation Link
+      description: A link to the page (or the section of it) that is affected, if there is one.
+      placeholder: https://docs.ansible.com/projects/ansible/latest/collections/chocolatey/chocolatey/win_chocolatey_module.html
+    validations:
+      required: false
+  - type: textarea
+    id: problem
+    attributes:
+      label: What Is Wrong Or Missing?
+      description: |
+        In your own words, please describe what is incorrect, out of date, unclear or missing. If following the documentation produces an error or a warning, include it here.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: What Should It Say?
+      description: |
+        If you know what the documentation should say instead, please describe it here. The module documentation and examples are generated from the `DOCUMENTATION` and `EXAMPLES` blocks in `chocolatey/plugins/modules/<module>.py`.
+    validations:
+      required: false
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: |
+        Please include any other information here that you feel may be relevant that is not covered in the previous sections.
+  - type: textarea
+    id: related-issues
+    attributes:
+      label: Related Issues
+      description: |
+        Include any links to other issues that are related to this documentation.
+      placeholder: |
+        - Issue #
+        - Issue #
+    validations:
+      required: false
