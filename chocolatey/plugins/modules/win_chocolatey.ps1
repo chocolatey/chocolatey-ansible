@@ -192,6 +192,13 @@ if ($state -in "absent", "reinstalled") {
                 Version = $version
                 AllowMultiple = $useAllowMultiple
             }
+
+            # For state=reinstalled, choco_args are intended for the install step and
+            # may not be valid for `choco uninstall`, so only pass them when removing.
+            if ($state -eq "absent") {
+                $uninstallParams.ChocoArgs = $choco_args
+            }
+
             Uninstall-ChocolateyPackage @uninstallParams
         }
     }
